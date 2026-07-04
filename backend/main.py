@@ -14,7 +14,6 @@ Endpoint'ler:
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
 
 import numpy as np
 from fastapi import FastAPI
@@ -52,19 +51,10 @@ app.add_middleware(
 # mu: yıllık beklenen getiri, sigma: yıllık volatilite
 # ----------------------------------------------------------
 
-@dataclass(frozen=True)
-class AssetParams:
-    model: str
-    ticker: str          # Yahoo Finance sembolü
-    mu: float            # fallback: yıllık beklenen getiri
-    sigma: float         # fallback: yıllık volatilite
-
-
-ASSETS: dict[str, AssetParams] = {
-    # XU030.IS = BIST-30 endeksi, QQQ = Nasdaq-100 ETF
-    "A": AssetParams(model="BIST-30 (XU030)", ticker="XU030.IS", mu=0.30, sigma=0.19),
-    "B": AssetParams(model="Nasdaq-100 (QQQ)", ticker="QQQ",     mu=0.27, sigma=0.25),
-}
+# AI sembol çıkaramazsa devreye giren emniyet kemeri
+DEFAULT_SYMBOLS = ["XU030.IS", "QQQ"]
+DEFAULT_MU, DEFAULT_SIGMA = 0.20, 0.25   # canlı veri de yoksa GBM varsayılanları
+MAX_SYMBOLS = 4
 
 RISK_FREE = 0.05      # yıllık risksiz oran
 TRADING_DAYS = 252
@@ -126,10 +116,11 @@ class SimulateRequest(BaseModel):
 
 
 class SimulateResponse(BaseModel):
-    metrics: dict
+    metrics: dict       # { "THYAO.IS": {...}, "AAPL": {...} } — dinamik anahtarlar
     aiText: str
-    dataSources: dict   # {"A": "live"|"cache"|"fallback", "B": ...}
-    aiMeta: dict        # {mode, analyst, referee, confidence, tokens...}
+    dataSources: dict
+    aiMeta: dict
+    symbols: list       # AI'ın prompt'tan çıkardığı (veya varsayılan) semboller
 
 
 class ReportRequest(BaseModel):
@@ -153,15 +144,20 @@ def health() -> dict:
 def simulate(req: SimulateRequest) -> SimulateResponse:
     seed = _seed_from_prompt(req.prompt)
 
+    # 1) AI prompt'tan sembolleri çıkarır; boş dönerse emniyet kemeri
+    symbols = ai.extract_symbols(req.prompt)[:MAX_SYMBOLS] or DEFAULT_SYMBOLS
+
     metrics: dict = {}
     sources: dict[str, str] = {}
-    for i, (key, params) in enumerate(ASSETS.items()):
-        mu, sigma, source = market.get_params(params.ticker, params.mu, params.sigma)
-        metrics[key] = _run_gbm(params.model, mu, sigma, seed=seed + i)
-        sources[key] = source
+    for i, sym in enumerate(symbols):
+        mu, sigma, source = market.get_params(sym, DEFAULT_MU, DEFAULT_SIGMA)
+        metrics[sym] = _run_gbm(sym, mu, sigma, seed=seed + i)
+        sources[sym] = source
 
     src_labels = {"live": "canlı Yahoo Finance", "cache": "önbellek", "fallback": "varsayılan"}
     sources_note = ", ".join(f"{k}: {src_labels[v]}" for k, v in sources.items())
+    if symbols == DEFAULT_SYMBOLS and not ai.extract_symbols.__defaults__:
+        pass  # (bilgi: semboller varsayılandan geldiyse cevaptaki symbols alanı bunu gösterir)
 
     # RAG: indekste doküman varsa prompt'a en alakalı 3 chunk'ı çek
     try:
@@ -179,6 +175,7 @@ def simulate(req: SimulateRequest) -> SimulateResponse:
         aiText=result["aiText"],
         dataSources=sources,
         aiMeta=result["meta"],
+        symbols=symbols,   # şeffaflık: AI prompt'u böyle yorumladı
     )
 
 

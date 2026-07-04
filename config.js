@@ -57,10 +57,7 @@ FDX.SEED = {
     "FastAPI üzerinde 2.000 yollu Monte Carlo (GBM) çalışacak ve sonuçlar " +
     "bu panele düşecek.",
 
-  metrics: {
-    A: { model: "PortA-Core7", cagr: 0, vol: 0, sharpe: 0, mdd: 0 },
-    B: { model: "SimB-Alpha4", cagr: 0, vol: 0, sharpe: 0, mdd: 0 }
-  }
+  metrics: {}   // v0.9: kartlar ilk simülasyonla dinamik doğar
 };
 
 

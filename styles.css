@@ -267,9 +267,11 @@ body {
 /* ---------- karşılaştırma kartları ---------- */
 .compare-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* v0.9: 1-4+ varlik icin akilli dizilim — dar ekranda alt alta */
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 20px;
 }
+.compare-grid .empty-state { grid-column: 1 / -1; }
 
 .asset-card { padding: 20px 22px; opacity: 0; transform: translateY(16px); animation: rise 0.7s ease forwards; }
 #cardB { animation-delay: 0.12s; }

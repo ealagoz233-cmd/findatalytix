@@ -57,7 +57,7 @@
           <span data-i18n="views.report">Risk Raporu</span>
         </button>
         <button class="nav-item" data-view="config">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
           <span data-i18n="views.config">Konfigürasyon</span>
         </button>
       </nav>
@@ -149,34 +149,12 @@
           </button>
         </div>
 
-        <div class="compare-grid">
-          <article class="asset-card glass" id="cardA">
-            <h2 class="asset-title">Referans Varlık A</h2>
-            <div class="asset-body">
-              <table class="metrics">
-                <tr><th>Model</th><td><span class="pill" data-asset="A" data-metric="model">—</span></td></tr>
-                <tr><th>Yıllık Getiri <em>(CAGR, %)</em></th><td><span class="pill num" data-asset="A" data-metric="cagr" data-suffix=" %">0</span></td></tr>
-                <tr><th>Volatilite <em>(σ, %)</em></th><td><span class="pill num" data-asset="A" data-metric="vol" data-suffix=" %">0</span></td></tr>
-                <tr><th>Sharpe Oranı</th><td><span class="pill num" data-asset="A" data-metric="sharpe">0</span></td></tr>
-                <tr><th>Maks. Düşüş <em>(MDD)</em></th><td><span class="pill num" data-asset="A" data-metric="mdd" data-suffix=" %">0</span></td></tr>
-              </table>
-              <div class="chart" id="chartA"></div>
-            </div>
-          </article>
-
-          <article class="asset-card glass" id="cardB">
-            <h2 class="asset-title">Simüle Edilen Varlık B</h2>
-            <div class="asset-body">
-              <table class="metrics">
-                <tr><th>Model</th><td><span class="pill" data-asset="B" data-metric="model">—</span></td></tr>
-                <tr><th>Yıllık Getiri <em>(CAGR, %)</em></th><td><span class="pill num" data-asset="B" data-metric="cagr" data-suffix=" %">0</span></td></tr>
-                <tr><th>Volatilite <em>(σ, %)</em></th><td><span class="pill num" data-asset="B" data-metric="vol" data-suffix=" %">0</span></td></tr>
-                <tr><th>Sharpe Oranı</th><td><span class="pill num" data-asset="B" data-metric="sharpe">0</span></td></tr>
-                <tr><th>Maks. Düşüş <em>(MDD)</em></th><td><span class="pill num" data-asset="B" data-metric="mdd" data-suffix=" %">0</span></td></tr>
-              </table>
-              <div class="chart" id="chartB"></div>
-            </div>
-          </article>
+        <div class="compare-grid" id="simResultsGrid">
+          <div class="empty-state glass" id="simEmpty">
+            <svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/></svg>
+            <h3>Henüz simülasyon çalıştırılmadı</h3>
+            <p>Prompt'a analiz etmek istediğin varlıkları yaz (örn: "THYAO ile Apple'ı karşılaştır") — AI sembolleri çıkarır, her biri için Monte Carlo koşar ve kartlar burada belirir.</p>
+          </div>
         </div>
 
         <div class="lower-grid">

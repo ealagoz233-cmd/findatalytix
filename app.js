@@ -63,6 +63,7 @@
     }
   };
 
+  let introDone = false;
   const $ = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
 
@@ -70,8 +71,7 @@
      GRAFİK MODÜLÜ — yaşam döngüsü yönetimli
   ======================================================== */
   const Charts = (function () {
-    let instances = [];   // {chart, el}
-    let ready = false;
+    let instances = [];   // {chart}
 
     function volSurface({ baseVol, smile, termSlope, noise }) {
       const data = [];
@@ -103,7 +103,7 @@
         },
         xAxis3D: axis("Vade (ay)"),
         yAxis3D: axis("Moneyness (%)"),
-        zAxis3D: axis("İmp. Vol (%)"),
+        zAxis3D: axis("Imp. Vol (%)"),
         grid3D: {
           boxWidth: 90, boxDepth: 90, boxHeight: 55,
           viewControl: {
@@ -124,17 +124,22 @@
       };
     }
 
-    function init() {
-      if (ready || !window.echarts) return;          // çift-init koruması
-      [["#chartA", FDX.CONFIG.surfaces.A], ["#chartB", FDX.CONFIG.surfaces.B]]
-        .forEach(([sel, cfg]) => {
-          const el = $(sel);
-          if (!el) return;
-          const chart = echarts.init(el, null, { renderer: "canvas" });
-          chart.setOption(option(volSurface(cfg)));
-          instances.push({ chart, el });
-        });
-      ready = true;
+    /* v0.9: her varligin yuzeyi kendi GERCEK volatilitesinden dogar.
+       Kartlar DOM'a eklendikten SONRA cagrilir (0x0 tuzagi yok). */
+    function renderFor(metrics) {
+      dispose();
+      Object.entries(metrics).forEach(([sym, m], i) => {
+        const el = document.getElementById("chart-" + cssSafe(sym));
+        if (!el || !window.echarts) return;
+        const chart = echarts.init(el, null, { renderer: "canvas" });
+        chart.setOption(option(volSurface({
+          baseVol: (typeof m.vol === "number" && m.vol > 0) ? m.vol : 18,
+          smile: 0.55 + (i % 3) * 0.15,
+          termSlope: 0.8 - (i % 2) * 0.25,
+          noise: 0.9 + i * 0.2
+        })));
+        instances.push({ chart });
+      });
     }
 
     function setRotation(on) {
@@ -144,16 +149,15 @@
 
     function resize() { instances.forEach(({ chart }) => chart.resize()); }
 
-    /* Bugün çağıran yok ama yaşam döngüsü tamamlansın diye var:
-       ileride grafik yeniden kurulacaksa önce bu çağrılacak. */
     function dispose() {
       instances.forEach(({ chart }) => chart.dispose());
       instances = [];
-      ready = false;
     }
 
-    return { init, setRotation, resize, dispose, isReady: () => ready };
+    return { renderFor, setRotation, resize, dispose };
   })();
+
+  const cssSafe = s => s.replace(/[^A-Za-z0-9]/g, "_");
 
   window.addEventListener("resize", Charts.resize);
 
@@ -295,9 +299,9 @@
       $("#viewTitle").textContent = Prefs.dict().views[state.view];
 
       const inSim = state.view === "simulation";
-      if (inSim && !Charts.isReady()) {
-        Charts.init();               // tembel yükleme (0×0 tuzağına karşı)
-        runSimIntro(state);          // intro animasyonları TEK yerden
+      if (inSim && !introDone) {
+        introDone = true;
+        runSimIntro();
       }
       Charts.setRotation(inSim);
       if (inSim) Charts.resize();
@@ -334,7 +338,8 @@
 
       if (sim.status === "done" && prev.simulation && prev.simulation.status === "running") {
         FDX.api.refreshHistory();
-        renderMetrics(sim.metrics, true);
+        renderSimCards(sim.metrics);          // kartlar once DOM'a
+        Charts.renderFor(sim.metrics);        // sonra yuzeyler
         $("#aiCursor").classList.remove("done");
         typeInto($("#aiText"), sim.aiText, FDX.CONFIG.typing.aiMs,
           () => { $("#aiCursor").classList.add("done"); renderAiMeta(sim.aiMeta); });
@@ -498,7 +503,13 @@
 
       const tdSharpe = document.createElement("td");
       tdSharpe.className = "mono";
-      tdSharpe.textContent = trNumber(item.sharpeA) + " / " + trNumber(item.sharpeB);
+      if (item.assets && item.assets.length) {
+        tdSharpe.textContent = item.assets.map(a => trNumber(a.sharpe)).join(" / ");
+        tdSharpe.title = item.assets.map(a => a.sym + ": " + trNumber(a.sharpe)).join("  \u00b7  ");
+      } else {
+        // v0.8 kayitlariyla geriye donuk uyumluluk
+        tdSharpe.textContent = trNumber(item.sharpeA || 0) + " / " + trNumber(item.sharpeB || 0);
+      }
 
       const tdStatus = document.createElement("td");
       const tag = document.createElement("span");
@@ -517,19 +528,59 @@
     });
   }
 
-  function renderMetrics(metrics, animate) {
-    $$("[data-metric]").forEach(el => {
-      const asset = el.dataset.asset;
-      const key = el.dataset.metric;
-      const val = metrics[asset][key];
-      if (typeof val === "number") {
-        const suffix = el.dataset.suffix || "";
-        if (animate) animateNumber(el, val, suffix);
-        else el.textContent = trNumber(val) + suffix;
-        el.classList.toggle("neg", val < 0);
-      } else {
-        el.textContent = val;
-      }
+  /* v0.9: N varlik icin dinamik kart uretimi */
+  function renderSimCards(metrics) {
+    const grid = $("#simResultsGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    const rows = [
+      ["Yillik Getiri (CAGR, %)", "cagr", " %"],
+      ["Volatilite (\u03c3, %)", "vol", " %"],
+      ["Sharpe Orani", "sharpe", ""],
+      ["Maks. Dusus (MDD)", "mdd", " %"]
+    ];
+
+    Object.entries(metrics).forEach(([sym, m]) => {
+      const card = document.createElement("article");
+      card.className = "asset-card glass";
+
+      const title = document.createElement("h2");
+      title.className = "asset-title";
+      title.textContent = sym;
+      card.appendChild(title);
+
+      const body = document.createElement("div");
+      body.className = "asset-body";
+
+      const table = document.createElement("table");
+      table.className = "metrics";
+      rows.forEach(([label, key, suffix]) => {
+        const tr = document.createElement("tr");
+        const th = document.createElement("th");
+        th.textContent = label;
+        const td = document.createElement("td");
+        const pill = document.createElement("span");
+        pill.className = "pill num";
+        const val = m[key];
+        if (typeof val === "number") {
+          pill.classList.toggle("neg", val < 0);
+          animateNumber(pill, val, suffix);
+        } else {
+          pill.textContent = String(val);
+        }
+        td.appendChild(pill);
+        tr.append(th, td);
+        table.appendChild(tr);
+      });
+
+      const chartDiv = document.createElement("div");
+      chartDiv.className = "chart";
+      chartDiv.id = "chart-" + cssSafe(sym);
+
+      body.append(table, chartDiv);
+      card.appendChild(body);
+      grid.appendChild(card);
     });
   }
 
@@ -773,9 +824,7 @@
 
   /* İlk giriş animasyonları — yalnızca Charts.init ile birlikte,
      yani hayatta bir kez çalışır (çakışma imkânsız). */
-  function runSimIntro(state) {
-    renderMetrics(state.simulation.metrics, true);
-
+  function runSimIntro() {
     // textarea daktilo (value'ya yazar, textContent'e değil)
     const input = $("#promptInput");
     const text = FDX.SEED.promptText;

@@ -71,7 +71,7 @@ def build_report(payload: dict) -> tuple[bytes, str]:
     """(docx_baytları, dosya_adı) döner."""
 
     metrics = payload.get("metrics") or {}
-    a, b = metrics.get("A", {}), metrics.get("B", {})
+    asset_keys = list(metrics.keys())          # dinamik: 1..N varlık
     ai_text = (payload.get("aiText") or "").strip()
     meta = payload.get("aiMeta") or {}
     prompt = (payload.get("prompt") or "").strip()
@@ -114,22 +114,25 @@ def build_report(payload: dict) -> tuple[bytes, str]:
         _para(doc, "Bu rapor oluşturulduğunda AI yorumu mevcut değildi; "
                    "aşağıdaki sayısal bulgular esas alınmalıdır.", color=GREY, italic=True)
 
-    # ---- 2. Metrik Karşılaştırması ----
+    # ---- 2. Metrik Karşılaştırması (dinamik sütun) ----
     _heading(doc, "2. Metrik Karşılaştırması")
-    table = doc.add_table(rows=1, cols=3)
+    table = doc.add_table(rows=1, cols=1 + max(len(asset_keys), 1))
     table.style = "Light Grid Accent 1"
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
     hdr = table.rows[0].cells
-    for i, text in enumerate(["Metrik", "Varlık A", "Varlık B"]):
+    for i, text in enumerate(["Metrik"] + (asset_keys or ["—"])):
         hdr[i].text = ""
         run = hdr[i].paragraphs[0].add_run(text)
         run.bold = True
 
     for label, key, suffix in METRIC_ROWS:
+        if key == "model":
+            continue   # sütun başlığı zaten sembolün kendisi
         row = table.add_row().cells
         row[0].text = label
-        for cell, asset in ((row[1], a), (row[2], b)):
-            value = asset.get(key, "—")
+        for i, sym in enumerate(asset_keys):
+            value = metrics[sym].get(key, "—")
+            cell = row[i + 1]
             cell.text = ""
             run = cell.paragraphs[0].add_run(_fmt(value, suffix))
             if key == "mdd" and isinstance(value, (int, float)) and value < 0:
@@ -137,9 +140,10 @@ def build_report(payload: dict) -> tuple[bytes, str]:
 
     # Risk-ayarlı kazanan
     try:
-        winner = "A" if float(a.get("sharpe", 0)) >= float(b.get("sharpe", 0)) else "B"
-        _para(doc, f"Risk-ayarlı getiri (Sharpe) bazında öne çıkan: Varlık {winner}.",
-              bold=True, color=GOLD)
+        if asset_keys:
+            winner = max(asset_keys, key=lambda k: float(metrics[k].get("sharpe", 0)))
+            _para(doc, f"Risk-ayarlı getiri (Sharpe) bazında öne çıkan: {winner}.",
+                  bold=True, color=GOLD)
     except (TypeError, ValueError):
         pass
 

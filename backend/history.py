@@ -11,6 +11,7 @@ import json, os, time, threading
 
 FILE = "./history.json"
 MAX_ITEMS = 50
+WEEKLY_LIMIT = 600   # durum çubuğundaki döngü tavanı — artık backend yönetiyor
 _lock = threading.Lock()
 
 
@@ -31,8 +32,9 @@ def record(prompt: str, metrics: dict, mode: str, confidence) -> None:
         data["items"].insert(0, {
             "ts": time.time(),
             "prompt": prompt[:120],
-            "sharpeA": metrics["A"]["sharpe"], "sharpeB": metrics["B"]["sharpe"],
-            "cagrA": metrics["A"]["cagr"],   "cagrB": metrics["B"]["cagr"],
+            # Dinamik varlıklar (v0.9): her simülasyondaki tüm semboller
+            "assets": [{"sym": k, "sharpe": m["sharpe"], "cagr": m["cagr"]}
+                       for k, m in metrics.items()],
             "mode": mode,
             "confidence": confidence,
         })
@@ -44,4 +46,6 @@ def record(prompt: str, metrics: dict, mode: str, confidence) -> None:
 
 
 def snapshot() -> dict:
-    return _load()
+    data = _load()
+    data["weeklyLimit"] = WEEKLY_LIMIT
+    return data

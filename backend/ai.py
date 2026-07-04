@@ -123,6 +123,42 @@ def _referee_call(system: str, user: str):
 # Prompt şablonları
 # ----------------------------------------------------------
 
+EXTRACTOR_SYSTEM = (
+    "Kullanicinin finansal analiz isteginden varlik sembollerini cikart. "
+    "KURALLAR: BIST hisseleri/endeksleri icin '.IS' uzantisi ekle (THYAO.IS, XU030.IS); "
+    "ABD varliklarinda ham sembol (AAPL, QQQ). Sektor/tema ima edilirse uygun BIST "
+    "endeksini sec (bankacilik->XBANK.IS, sinai->XUSIN.IS, teknoloji->XUTEK.IS). "
+    "En fazla 4 sembol. SADECE gecerli bir JSON dizisi dondur, baska hicbir sey yazma. "
+    'Ornek: ["THYAO.IS","AAPL"]. Sembol cikarilamiyorsa [] dondur.'
+)
+
+_SYMBOL_RE = __import__("re").compile(r"^[A-Z0-9.^-]{2,12}$")
+
+
+def extract_symbols(prompt: str) -> list[str]:
+    """Prompt'tan sembol listesi. Model yoksa/hata olursa/geçersizse []."""
+    if _claude is None and _gemini is None:
+        return []
+    try:
+        _, raw, _tin, _tout = _analyst_call(EXTRACTOR_SYSTEM, prompt, cheap=True)
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        data = json.loads(clean)
+        if not isinstance(data, list):
+            return []
+        out, seen = [], set()
+        for s in data:
+            sym = str(s).strip().upper()
+            if _SYMBOL_RE.match(sym) and sym not in seen:
+                seen.add(sym)
+                out.append(sym)
+            if len(out) >= 4:            # maliyet + ekran freni
+                break
+        return out
+    except Exception as exc:
+        logger.warning("Sembol çıkarma başarısız: %s", exc)
+        return []
+
+
 ANALYST_SYSTEM = (
     "Sen FinDatalytix'in finansal analiz asistanısın. Türkçe, net ve ölçülü yaz. "
     "Sana verilen Monte Carlo metriklerini yorumla; RAG bağlamı verildiyse "
@@ -158,14 +194,14 @@ def analyze(prompt: str, metrics: dict, sources_note: str, chunks: list[dict]) -
 
     rag_sources = sorted({f"{c['source']} (s.{c['page']})" for c in chunks})
 
-    # ---- Hiç model yoksa: dürüst şablon ----
+    # ---- Hiç model yoksa: dürüst şablon (dinamik N varlık) ----
     if _claude is None and _gemini is None:
-        a, b = metrics["A"], metrics["B"]
-        winner = "A" if a["sharpe"] >= b["sharpe"] else "B"
+        parts = [f"{k}: %{m['cagr']} getiri / {m['sharpe']} Sharpe / %{m['mdd']} MDD"
+                 for k, m in metrics.items()]
+        winner = max(metrics.items(), key=lambda kv: kv[1]["sharpe"])[0]
         text = (
-            f"Monte Carlo Analizi: Varlık A yıllık %{a['cagr']} getiri / {a['sharpe']} Sharpe, "
-            f"Varlık B %{b['cagr']} / {b['sharpe']}. Risk-ayarlı bazda Varlık {winner} önde. "
-            f"Maksimum düşüş: A %{a['mdd']}, B %{b['mdd']}. Veri kaynağı — {sources_note}. "
+            f"Monte Carlo Analizi — {'; '.join(parts)}. "
+            f"Risk-ayarlı bazda öne çıkan: {winner}. Veri kaynağı — {sources_note}. "
             f"(Şablon yorum: .env dosyasına ANTHROPIC_API_KEY veya GEMINI_API_KEY "
             f"eklendiğinde gerçek AI analizi devreye girer.)"
         )
@@ -213,11 +249,10 @@ def analyze(prompt: str, metrics: dict, sources_note: str, chunks: list[dict]) -
 
 
 def analyze_fallback_after_error(prompt, metrics, sources_note, rag_sources, error) -> dict:
-    a, b = metrics["A"], metrics["B"]
+    parts = [f"{k} %{m['cagr']} / {m['sharpe']} Sharpe" for k, m in metrics.items()]
     text = (
         f"AI servisine ulaşılamadı ({error[:120]}). Ham sonuçlar: "
-        f"Varlık A %{a['cagr']} getiri / {a['sharpe']} Sharpe; "
-        f"Varlık B %{b['cagr']} / {b['sharpe']}. Kaynak: {sources_note}."
+        f"{'; '.join(parts)}. Kaynak: {sources_note}."
     )
     return {"aiText": text, "meta": {
         "mode": "error-fallback", "analyst": None, "referee": None,
