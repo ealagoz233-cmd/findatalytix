@@ -1,5 +1,5 @@
 /* ==========================================================
-   FinDatalytix v0.8 Alpha — koyu tema / glassmorphism
+   FinDatalytix v0.9 — koyu tema / glassmorphism
    Palet:
      --bg-deep    #0a1120  gece laciverti (zemin)
      --bg-panel   #111c31  panel laciverti
@@ -274,7 +274,10 @@ body {
 .compare-grid .empty-state { grid-column: 1 / -1; }
 
 .asset-card { padding: 20px 22px; opacity: 0; transform: translateY(16px); animation: rise 0.7s ease forwards; }
-#cardB { animation-delay: 0.12s; }
+/* v0.9: kartlar dinamik dogar; sirali gecikme nth-child ile */
+.compare-grid .asset-card:nth-child(2) { animation-delay: 0.1s; }
+.compare-grid .asset-card:nth-child(3) { animation-delay: 0.2s; }
+.compare-grid .asset-card:nth-child(4) { animation-delay: 0.3s; }
 
 @keyframes rise {
   to { opacity: 1; transform: translateY(0); }
@@ -619,7 +622,7 @@ body {
   border-width: 1.5px;
   border-color: var(--stroke-strong);
   color: var(--text-dim);
-  cursor: not-allowed;
+  cursor: pointer;
   transition: border-color 0.22s, background 0.22s;
 }
 .dropzone svg {
@@ -664,23 +667,6 @@ body {
   line-height: 1.6;
 }
 
-.mock-search {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-}
-.mock-search input {
-  width: 260px;
-  padding: 10px 14px;
-  border-radius: 9px;
-  border: 1px solid var(--stroke-strong);
-  background: rgba(143, 184, 232, 0.05);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 0.88rem;
-}
-.mock-search input:disabled,
-.mock-search .chip:disabled { opacity: 0.55; cursor: not-allowed; }
 
 /* ---------- form satırları (konfig / ayarlar) ---------- */
 .form-row {
@@ -811,8 +797,6 @@ body {
 }
 .file-del:hover { color: var(--red); border-color: var(--red); }
 
-/* dropzone artık aktif */
-.dropzone { cursor: pointer; }
 .dropzone:focus-visible { outline: 2px solid var(--ice); outline-offset: 3px; }
 
 /* ---------- dar ekran (≤420px) ---------- */
@@ -928,36 +912,43 @@ body {
 @media (max-width: 640px) { .asset-chart { height: 420px; } }
 
 /* ==========================================================
-   AY 6.2 — AÇIK TEMA
-   Tüm renkler :root değişkenlerinde tutulduğu için açık tema
-   tek bir override bloğu: mimarinin ilk günden kazandırdığı ödül.
+   AÇIK TEMA (premium) — slate zemin, camsı beyaz paneller,
+   pastel ambient ışıklar. Tek override bloğu: :root değişken
+   mimarisinin ödülü.
    ========================================================== */
 [data-theme="light"] {
-  --bg-deep: #eef2f8;
-  --bg-panel: rgba(255, 255, 255, 0.78);
-  --bg-panel-solid: #ffffff;
-  --stroke: rgba(30, 58, 102, 0.14);
-  --stroke-strong: rgba(30, 58, 102, 0.30);
-  --text: #1d2a3f;
-  --text-dim: #566783;
+  --bg-deep: #e9eef6;
+  --bg-panel: rgba(255, 255, 255, 0.72);
+  --bg-panel-solid: #fbfdff;
+  --stroke: rgba(38, 64, 110, 0.13);
+  --stroke-strong: rgba(38, 64, 110, 0.30);
+  --text: #1c2940;
+  --text-dim: #54658a;
   --gold: #8a6d2f;
   --gold-soft: rgba(138, 109, 47, 0.12);
   --ice: #2e5c9e;
 }
 [data-theme="light"] body {
   background:
-    radial-gradient(1100px 500px at 75% -10%, rgba(120, 160, 220, 0.25), transparent 60%),
-    radial-gradient(900px 600px at -10% 110%, rgba(160, 190, 235, 0.25), transparent 55%),
+    radial-gradient(1100px 500px at 75% -10%, rgba(140, 175, 230, 0.35), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgba(190, 210, 240, 0.35), transparent 55%),
     var(--bg-deep);
 }
-[data-theme="light"] .ambient { opacity: 0.12; }
+/* Ambient ışıklar pastel tonlara döner */
+[data-theme="light"] .ambient { opacity: 0.35; }
+[data-theme="light"] .ambient-1 { background: #a9c5ee; }
+[data-theme="light"] .ambient-2 { background: #ecdcae; }
+[data-theme="light"] .ambient-3 { background: #bfd4f3; }
+
 [data-theme="light"] .glass {
-  box-shadow: 0 14px 34px rgba(30, 58, 102, 0.12),
-              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 14px 34px rgba(38, 64, 110, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
-/* Grafikler koyu zeminde okunaklı kalır (finans terminali geleneği):
-   eksen yazıları koyu paletle çizildiğinden açık temada grafik
-   kutuları bilinçli olarak gece panosunda bırakılır. */
+[data-theme="light"] * { scrollbar-color: rgba(38, 64, 110, 0.30) transparent; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background-color: rgba(38, 64, 110, 0.25); }
+
+/* Grafikler koyu zeminde okunaklı kalır (finans terminali geleneği) */
 [data-theme="light"] .chart,
 [data-theme="light"] .asset-chart {
   background: #111c31;
@@ -967,3 +958,89 @@ body {
 [data-theme="light"] .nav-item.active,
 [data-theme="light"] .send-btn,
 [data-theme="light"] .report-btn { color: #ffffff; }
+
+/* Konfigürasyon başlık notu */
+.cfg-note { font-style: normal; font-weight: 400; font-size: 0.74rem; color: var(--text-dim); }
+
+/* ==========================================================
+   İZLEME LİSTESİ (v0.9.x)
+   ========================================================== */
+.watch-table td { vertical-align: middle; }
+.watch-table .spark { width: 110px; height: 30px; display: block; }
+
+.watch-change {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.watch-change.up   { color: var(--green); background: rgba(74, 222, 128, 0.1); }
+.watch-change.down { color: var(--red);   background: rgba(248, 113, 113, 0.1); }
+
+/* Fiyat değişim flaşları: satır bir kez yanıp söner */
+@keyframes flashUp   { 0% { background: rgba(74, 222, 128, 0.22); } 100% { background: transparent; } }
+@keyframes flashDown { 0% { background: rgba(248, 113, 113, 0.22); } 100% { background: transparent; } }
+tr.flash-up   { animation: flashUp 1.3s ease; }
+tr.flash-down { animation: flashDown 1.3s ease; }
+
+/* Konfigürasyon: kaydet satırı + geri bildirim */
+.cfg-save-row { justify-content: flex-end; gap: 14px; }
+.cfg-feedback { font-size: 0.82rem; }
+.cfg-feedback.ok   { color: var(--green); }
+.cfg-feedback.err  { color: var(--red); }
+.cfg-feedback.warn { color: var(--gold); }
+
+
+/* ==========================================================
+   PREMIUM DURUM ÇUBUĞU — açılı degrade zemin, neon ikon
+   parıltısı, yaylanan hover
+   ========================================================== */
+.status-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg,
+      rgba(143, 184, 232, 0.10) 0%,
+      rgba(17, 28, 49, 0.04) 45%,
+      rgba(217, 179, 106, 0.09) 100%),
+    var(--bg-panel);
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.45, 0.64, 1),
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.status-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: var(--stroke-strong);
+  box-shadow: 0 24px 46px rgba(3, 8, 18, 0.55);
+}
+[data-theme="light"] .status-card {
+  background:
+    linear-gradient(135deg,
+      rgba(46, 92, 158, 0.08) 0%,
+      rgba(255, 255, 255, 0.05) 45%,
+      rgba(138, 109, 47, 0.08) 100%),
+    var(--bg-panel);
+}
+[data-theme="light"] .status-card:hover {
+  box-shadow: 0 20px 40px rgba(38, 64, 110, 0.22);
+}
+
+/* İkonların arkasında yumuşak neon hâle */
+.status-icon { position: relative; z-index: 0; }
+.status-icon::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: inherit;
+  filter: blur(14px);
+  opacity: 0.55;
+  z-index: -1;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+.status-icon.ok::after    { background: rgba(74, 222, 128, 0.65); }
+.status-icon.db::after    { background: rgba(143, 184, 232, 0.65); }
+.status-icon.cycle::after { background: rgba(217, 179, 106, 0.65); }
+.status-card:hover .status-icon::after { opacity: 0.85; filter: blur(18px); }

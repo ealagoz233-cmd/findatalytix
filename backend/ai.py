@@ -22,6 +22,7 @@ Tasarım kararları:
 from __future__ import annotations
 
 import os
+import re
 import json
 import logging
 
@@ -45,7 +46,12 @@ CLAUDE_MODEL_STRONG = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
 CLAUDE_MODEL_CHEAP = os.getenv("CLAUDE_MODEL_CHEAP", "claude-haiku-4-5-20251001")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
-ANALYST = os.getenv("AI_ANALYST", "claude").lower()   # claude | gemini
+import settings as app_settings
+
+def _current_analyst() -> str:
+    """Rol artık settings.json'dan (arayüzden) yönetilir; restart gerekmez."""
+    return app_settings.get("analyst")
+
 SIMPLE_PROMPT_CHARS = 200                              # bunun altı → ucuz model
 
 _claude = None
@@ -54,7 +60,7 @@ _gemini = None
 if ANTHROPIC_KEY:
     try:
         import anthropic
-        _claude = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+        _claude = anthropic.Anthropic(api_key=ANTHROPIC_KEY, timeout=45.0)
     except Exception as exc:
         logger.warning("Anthropic istemcisi kurulamadı: %s", exc)
 
@@ -68,11 +74,12 @@ if GEMINI_KEY:
 
 
 def status() -> dict:
+    analyst = _current_analyst()
     return {
         "claude": _claude is not None,
         "gemini": _gemini is not None,
-        "analyst": ANALYST,
-        "referee": "gemini" if ANALYST == "claude" else "claude",
+        "analyst": analyst,
+        "referee": "gemini" if analyst == "claude" else "claude",
     }
 
 
@@ -93,7 +100,8 @@ def _call_claude(system: str, user: str, cheap: bool) -> tuple[str, int, int]:
 
 
 def _call_gemini(system: str, user: str, cheap: bool) -> tuple[str, int, int]:
-    resp = _gemini.generate_content(system + "\n\n" + user)
+    resp = _gemini.generate_content(system + "\n\n" + user,
+                                    request_options={"timeout": 45})
     usage = getattr(resp, "usage_metadata", None)
     tin = getattr(usage, "prompt_token_count", 0) or 0
     tout = getattr(usage, "candidates_token_count", 0) or 0
@@ -101,7 +109,7 @@ def _call_gemini(system: str, user: str, cheap: bool) -> tuple[str, int, int]:
 
 
 def _analyst_call(system: str, user: str, cheap: bool):
-    if ANALYST == "gemini" and _gemini:
+    if _current_analyst() == "gemini" and _gemini:
         return "gemini", *_call_gemini(system, user, cheap)
     if _claude:
         return "claude", *_call_claude(system, user, cheap)
@@ -111,7 +119,7 @@ def _analyst_call(system: str, user: str, cheap: bool):
 
 
 def _referee_call(system: str, user: str):
-    referee = "gemini" if ANALYST == "claude" else "claude"
+    referee = "gemini" if _current_analyst() == "claude" else "claude"
     if referee == "gemini" and _gemini:
         return "gemini", *_call_gemini(system, user, cheap=True)
     if referee == "claude" and _claude:
@@ -132,7 +140,7 @@ EXTRACTOR_SYSTEM = (
     'Ornek: ["THYAO.IS","AAPL"]. Sembol cikarilamiyorsa [] dondur.'
 )
 
-_SYMBOL_RE = __import__("re").compile(r"^[A-Z0-9.^-]{2,12}$")
+_SYMBOL_RE = re.compile(r"^[A-Z0-9.^-]{2,12}$")
 
 
 def extract_symbols(prompt: str) -> list[str]:
@@ -159,6 +167,31 @@ def extract_symbols(prompt: str) -> list[str]:
         return []
 
 
+ROUTER_SYSTEM = (
+    "Kullanicinin finansal analiz sorusunu incele. Cevabi bulmak icin dokuman "
+    "veritabaninda kac farkli arama gerekir? SADECE su JSON'u dondur: "
+    '{"type": "simple" veya "complex", "sub_queries": ["arama 1", ...]}. '
+    "Basit soru = tek arama (sorunun kendisi). Karmasik soru = en fazla 3 "
+    "spesifik arama sorgusu. Sorgular Turkce ve kisa olsun."
+)
+
+
+def route_query(prompt: str) -> list[str]:
+    """Prompt'u 1-3 spesifik RAG aramasina ayristirir.
+    Model yoksa/parse bozulursa: [prompt] (tek arama) - sistem asla durmaz."""
+    if _claude is None and _gemini is None:
+        return [prompt]
+    try:
+        _, raw, _ti, _to = _analyst_call(ROUTER_SYSTEM, prompt, cheap=True)
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        data = json.loads(clean)
+        subs = [str(q).strip() for q in data.get("sub_queries", []) if str(q).strip()]
+        return subs[:3] or [prompt]
+    except Exception as exc:
+        logger.warning("Sorgu yönlendirici başarısız (%s) → tek arama", exc)
+        return [prompt]
+
+
 ANALYST_SYSTEM = (
     "Sen FinDatalytix'in finansal analiz asistanısın. Türkçe, net ve ölçülü yaz. "
     "Sana verilen Monte Carlo metriklerini yorumla; RAG bağlamı verildiyse "
@@ -171,8 +204,14 @@ REFEREE_SYSTEM = (
     "Sen bir finansal analiz hakemisin. Sana bir soru, veri ve bir analiz "
     "yorumu verilecek. Yorumu şu ölçütlerle değerlendir: verilerle tutarlılık, "
     "kaynak kullanımı, abartı/uydurma olup olmaması. SADECE şu JSON'u döndür, "
-    'başka hiçbir şey yazma: {"score": 0-100 arası tamsayı, "note": "tek cümlelik Türkçe not"}'
+    "başka hiçbir şey yazma: "
+    '{"score": 0-100 tamsayı, "note": "tek cümlelik Türkçe not", '
+    '"gapQuery": "puan 60 altındaysa eksik bilgiyi bulacak kısa arama sorgusu, yoksa null"}'
 )
+
+# Öz-düzeltme döngüsü sınırları (maliyet freni)
+CONFIDENCE_THRESHOLD = 60   # bunun altı → düzeltme turu
+MAX_REVISIONS = 2           # ilk taslak + en fazla 2 yeniden yazım
 
 
 def _build_context(chunks: list[dict]) -> str:
@@ -188,9 +227,28 @@ def _build_context(chunks: list[dict]) -> str:
 # Ana giriş noktası
 # ----------------------------------------------------------
 
-def analyze(prompt: str, metrics: dict, sources_note: str, chunks: list[dict]) -> dict:
-    """Dönen sözlük: {aiText, meta{mode, analyst, referee, confidence,
-    refereeNote, tokensIn, tokensOut, ragSources[]}}"""
+def _referee_review(prompt: str, metrics: dict, text: str):
+    """(referee_adi, score, note, gap_query, tin, tout) - hata olursa score None."""
+    referee_name, raw, tin, tout = _referee_call(
+        REFEREE_SYSTEM,
+        f"Soru: {prompt}\nVeri: {json.dumps(metrics, ensure_ascii=False)}\nAnaliz:\n{text}"
+    )
+    if not referee_name:
+        return None, None, None, None, 0, 0
+    clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    parsed = json.loads(clean)
+    score = max(0, min(100, int(parsed.get("score", 0))))
+    note = str(parsed.get("note", ""))[:300]
+    gap = parsed.get("gapQuery")
+    gap = str(gap).strip() if gap and str(gap).lower() != "null" else None
+    return referee_name, score, note, gap, tin, tout
+
+
+def analyze(prompt: str, metrics: dict, sources_note: str,
+            chunks: list[dict], fetch_more=None) -> dict:
+    """Ajan dongusu: taslak -> hakem -> (puan dusukse) eksik veri aramasi ->
+    yeniden yazim. fetch_more(query) -> list[chunk]: RAG'e donus kapisi
+    (main.py enjekte eder; test edilebilirlik icin bagimlilik disaridan gelir)."""
 
     rag_sources = sorted({f"{c['source']} (s.{c['page']})" for c in chunks})
 
@@ -207,45 +265,79 @@ def analyze(prompt: str, metrics: dict, sources_note: str, chunks: list[dict]) -
         )
         return {"aiText": text, "meta": {
             "mode": "template", "analyst": None, "referee": None,
-            "confidence": None, "refereeNote": None,
+            "confidence": None, "refereeNote": None, "rounds": 0, "roundLog": [],
             "tokensIn": 0, "tokensOut": 0, "ragSources": rag_sources}}
 
-    # ---- Analist ----
     cheap = len(prompt) < SIMPLE_PROMPT_CHARS
-    user_msg = (
-        f"Kullanıcı sorusu: {prompt}\n\n"
-        f"Monte Carlo metrikleri (JSON): {json.dumps(metrics, ensure_ascii=False)}\n"
-        f"Piyasa verisi kaynağı: {sources_note}\n\n"
-        f"RAG bağlamı:\n{_build_context(chunks)}"
-    )
+    tin_total = tout_total = 0
+    round_log: list[dict] = []
+    work_chunks = list(chunks)
+    feedback = None
+    text = ""
+    analyst_name = referee_name = None
+    confidence = note = None
 
-    try:
-        analyst_name, text, tin, tout = _analyst_call(ANALYST_SYSTEM, user_msg, cheap)
-    except Exception as exc:
-        logger.warning("Analist çağrısı başarısız: %s", exc)
-        return analyze_fallback_after_error(prompt, metrics, sources_note, rag_sources, str(exc))
-
-    # ---- Hakem ----
-    confidence, note, referee_name = None, None, None
-    try:
-        referee_name, raw, rtin, rtout = _referee_call(
-            REFEREE_SYSTEM,
-            f"Soru: {prompt}\nVeri: {json.dumps(metrics, ensure_ascii=False)}\nAnaliz:\n{text}"
+    for round_no in range(1, MAX_REVISIONS + 2):   # taslak + düzeltmeler
+        user_msg = (
+            f"Kullanıcı sorusu: {prompt}\n\n"
+            f"Monte Carlo metrikleri (JSON): {json.dumps(metrics, ensure_ascii=False)}\n"
+            f"Piyasa verisi kaynağı: {sources_note}\n\n"
+            f"RAG bağlamı:\n{_build_context(work_chunks)}"
         )
-        if referee_name:
-            tin += rtin; tout += rtout
-            clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-            parsed = json.loads(clean)
-            confidence = max(0, min(100, int(parsed.get("score", 0))))
-            note = str(parsed.get("note", ""))[:300]
-    except Exception as exc:
-        logger.warning("Hakem değerlendirmesi alınamadı: %s", exc)
-        note = "Hakem değerlendirmesi bu turda alınamadı."
+        if feedback:
+            user_msg += (f"\n\nHAKEM GERİ BİLDİRİMİ (önceki taslağın): {feedback}\n"
+                         f"Bu eleştiriyi gidererek analizi yeniden yaz.")
 
+        try:
+            analyst_name, text, tin, tout = _analyst_call(ANALYST_SYSTEM, user_msg, cheap)
+            tin_total += tin; tout_total += tout
+        except Exception as exc:
+            logger.warning("Analist çağrısı başarısız (tur %d): %s", round_no, exc)
+            if round_no == 1:
+                return analyze_fallback_after_error(prompt, metrics, sources_note,
+                                                    rag_sources, str(exc))
+            break   # elde önceki tur taslağı var, onunla devam
+
+        try:
+            referee_name, confidence, note, gap, rtin, rtout = \
+                _referee_review(prompt, metrics, text)
+            tin_total += rtin; tout_total += rtout
+        except Exception as exc:
+            logger.warning("Hakem değerlendirmesi alınamadı: %s", exc)
+            note = "Hakem değerlendirmesi bu turda alınamadı."
+            round_log.append({"round": round_no, "score": None, "note": note})
+            break
+
+        round_log.append({"round": round_no, "score": confidence, "note": note})
+
+        # Döngü kararı: puan yeterli mi, tur hakkı var mı?
+        if confidence is None or confidence >= CONFIDENCE_THRESHOLD:
+            break
+        if round_no > MAX_REVISIONS:
+            break
+
+        # Eksik veri araması (Gap Query) → bağlamı zenginleştir
+        if gap and callable(fetch_more):
+            try:
+                extra = fetch_more(gap) or []
+                seen = {(c["source"], c["page"], c["text"][:60]) for c in work_chunks}
+                for c in extra:
+                    key = (c["source"], c["page"], c["text"][:60])
+                    if key not in seen:
+                        work_chunks.append(c); seen.add(key)
+                logger.info("Düzeltme turu %d: '%s' araması %d yeni chunk getirdi",
+                            round_no, gap, len(extra))
+            except Exception as exc:
+                logger.warning("Gap query başarısız: %s", exc)
+        feedback = note + (f" (Eksik bilgi araması yapıldı: '{gap}')" if gap else "")
+
+    rag_sources = sorted({f"{c['source']} (s.{c['page']})" for c in work_chunks})
     return {"aiText": text, "meta": {
         "mode": "live-ai", "analyst": analyst_name, "referee": referee_name,
         "confidence": confidence, "refereeNote": note,
-        "tokensIn": tin, "tokensOut": tout, "ragSources": rag_sources}}
+        "rounds": len(round_log), "roundLog": round_log,
+        "tokensIn": tin_total, "tokensOut": tout_total,
+        "ragSources": rag_sources}}
 
 
 def analyze_fallback_after_error(prompt, metrics, sources_note, rag_sources, error) -> dict:
@@ -256,5 +348,5 @@ def analyze_fallback_after_error(prompt, metrics, sources_note, rag_sources, err
     )
     return {"aiText": text, "meta": {
         "mode": "error-fallback", "analyst": None, "referee": None,
-        "confidence": None, "refereeNote": None,
+        "confidence": None, "refereeNote": None, "rounds": 0, "roundLog": [],
         "tokensIn": 0, "tokensOut": 0, "ragSources": rag_sources}}

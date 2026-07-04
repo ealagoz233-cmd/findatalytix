@@ -15,7 +15,7 @@ FDX.CONFIG = {
   api: {
     useMock: false,                         // ← MOTOR TAKILDI
     baseUrl: "http://127.0.0.1:8000/api",
-    timeoutMs: 8000
+    timeoutMs: 60000
   },
 
   surfaces: {

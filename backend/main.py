@@ -1,14 +1,16 @@
 """
-FinDatalytix — main.py (Ay 2: Backend Motoru)
-=============================================
+FinDatalytix — main.py (v0.9: Dinamik Portföy Motoru)
+=====================================================
 Çalıştırma:
     pip install -r requirements.txt
     uvicorn main:app --reload --port 8000
 
 Endpoint'ler:
-    POST /api/simulate  -> Monte Carlo (GBM) + metrikler + aiText
-    POST /api/report    -> taslak (stub), Ay 5'te python-docx bağlanacak
-    GET  /api/health    -> ayakta mı kontrolü
+    POST /api/simulate        -> AI sembol çıkarma + N varlık Monte Carlo + analist/hakem
+    POST /api/report          -> gerçek .docx risk raporu (indirilir)
+    GET  /api/asset/{sembol}  -> 1 yıllık OHLCV + RSI + MACD
+    POST/GET/DELETE /api/documents, POST /api/query  -> RAG
+    GET  /api/history, /api/ai/status, /api/health
 """
 
 from __future__ import annotations
@@ -24,6 +26,8 @@ import market
 import ai
 import history
 import analysis
+import watchlist
+import settings as app_settings
 
 # ----------------------------------------------------------
 # Uygulama + CORS
@@ -31,7 +35,7 @@ import analysis
 # (credentials kapalıyken) hem file:// hem localhost sunucularını kapsar.
 # ----------------------------------------------------------
 
-app = FastAPI(title="FinDatalytix API", version="0.2.0")
+app = FastAPI(title="FinDatalytix API", version="0.9.0")
 
 # CORS: gelistirmede "*" (file:// Origin=null dahil calissin diye),
 # deploy gununde .env'e CORS_ORIGINS=https://alanadi.com yazilarak daraltilir.
@@ -46,10 +50,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ----------------------------------------------------------
-# Varlık parametreleri (Ay 1 H3-4'te gerçek piyasa verisine bağlanacak)
-# mu: yıllık beklenen getiri, sigma: yıllık volatilite
-# ----------------------------------------------------------
 
 # AI sembol çıkaramazsa devreye giren emniyet kemeri
 DEFAULT_SYMBOLS = ["XU030.IS", "QQQ"]
@@ -103,7 +103,7 @@ def _run_gbm(model: str, mu: float, sigma: float, seed: int) -> dict:
 
 def _seed_from_prompt(prompt: str) -> int:
     """Aynı prompt -> aynı sonuç (tekrarlanabilirlik).
-    Farklı prompt -> farklı senaryo. RAG gelene kadar 'anlama' bu."""
+    Farklı prompt -> farklı senaryo."""
     return int(hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:8], 16)
 
 
@@ -156,16 +156,27 @@ def simulate(req: SimulateRequest) -> SimulateResponse:
 
     src_labels = {"live": "canlı Yahoo Finance", "cache": "önbellek", "fallback": "varsayılan"}
     sources_note = ", ".join(f"{k}: {src_labels[v]}" for k, v in sources.items())
-    if symbols == DEFAULT_SYMBOLS and not ai.extract_symbols.__defaults__:
-        pass  # (bilgi: semboller varsayılandan geldiyse cevaptaki symbols alanı bunu gösterir)
 
-    # RAG: indekste doküman varsa prompt'a en alakalı 3 chunk'ı çek
+    # RAG: sorgu yönlendirici prompt'u 1-3 spesifik aramaya ayırır,
+    # sonuçlar tekilleştirilerek birleştirilir (v1.0 Ajan Beyni)
+    top_k = app_settings.get("topK")
+    chunks: list = []
     try:
-        chunks = get_store().query(req.prompt, top_k=3)
+        store = get_store()
+        seen = set()
+        for sub_q in ai.route_query(req.prompt):
+            for c in store.query(sub_q, top_k=top_k):
+                key = (c["source"], c["page"], c["text"][:60])
+                if key not in seen:
+                    seen.add(key)
+                    chunks.append(c)
+        chunks = chunks[:top_k * 2]   # bağlam şişmesin (maliyet freni)
+        fetch_more = lambda q: store.query(q, top_k=top_k)
     except Exception:
-        chunks = []
+        chunks, fetch_more = [], None
 
-    result = ai.analyze(req.prompt, metrics, sources_note, chunks)
+    result = ai.analyze(req.prompt, metrics, sources_note, chunks,
+                        fetch_more=fetch_more)
 
     history.record(req.prompt, metrics,
                    result["meta"]["mode"], result["meta"].get("confidence"))
@@ -193,10 +204,55 @@ def get_asset(symbol: str) -> dict:
     return data
 
 
+@app.get("/api/watchlist")
+def watchlist_quotes(symbols: str) -> dict:
+    """İzleme listesi: N sembol için fiyat + değişim + 7 günlük sparkline."""
+    syms = [s.strip().upper() for s in symbols.split(",") if s.strip()][:15]
+    if not syms:
+        raise HTTPException(422, "En az bir sembol gerekli (?symbols=THYAO,AAPL)")
+    for s in syms:
+        if not (2 <= len(s) <= 12):
+            raise HTTPException(422, f"Geçersiz sembol: '{s}' (2-12 karakter)")
+    return {"quotes": watchlist.get_quotes(syms)}
+
+
 @app.get("/api/history")
 def get_history() -> dict:
     """Genel Bakış tablosu + durum çubuğu döngü sayacı için."""
     return history.snapshot()
+
+
+class SettingsPatch(BaseModel):
+    analyst: str | None = None
+    chunkTarget: int | None = None
+    topK: int | None = None
+
+
+@app.get("/api/settings")
+def get_settings() -> dict:
+    data = app_settings.load()
+    st = ai.status()
+    data["available"] = {"claude": st["claude"], "gemini": st["gemini"]}
+    data["referee"] = "gemini" if data["analyst"] == "claude" else "claude"
+    return data
+
+
+@app.post("/api/settings")
+def update_settings(patch: SettingsPatch) -> dict:
+    body = {k: v for k, v in patch.model_dump().items() if v is not None}
+    if "analyst" in body and body["analyst"].lower() not in app_settings.VALID_ANALYSTS:
+        raise HTTPException(422, "analyst 'claude' ya da 'gemini' olmalı")
+    saved = app_settings.save(body)
+    st = ai.status()
+    warning = None
+    key_map = {"claude": st["claude"], "gemini": st["gemini"]}
+    if not key_map.get(saved["analyst"], False):
+        warning = (f"Uyarı: {saved['analyst']} için API anahtarı algılanmadı; "
+                   f"anahtar eklenene dek şablon/yedek akış çalışır.")
+    saved["referee"] = "gemini" if saved["analyst"] == "claude" else "claude"
+    saved["available"] = key_map
+    saved["warning"] = warning
+    return saved
 
 
 @app.get("/api/ai/status")
@@ -242,7 +298,7 @@ def get_store() -> rag.RagStore:
 
 class QueryRequest(BaseModel):
     question: str = Field(min_length=3, max_length=1000)
-    top_k: int = Field(default=5, ge=1, le=20)
+    top_k: int | None = Field(default=None, ge=1, le=20)   # None → ayardan
 
 
 @app.post("/api/documents")
@@ -280,5 +336,5 @@ def delete_document(filename: str) -> dict:
 
 @app.post("/api/query")
 def query_documents(req: QueryRequest) -> dict:
-    results = get_store().query(req.question, req.top_k)
+    results = get_store().query(req.question, req.top_k or app_settings.get("topK"))
     return {"question": req.question, "results": results, "count": len(results)}

@@ -13,6 +13,18 @@
 ---------------------------------------------------------- */
 (function () {
 
+  const WATCH_KEY = "fdx-watchlist";
+  const WATCH_DEFAULTS = ["XU100.IS", "THYAO.IS", "AAPL", "BTC-USD"];
+  const WATCH_MAX = 15;
+
+  function _loadWatchSymbols() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(WATCH_KEY));
+      if (Array.isArray(raw) && raw.length) return raw.slice(0, WATCH_MAX);
+    } catch (e) { /* bozuk kayıt → varsayılan */ }
+    return WATCH_DEFAULTS.slice();
+  }
+
   const initialState = {
     view: "simulation",
     params: {},                       // örn: { symbol: "THYAO" }
@@ -29,9 +41,19 @@
       error: null
     },
 
-    history: { items: [], totalRuns: null, error: null },
+    history: { items: [], totalRuns: null, weeklyRuns: null, weeklyLimit: 600, error: null },
 
-    asset: { status: "idle", error: null, symbol: null, data: null },
+    asset: { status: "idle", symbol: null, data: null, error: null },
+
+    aiStatus: null,   // GET /api/ai/status cevabı (Konfigürasyon sayfası)
+    settings: { data: null, status: "idle", error: null, warning: null },
+
+    watchlist: {
+      symbols: _loadWatchSymbols(),
+      quotes: {},          // sembol -> kotasyon
+      status: "idle",
+      error: null
+    },
 
     vectordb: {
       files: [],        // { name, sizeKB, ext, status, reason, chunks }
@@ -122,7 +144,11 @@
         body: body ? JSON.stringify(body) : null,
         signal: ctrl.signal
       });
-      if (!res.ok) throw new Error("Sunucu hatası: HTTP " + res.status);
+      if (!res.ok) {
+        let detail = "";
+        try { detail = (await res.json()).detail || ""; } catch (e) {}
+        throw new Error(detail || ("Sunucu hatası: HTTP " + res.status));
+      }
       return await res.json();
     } catch (err) {
       if (err.name === "AbortError") {
@@ -178,12 +204,14 @@
     }
 
     s.set({ report: { status: "generating", error: null } });
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), C.timeoutMs);
     try {
-      // Binary indirme: request() JSON bekler, burada blob gerekiyor
+      // Binary indirme: request() JSON bekler, burada blob gerekiyor.
+      // AbortController: timeout aninda baglanti GERCEKTEN kesilir.
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), C.timeoutMs);
       const res = await fetch(C.baseUrl + "/report", {
         method: "POST",
+        signal: ctrl.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: sim.prompt || "",
@@ -191,8 +219,7 @@
           dataSources: sim.dataSources || {},
           aiText: sim.aiText || "",
           aiMeta: sim.aiMeta || {}
-        }),
-        signal: ctrl.signal
+        })
       });
       clearTimeout(timer);
       if (!res.ok) throw new Error("Sunucu hatasi: HTTP " + res.status);
@@ -218,9 +245,7 @@
         }
       }, 2400);
     } catch (err) {
-      clearTimeout(timer);
-      const msg = err.name === "AbortError" ? "İstek zaman aşımına uğradı." : err.message;
-      s.set({ report: { status: "error", error: msg } });
+      s.set({ report: { status: "error", error: err.message } });
     }
   }
 
@@ -248,11 +273,12 @@
       if (entry.status === "rejected") continue;
 
       // Gerçek yükleme: multipart/form-data (Content-Type'ı tarayıcı koyar)
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 120000); // 120 sec timeout
       try {
         const form = new FormData();
         form.append("file", f);
+        // Buyuk PDF indekslemesi uzun surebilir: cömert ama sonlu timeout
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 120000);
         const res = await fetch(FDX.CONFIG.api.baseUrl + "/documents",
                                 { method: "POST", body: form, signal: ctrl.signal });
         clearTimeout(timer);
@@ -261,9 +287,7 @@
         patchFile(f.name, { status: "indexed", chunks: data.chunks });
         refreshVectorStats();
       } catch (err) {
-        clearTimeout(timer);
-        const msg = err.name === "AbortError" ? "Zaman aşımı (dosya büyük olabilir)" : err.message;
-        patchFile(f.name, { status: "error", reason: msg });
+        patchFile(f.name, { status: "error", reason: err.message });
       }
     }
   }
@@ -319,23 +343,135 @@
     const s = FDX.store;
     try {
       const data = await request("/history");
-      s.set({ history: { items: data.items, totalRuns: data.totalRuns, error: null } });
+      s.set({ history: { items: data.items, totalRuns: data.totalRuns,
+                         weeklyRuns: data.weeklyRuns || 0,
+                         weeklyLimit: data.weeklyLimit || 600, error: null } });
     } catch (err) {
       s.set({ history: { items: [], totalRuns: null, error: err.message } });
     }
   }
 
+  /* Varlik Analizi (Ay 6) */
   async function fetchAsset(symbol) {
     const s = FDX.store;
-    s.set({ asset: { status: "loading", error: null, symbol, data: null } });
+    const sym = symbol.trim().toUpperCase();
+    if (!sym) return;
+    s.set({ asset: { status: "loading", symbol: sym, data: null, error: null } });
     try {
-      const data = await request("/asset/" + encodeURIComponent(symbol));
-      s.set({ asset: { status: "done", error: null, symbol, data } });
+      const data = await request("/asset/" + encodeURIComponent(sym));
+      s.set({ asset: { status: "done", symbol: sym, data, error: null } });
     } catch (err) {
-      s.set({ asset: { status: "error", error: err.message, symbol, data: null } });
+      s.set({ asset: { status: "error", symbol: sym, data: null, error: err.message } });
+    }
+  }
+
+  /* ---- İzleme Listesi ---- */
+
+  function _saveWatch(symbols) {
+    try { localStorage.setItem("fdx-watchlist", JSON.stringify(symbols)); }
+    catch (e) { /* private mod vb. — liste yine bellekte yaşar */ }
+  }
+
+  function addWatchSymbol(symbol) {
+    const s = FDX.store;
+    const sym = symbol.trim().toUpperCase();
+    const w = s.get().watchlist;
+    if (sym.length < 2 || sym.length > 12) return "Sembol 2-12 karakter olmali";
+    if (w.symbols.includes(sym)) return "Bu sembol zaten listede";
+    if (w.symbols.length >= 15) return "Liste dolu (en fazla 15 sembol)";
+    const symbols = w.symbols.concat([sym]);
+    _saveWatch(symbols);
+    s.set({ watchlist: { ...w, symbols } });
+    fetchWatchlist();
+    return null;   // hata yok
+  }
+
+  function removeWatchSymbol(sym) {
+    const s = FDX.store;
+    const w = s.get().watchlist;
+    const symbols = w.symbols.filter(x => x !== sym);
+    const quotes = { ...w.quotes };
+    delete quotes[sym];
+    _saveWatch(symbols);
+    s.set({ watchlist: { ...w, symbols, quotes } });
+  }
+
+  async function fetchWatchlist() {
+    const s = FDX.store;
+    const w = s.get().watchlist;
+    if (!w.symbols.length) {
+      s.set({ watchlist: { ...w, quotes: {}, status: "done", error: null } });
+      return;
+    }
+    s.set({ watchlist: { ...s.get().watchlist, status: "loading" } });
+    try {
+      const data = await request("/watchlist?symbols=" +
+                                 encodeURIComponent(w.symbols.join(",")));
+      const quotes = {};
+      // TOLERANSLI OKUYUCU: backend surumu ne dondururse dondursun
+      // (last/price, spark/sparkline, changePct/change) tek bicime
+      // normalize edilir; taninmayan bicim COKERTMEZ, rozetlenir.
+      (data.quotes || []).forEach(raw => {
+        const num = v => (typeof v === "number" && isFinite(v)) ? v : null;
+        const q = {
+          symbol: raw.symbol,
+          resolved: raw.resolved || raw.symbol,
+          error: raw.error || null,
+          last: num(raw.last) !== null ? num(raw.last) : num(raw.price),
+          changePct: num(raw.changePct) !== null ? num(raw.changePct) : num(raw.change),
+          spark: Array.isArray(raw.spark) ? raw.spark
+               : Array.isArray(raw.sparkline) ? raw.sparkline : []
+        };
+        if (!q.error && (q.last === null || q.spark.length < 2)) {
+          q.error = "veri bicimi taninmadi (backend surumunu guncelle)";
+        }
+        quotes[q.symbol] = q;
+      });
+      s.set({ watchlist: { ...s.get().watchlist,
+                           quotes, status: "done", error: null } });
+    } catch (err) {
+      s.set({ watchlist: { ...s.get().watchlist,
+                           status: "error", error: err.message } });
+    }
+  }
+
+  /* ---- Çalışma zamanı ayarları (Konfigürasyon) ---- */
+  async function fetchSettings() {
+    const s = FDX.store;
+    try {
+      const data = await request("/settings");
+      s.set({ settings: { data, status: "done", error: null,
+                          warning: data.warning || null } });
+    } catch (err) {
+      s.set({ settings: { data: null, status: "error", error: err.message, warning: null } });
+    }
+  }
+
+  async function saveSettings(patch) {
+    const s = FDX.store;
+    s.set({ settings: { ...s.get().settings, status: "saving", error: null } });
+    try {
+      const data = await request("/settings", { method: "POST", body: patch });
+      s.set({ settings: { data, status: "saved", error: null,
+                          warning: data.warning || null } });
+      refreshAiStatus();   // durum satırı da yeni rolleri göstersin
+    } catch (err) {
+      s.set({ settings: { ...s.get().settings, status: "error", error: err.message } });
+    }
+  }
+
+  async function refreshAiStatus() {
+    const s = FDX.store;
+    try {
+      const data = await request("/ai/status");
+      s.set({ aiStatus: data });
+    } catch (err) {
+      s.set({ aiStatus: { error: err.message } });
     }
   }
 
   FDX.api = { runSimulation, generateReport, addFiles, removeFile,
-              refreshVectorStats, queryDocs, refreshHistory, fetchAsset };
+              refreshVectorStats, queryDocs, refreshHistory, fetchAsset,
+              refreshAiStatus, fetchWatchlist, addWatchSymbol, removeWatchSymbol,
+              fetchSettings, saveSettings };
 })();

@@ -306,8 +306,21 @@
       Charts.setRotation(inSim);
       if (inSim) Charts.resize();
 
-      if (state.view === "vectordb") FDX.api.refreshVectorStats();
-      if (state.view === "overview") FDX.api.refreshHistory();
+      if (state.view === "vectordb") {
+        FDX.api.refreshVectorStats();
+      }
+      if (state.view === "config") {
+        FDX.api.refreshAiStatus();
+        FDX.api.fetchSettings();
+      }
+
+      if (state.view === "overview") {
+        FDX.api.refreshHistory();
+        FDX.api.fetchWatchlist();
+        WatchPoller.start();
+      } else {
+        WatchPoller.stop();
+      }
 
       if (state.view === "assets" && state.params.symbol) {
         const sym = state.params.symbol.toUpperCase();
@@ -380,6 +393,22 @@
       renderAsset(state.asset);
     }
 
+    /* ---- Konfigurasyon: AI durumu ---- */
+    if (state.aiStatus !== prev.aiStatus) {
+      renderAiStatus(state.aiStatus);
+    }
+
+    /* ---- Ayarlar (Konfigurasyon formu) ---- */
+    if (state.settings !== prev.settings) {
+      renderSettings(state.settings);
+    }
+
+    /* ---- Izleme Listesi ---- */
+    if (state.watchlist !== prev.watchlist) {
+      renderWatchlist(state.watchlist,
+                      prev.watchlist && prev.watchlist.data ? prev.watchlist.data.quotes : {});
+    }
+
     renderStatusBar(state);   // ucuz islem, her degisimde tazelenir
 
     prev = state;
@@ -431,6 +460,180 @@
     AssetChart.show(d);   // panel gorunur olduktan SONRA ciz (0x0 tuzagi)
   }
 
+  /* ========================================================
+     IZLEME LISTESI (v0.9.x)
+  ======================================================== */
+
+  /* Polling motoru: 60 sn periyot, sekme gizliyken atlar.
+     (yfinance resmi API degil; daha sik sormak ban riski,
+     backend onbellegi 55 sn oldugundan ayrica anlamsiz.) */
+  const WatchPoller = (function () {
+    let timer = null;
+    function tick() {
+      if (document.visibilityState === "visible") FDX.api.fetchWatchlist();
+    }
+    function start() {
+      if (timer) return;
+      timer = setInterval(tick, 60000);
+    }
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+    document.addEventListener("visibilitychange", () => {
+      // Sekme geri gelince beklemeden tazele
+      if (document.visibilityState === "visible" && timer) tick();
+    });
+    return { start, stop };
+  })();
+
+  /* El yapimi SVG sparkline: N adet ECharts örnegi yerine sifir
+     maliyetli polyline — dispose derdi yok, 15 satirda bile tüy gibi. */
+  function sparklineSVG(points, up) {
+    const W = 110, H = 30, PAD = 2;
+    const min = Math.min(...points), max = Math.max(...points);
+    const span = (max - min) || 1;
+    const step = (W - PAD * 2) / (points.length - 1 || 1);
+    const coords = points.map((v, i) => {
+      const x = (PAD + i * step).toFixed(1);
+      const y = (H - PAD - ((v - min) / span) * (H - PAD * 2)).toFixed(1);
+      return x + "," + y;
+    }).join(" ");
+    const color = up ? "#4ade80" : "#f87171";
+    return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" ' +
+           'preserveAspectRatio="none" aria-hidden="true">' +
+           '<polyline points="' + coords + '" fill="none" stroke="' + color +
+           '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  }
+
+  function renderWatchlist(w, prevQuotes) {
+    const body = $("#watchlistBody");
+    const err = $("#watchError");
+    if (!body) return;
+
+    if (w.error) {
+      err.hidden = false;
+      err.textContent = w.error;
+    } else {
+      err.hidden = true;
+    }
+
+    body.innerHTML = "";
+
+    if (!w.symbols.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td colspan="5" class="table-empty">Liste bos - yukaridan sembol ekle (orn: THYAO, NVDA, BTC-USD).</td>';
+      body.appendChild(tr);
+      return;
+    }
+
+    w.symbols.forEach(sym => {
+      const q = w.data && w.data.quotes ? w.data.quotes[sym] : null;
+      const tr = document.createElement("tr");
+
+      // Fiyat degistiyse flas (yesil/kirmizi)
+      const prevQ = prevQuotes[sym];
+      if (q && prevQ && typeof q.price === "number" &&
+          typeof prevQ.price === "number" && q.price !== prevQ.price) {
+        tr.className = q.price > prevQ.price ? "flash-up" : "flash-down";
+      }
+
+      const tdSym = document.createElement("td");
+      tdSym.className = "mono";
+      tdSym.textContent = q && q.resolved ? q.resolved : sym;
+
+      const tdPrice = document.createElement("td");
+      tdPrice.className = "mono";
+      const tdChange = document.createElement("td");
+      const tdSpark = document.createElement("td");
+
+      if (!q) {
+        tdPrice.textContent = "\u2026";
+        tdChange.textContent = "";
+        tdSpark.textContent = "";
+      } else if (q.error) {
+        tdPrice.textContent = "\u2014";
+        tdChange.innerHTML = "";
+        const tag = document.createElement("span");
+        tag.className = "tag wait";
+        tag.textContent = q.error;
+        tdChange.appendChild(tag);
+        tdSpark.textContent = "";
+      } else {
+        tdPrice.textContent = trNumber(q.price);
+        const up = q.changePct >= 0;
+        const chip = document.createElement("span");
+        chip.className = "watch-change " + (up ? "up" : "down");
+        chip.textContent = (up ? "\u25b2 +" : "\u25bc ") + trNumber(q.changePct) + "%";
+        tdChange.appendChild(chip);
+        tdSpark.innerHTML = sparklineSVG(q.sparkline, up);
+      }
+
+      const tdDel = document.createElement("td");
+      const del = document.createElement("button");
+      del.className = "file-del";
+      del.setAttribute("aria-label", sym + " sembolunu listeden cikar");
+      del.textContent = "\u2715";
+      del.addEventListener("click", () => FDX.api.removeWatchSymbol(sym));
+      tdDel.appendChild(del);
+
+      tr.append(tdSym, tdPrice, tdChange, tdSpark, tdDel);
+      body.appendChild(tr);
+    });
+  }
+
+  /* Konfigurasyon sayfasi: .env'den algilanan gercek AI durumu */
+  function renderAiStatus(st) {
+    const line = $("#aiStatusLine");
+    if (!line || !st) return;
+    if (st.error) {
+      line.textContent = "AI durumu alinamadi: " + st.error;
+      return;
+    }
+    const mark = ok => ok ? "\u2713" : "\u2717 (anahtar yok)";
+    line.textContent =
+      "Algilanan anahtarlar - Claude: " + mark(st.claude) +
+      " \u00b7 Gemini: " + mark(st.gemini) +
+      " \u00b7 Roller: analist=" + st.analyst + ", hakem=" + st.referee;
+
+    // Form kontrolu renderSettings'te; burasi yalnizca durum satiri.
+  }
+
+  function renderSettings(st) {
+    const fb = $("#cfgFeedback");
+    const saveBtn = $("#cfgSaveBtn");
+    if (!fb || !saveBtn) return;
+
+    saveBtn.disabled = st.status === "saving";
+    saveBtn.querySelector(".report-btn-label").textContent =
+      st.status === "saving" ? "Kaydediliyor\u2026" : "Kaydet";
+
+    if (st.status === "error") {
+      fb.textContent = "Hata: " + st.error;
+      fb.className = "cfg-feedback err";
+    } else if (st.status === "saved") {
+      fb.textContent = st.warning || "Kaydedildi \u2713 (restart gerekmez)";
+      fb.className = "cfg-feedback " + (st.warning ? "warn" : "ok");
+    } else if (st.warning) {
+      fb.textContent = st.warning;
+      fb.className = "cfg-feedback warn";
+    } else {
+      fb.textContent = "";
+      fb.className = "cfg-feedback";
+    }
+
+    const d = st.data;
+    if (!d) return;
+    const analystSel = $("#cfgAnalyst"), refereeSel = $("#cfgReferee");
+    const chunk = $("#cfgChunk"), topk = $("#cfgTopK");
+    // Kullanici tam yazarken uzerine yazmayalim: yalniz fetch/save sonrasi
+    if (st.status === "done" || st.status === "saved") {
+      analystSel.value = d.analyst;
+      refereeSel.value = d.referee;
+      chunk.value = d.chunkTarget;
+      topk.value = d.topK;
+    }
+  }
+
   /* Status bar artik makyaj degil: gercek sistem durumunun aynasi */
   function renderStatusBar(state) {
     const sys = $("#statusSystem");
@@ -467,8 +670,12 @@
 
   function renderHistory(h) {
     const cycle = $("#cycleText");
-    cycle.textContent = h.totalRuns !== null
-      ? h.totalRuns + "/" + h.weeklyLimit : "\u2014";
+    if (h.weeklyRuns !== null) {
+      cycle.textContent = h.weeklyRuns + "/" + h.weeklyLimit;
+      cycle.title = "Bu hafta: " + h.weeklyRuns + " simulasyon \u00b7 Toplam: " + h.totalRuns;
+    } else {
+      cycle.textContent = "\u2014";
+    }
 
     const body = $("#historyBody");
     if (!body) return;
@@ -626,7 +833,11 @@
       if (meta.confidence !== null && meta.confidence !== undefined)
         bits.push("Hakem (" + meta.referee + "): " + meta.confidence + "/100" +
                   (meta.refereeNote ? " — " + meta.refereeNote : ""));
-      bits.push("Token: " + meta.tokensIn + "→" + meta.tokensOut);
+      if (meta.rounds > 1) {
+        const scores = (meta.roundLog || []).map(r => r.score).join(" \u2192 ");
+        bits.push("\u267b Oz-duzeltme: " + meta.rounds + " tur (" + scores + ")");
+      }
+      bits.push("Token: " + meta.tokensIn + "\u2192" + meta.tokensOut);
     } else {
       bits.push(meta.mode === "template"
         ? "Şablon mod — .env'e API anahtarı eklenince gerçek AI devreye girer"
@@ -783,6 +994,48 @@
       fileInput.value = "";   // aynı dosya tekrar seçilebilsin
     });
 
+    /* ---- Konfigurasyon ---- */
+    const cfgAnalyst = $("#cfgAnalyst");
+    cfgAnalyst.addEventListener("change", () => {
+      // Hakem her zaman digeridir - ayna aninda guncellensin
+      $("#cfgReferee").value = cfgAnalyst.value === "claude" ? "gemini" : "claude";
+    });
+    const cfgSaveBtn = $("#saveConfigBtn");
+    if (cfgSaveBtn) {
+      cfgSaveBtn.addEventListener("click", () => {
+        FDX.api.updateSettings({
+          analyst: cfgAnalyst.value,
+          chunkTarget: parseInt($("#cfgChunk").value, 10),
+          topK: parseInt($("#cfgTopK").value, 10)
+        }).then(() => {
+          const msg = $("#configSaveMsg");
+          if (msg) {
+            msg.style.opacity = 1;
+            setTimeout(() => msg.style.opacity = 0, 2000);
+          }
+        });
+      });
+    }
+
+    /* ---- Izleme Listesi: sembol ekleme ---- */
+    const watchInput = $("#watchInput");
+    const watchAddBtn = $("#watchAddBtn");
+    const addWatch = () => {
+      const errBox = $("#watchError");
+      const msg = FDX.api.addWatchSymbol(watchInput.value);
+      if (msg) {
+        if (errBox) {
+          errBox.hidden = false;
+          errBox.textContent = msg;
+        }
+      } else {
+        if (errBox) errBox.hidden = true;
+        if (watchInput) watchInput.value = "";
+      }
+    };
+    if (watchAddBtn) watchAddBtn.addEventListener("click", addWatch);
+    if (watchInput) watchInput.addEventListener("keydown", e => { if (e.key === "Enter") addWatch(); });
+
     /* ---- Varlik Analizi arama ---- */
     const assetInput = $("#assetInput");
     const runAsset = () => {
@@ -818,12 +1071,12 @@
 
     FDX.store.subscribe(render);
     FDX.router.start();   // hash'i okur → store'u günceller → render tetiklenir
-    // İlk view "simulation" ise render() içindeki tembel yükleme
-    // bloğu Charts.init + runSimIntro'yu zaten çalıştırır.
+    // İlk view "simulation" ise render() içindeki introDone bloğu
+    // runSimIntro'yu zaten çalıştırır; kartlar ilk simülasyonla doğar.
   });
 
-  /* İlk giriş animasyonları — yalnızca Charts.init ile birlikte,
-     yani hayatta bir kez çalışır (çakışma imkânsız). */
+  /* İlk giriş animasyonları — introDone bayrağıyla hayatta
+     yalnızca bir kez çalışır (çakışma imkânsız). */
   function runSimIntro() {
     // textarea daktilo (value'ya yazar, textContent'e değil)
     const input = $("#promptInput");
