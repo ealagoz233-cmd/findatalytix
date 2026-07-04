@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinDatalytix — v0.8 Alpha</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="ambient ambient-1"></div>
+  <div class="ambient ambient-2"></div>
+  <div class="ambient ambient-3"></div>
+
+  <div class="app">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar glass">
+      <div class="brand" id="brandHome" role="button" tabindex="0"
+           title="Ana sayfaya don (Genel Bakis)" aria-label="Ana sayfaya don">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 17 9 11 13 15 21 7"/>
+            <polyline points="15 7 21 7 21 13"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">FinDatalytix</span>
+          <span class="brand-version">(v0.8 Alpha)</span>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Ana menü">
+        <button class="nav-item" data-view="overview">
+          <svg viewBox="0 0 24 24"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1Z"/></svg>
+          <span data-i18n="views.overview">Genel Bakış</span>
+        </button>
+        <button class="nav-item" data-view="simulation">
+          <svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/></svg>
+          <span data-i18n="views.simulation">Simülasyon Oluştur</span>
+        </button>
+        <button class="nav-item" data-view="vectordb">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>
+          <span data-i18n="views.vectordb">Vektör Veri Tabanı</span>
+        </button>
+        <button class="nav-item" data-view="assets">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+          <span data-i18n="views.assets">Varlık Analizi</span>
+        </button>
+        <button class="nav-item" data-view="report">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+          <span data-i18n="views.report">Risk Raporu</span>
+        </button>
+        <button class="nav-item" data-view="config">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+          <span data-i18n="views.config">Konfigürasyon</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="nav-item" data-view="settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M1 12h4M19 12h4M4.2 19.8 7 17M17 7l2.8-2.8"/></svg>
+          <span data-i18n="views.settings">Ayarlar</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ============ ANA İÇERİK ============ -->
+    <main class="main">
+
+      <header class="topbar">
+        <h1 class="view-title" id="viewTitle">Simülasyon Oluştur</h1>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="shareBtn" title="Bu sayfanin baglantisini kopyala">
+            <svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+          <button class="icon-btn has-dot" title="Canli bildirimler Ay 5 hedefinde (orn: indeksleme bitti uyarisi)">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          </button>
+          <div class="user" title="Uyelik ve yetkilendirme (Auth) Ay 6 sonrasi yol haritasinda">
+            <span class="user-name">Eren Alagöz</span>
+            <div class="avatar">E</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ==================================================
+           VIEW: GENEL BAKIŞ
+      =================================================== -->
+      <section class="view" id="view-overview">
+        <div class="phase-note glass">
+          <span class="phase-badge">CANLI</span>
+          Son Simülasyonlar tablosu ve döngü sayacı artık gerçek geçmişinden besleniyor. Üstteki portföy kartları Ay 6 sonrası hedefinde.
+        </div>
+
+        <div class="ov-grid">
+          <div class="ov-card glass">
+            <span class="ov-label">Toplam Varlık</span>
+            <span class="ov-value mono">₺1.284.500</span>
+            <span class="ov-delta up">+2,4% bu hafta</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Günlük K/Z</span>
+            <span class="ov-value mono">+₺8.320</span>
+            <span class="ov-delta up">+0,65%</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Haftalık Getiri</span>
+            <span class="ov-value mono">%1,92</span>
+            <span class="ov-delta down">endeksin 0,3 puan altında</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Aktif Simülasyon</span>
+            <span class="ov-value mono">3</span>
+            <span class="ov-delta">2 tamamlandı, 1 kuyruğa alındı</span>
+          </div>
+        </div>
+
+        <div class="panel glass">
+          <h3>Son Simülasyonlar</h3>
+          <table class="data-table">
+            <thead>
+              <tr><th>Tarih</th><th>Karşılaştırma</th><th>Sharpe A/B</th><th>Durum</th></tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr><td colspan="4" class="table-empty">Geçmiş yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: SİMÜLASYON OLUŞTUR (mevcut içerik)
+      =================================================== -->
+      <section class="view active" id="view-simulation">
+
+        <div class="prompt-row">
+          <div class="prompt-box glass">
+            <svg class="prompt-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <textarea id="promptInput" rows="2" spellcheck="false"></textarea>
+          </div>
+          <button class="send-btn" id="sendBtn" title="Simülasyonu çalıştır">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+
+        <div class="compare-grid">
+          <article class="asset-card glass" id="cardA">
+            <h2 class="asset-title">Referans Varlık A</h2>
+            <div class="asset-body">
+              <table class="metrics">
+                <tr><th>Model</th><td><span class="pill" data-asset="A" data-metric="model">—</span></td></tr>
+                <tr><th>Yıllık Getiri <em>(CAGR, %)</em></th><td><span class="pill num" data-asset="A" data-metric="cagr" data-suffix=" %">0</span></td></tr>
+                <tr><th>Volatilite <em>(σ, %)</em></th><td><span class="pill num" data-asset="A" data-metric="vol" data-suffix=" %">0</span></td></tr>
+                <tr><th>Sharpe Oranı</th><td><span class="pill num" data-asset="A" data-metric="sharpe">0</span></td></tr>
+                <tr><th>Maks. Düşüş <em>(MDD)</em></th><td><span class="pill num" data-asset="A" data-metric="mdd" data-suffix=" %">0</span></td></tr>
+              </table>
+              <div class="chart" id="chartA"></div>
+            </div>
+          </article>
+
+          <article class="asset-card glass" id="cardB">
+            <h2 class="asset-title">Simüle Edilen Varlık B</h2>
+            <div class="asset-body">
+              <table class="metrics">
+                <tr><th>Model</th><td><span class="pill" data-asset="B" data-metric="model">—</span></td></tr>
+                <tr><th>Yıllık Getiri <em>(CAGR, %)</em></th><td><span class="pill num" data-asset="B" data-metric="cagr" data-suffix=" %">0</span></td></tr>
+                <tr><th>Volatilite <em>(σ, %)</em></th><td><span class="pill num" data-asset="B" data-metric="vol" data-suffix=" %">0</span></td></tr>
+                <tr><th>Sharpe Oranı</th><td><span class="pill num" data-asset="B" data-metric="sharpe">0</span></td></tr>
+                <tr><th>Maks. Düşüş <em>(MDD)</em></th><td><span class="pill num" data-asset="B" data-metric="mdd" data-suffix=" %">0</span></td></tr>
+              </table>
+              <div class="chart" id="chartB"></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="lower-grid">
+          <div class="lower-left">
+            <div class="rag-panel glass">
+              <h3>RAG Referans Kaynakları</h3>
+              <div class="rag-chips">
+                <button class="chip active">SPK 2024 Piyasa Bülteni</button>
+                <button class="chip">Basel III — Likidite Riski</button>
+                <button class="chip">TCMB Enflasyon Raporu</button>
+                <button class="chip">Bloomberg Volatilite Verisi</button>
+              </div>
+            </div>
+
+            <div class="ai-panel glass">
+              <h3>Claude &amp; Gemini Analiz Yorumu</h3>
+              <p id="aiText"></p>
+              <span class="cursor" id="aiCursor"></span>
+              <p class="ai-error" id="aiError" role="alert" hidden></p>
+              <div class="ai-meta" id="aiMeta" hidden></div>
+            </div>
+          </div>
+
+          <aside class="report-card glass" id="reportCard">
+            <h3>Risk Raporu Üret</h3>
+            <div class="report-icons">
+              <div class="doc-badge">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+              </div>
+              <button class="report-btn" id="reportBtn">
+                <span class="report-btn-label">Raporu Oluştur</span>
+                <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
+            </div>
+            <p class="report-hint">Word (.docx) formatında, RAG kaynaklı teknik risk raporu.</p>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: VEKTÖR VERİ TABANI
+      =================================================== -->
+      <section class="view" id="view-vectordb">
+        <div class="phase-note glass">
+          <span class="phase-badge">CANLI</span>
+          RAG boru hattı aktif: yüklediğin PDF/Word dosyaları ChromaDB'de vektörlenir ve aranabilir hale gelir.
+        </div>
+
+        <div class="ov-grid">
+          <div class="ov-card glass">
+            <span class="ov-label">Yüklü Doküman</span>
+            <span class="ov-value mono" id="statDocs">—</span>
+            <span class="ov-delta" id="statDocsNote">sunucu bekleniyor</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Toplam Chunk</span>
+            <span class="ov-value mono" id="statChunks">—</span>
+            <span class="ov-delta">vektörlenmiş parça</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Embedding Modeli</span>
+            <span class="ov-value small">ONNX MiniLM-L6</span>
+            <span class="ov-delta">ChromaDB yerleşik (~80MB)</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Son Güncelleme</span>
+            <span class="ov-value mono" id="statUpdated">—</span>
+            <span class="ov-delta">indeksin son yazımı</span>
+          </div>
+        </div>
+
+        <div class="dropzone glass" id="dropzone" role="button" tabindex="0"
+             aria-label="Dosya seçmek için tıkla ya da Enter'a bas; PDF veya Word dosyasını sürükleyip bırakabilirsin">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p><strong>PDF veya Word dosyasını sürükle</strong> ya da tıklayıp seç</p>
+          <p class="dz-hint">Dosyalar doğrulanıp kuyruğa alınır; vektör indeksleme Ay 3'te devreye girecek.</p>
+          <input type="file" id="fileInput" accept=".pdf,.docx" multiple hidden />
+        </div>
+
+        <div class="panel glass" id="fileListWrap" hidden>
+          <h3>Yükleme Kuyruğu</h3>
+          <ul class="file-list" id="fileList"></ul>
+        </div>
+
+        <div class="panel glass">
+          <h3>RAG Arama Testi</h3>
+          <div class="query-row">
+            <input type="text" id="queryInput"
+                   placeholder="Örn: politika faizi ne kadar? (indeksli dokümanlarda arar)" />
+            <button class="report-btn" id="queryBtn">
+              <span class="report-btn-label">Ara</span>
+              <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+          </div>
+          <div id="queryResults" class="query-results"></div>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: VARLIK ANALİZİ
+      =================================================== -->
+      <section class="view" id="view-assets">
+        <div class="phase-note glass">
+          <span class="phase-badge">CANLI</span>
+          Sembol yaz, 1 yıllık gerçek piyasa verisi RSI ve MACD göstergeleriyle çizilsin. BIST için sadece kod yeterli (THYAO), sistem .IS ekini kendisi dener.
+        </div>
+
+        <div class="panel glass">
+          <div class="query-row">
+            <input type="text" id="assetInput" maxlength="12"
+                   placeholder="Örn: THYAO, GARAN, XU030, AAPL, QQQ…" />
+            <button class="report-btn" id="assetBtn">
+              <span class="report-btn-label">Analiz Et</span>
+              <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+          </div>
+          <p class="ai-error" id="assetError" role="alert" hidden></p>
+        </div>
+
+        <div class="ov-grid" id="assetSummary" hidden>
+          <div class="ov-card glass">
+            <span class="ov-label">Son Fiyat</span>
+            <span class="ov-value mono" id="asLast">—</span>
+            <span class="ov-delta" id="asChange">—</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">52 Hafta Aralığı</span>
+            <span class="ov-value mono" id="asRange">—</span>
+            <span class="ov-delta">düşük — yüksek</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Yıllık Volatilite</span>
+            <span class="ov-value mono" id="asVol">—</span>
+            <span class="ov-delta">günlük getirilerden</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">RSI (14)</span>
+            <span class="ov-value mono" id="asRsi">—</span>
+            <span class="ov-delta" id="asRsiNote">—</span>
+          </div>
+        </div>
+
+        <div class="panel glass" id="assetChartWrap" hidden>
+          <h3 id="assetChartTitle">Fiyat Grafiği</h3>
+          <div id="assetChart" class="asset-chart"></div>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: RİSK RAPORU
+      =================================================== -->
+      <section class="view" id="view-report">
+        <div class="phase-note glass">
+          <span class="phase-badge">Ay 5</span>
+          Gerçek .docx üretimi (python-docx) Ay 5'te bağlanacak.
+        </div>
+
+        <div class="empty-state glass">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+          <h3>Rapor geçmişi boş</h3>
+          <p>Oluşturduğun her risk raporu burada listelenecek; tekrar indirebilecek ve karşılaştırabileceksin.</p>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: KONFİGÜRASYON
+      =================================================== -->
+      <section class="view" id="view-config">
+        <div class="phase-note glass">
+          <span class="phase-badge">Ay 4–6</span>
+          Model seçimi ve RAG parametreleri, AI entegrasyonu geldiğinde aktifleşecek.
+        </div>
+
+        <div class="panel glass">
+          <h3>AI Model Rolleri</h3>
+          <div class="form-row">
+            <label for="cfgAnalyst">Analist Model</label>
+            <select id="cfgAnalyst" disabled>
+              <option>Claude (Anthropic)</option>
+              <option>Gemini (Google)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="cfgReferee">Hakem Model</label>
+            <select id="cfgReferee" disabled>
+              <option>Gemini (Google)</option>
+              <option>Claude (Anthropic)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel glass">
+          <h3>RAG Parametreleri</h3>
+          <div class="form-row">
+            <label for="cfgChunk">Chunk Boyutu (token)</label>
+            <input id="cfgChunk" type="number" value="512" disabled />
+          </div>
+          <div class="form-row">
+            <label for="cfgTopK">Getirilecek Chunk Sayısı (top-k)</label>
+            <input id="cfgTopK" type="number" value="5" disabled />
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: AYARLAR
+      =================================================== -->
+      <section class="view" id="view-settings">
+        <div class="phase-note glass">
+          <span class="phase-badge">CANLI</span>
+          Tema ve dil tercihlerin tarayıcı hafızasına (localStorage) kaydedilir; sayfayı yenilesen de seçimin kalır. Not: dinamik hata mesajları şimdilik Türkçe.
+        </div>
+
+        <div class="panel glass">
+          <h3>Görünüm</h3>
+          <div class="form-row">
+            <label>Tema</label>
+            <div class="seg" id="themeSeg">
+              <button class="seg-btn" data-theme-opt="dark">Koyu</button>
+              <button class="seg-btn" data-theme-opt="light">Açık</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Dil</label>
+            <div class="seg" id="langSeg">
+              <button class="seg-btn" data-lang-opt="tr">Türkçe</button>
+              <button class="seg-btn" data-lang-opt="en">English</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Durum çubuğu — tüm sayfalarda görünür -->
+      <footer class="status-bar">
+        <div class="status-card glass">
+          <div class="status-icon ok">
+            <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <div class="status-text">
+            <span class="status-label" data-i18n="status.system">Sistem Durumu</span>
+            <span class="status-value" id="statusSystem">—</span>
+          </div>
+        </div>
+
+        <div class="status-card glass">
+          <div class="status-icon db">
+            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>
+          </div>
+          <div class="status-text">
+            <span class="status-label" data-i18n="status.db">Vektör Veri Tabanı</span>
+            <span class="status-value" id="statusDb">—</span>
+          </div>
+        </div>
+
+        <div class="status-card glass">
+          <div class="status-icon cycle">
+            <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+          </div>
+          <div class="status-text">
+            <span class="status-label" data-i18n="status.cycle">Haftalık Simülasyon Döngüsü</span>
+            <span class="status-value mono" id="cycleText">—</span>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts-gl/2.0.9/echarts-gl.min.js"></script>
+  <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
+       sıralı klasik script + FDX namespace kullanılıyor -->
+  <script src="config.js"></script>
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
