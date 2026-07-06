@@ -15,9 +15,6 @@ Endpoint'ler:
 
 from __future__ import annotations
 
-import hashlib
-
-import numpy as np
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -28,6 +25,13 @@ import history
 import analysis
 import watchlist
 import settings as app_settings
+
+# Cekirdek motor artik bagimsiz kutuphane (Faz 1: pilot tasima).
+# Alias'lar sayesinde asagidaki cagri noktalari degismedi.
+from findatalytix_engine.simulation import (
+    run_gbm as _run_gbm,
+    seed_from_prompt as _seed_from_prompt,
+)
 
 # ----------------------------------------------------------
 # Uygulama + CORS
@@ -56,55 +60,7 @@ DEFAULT_SYMBOLS = ["XU030.IS", "QQQ"]
 DEFAULT_MU, DEFAULT_SIGMA = 0.20, 0.25   # canlı veri de yoksa GBM varsayılanları
 MAX_SYMBOLS = 4
 
-RISK_FREE = 0.05      # yıllık risksiz oran
-TRADING_DAYS = 252
-N_PATHS = 2_000       # Monte Carlo yol sayısı
-HORIZON_DAYS = 252    # 1 yıllık ufuk
-
-
-# ----------------------------------------------------------
-# Monte Carlo çekirdeği (geometrik Brown hareketi)
-# ----------------------------------------------------------
-
-def _run_gbm(model: str, mu: float, sigma: float, seed: int) -> dict:
-    rng = np.random.default_rng(seed)
-    dt = 1.0 / TRADING_DAYS
-
-    z = rng.standard_normal((N_PATHS, HORIZON_DAYS))
-    log_ret = (mu - 0.5 * sigma**2) * dt + sigma * np.sqrt(dt) * z
-
-    # Fiyat yolları: S0 = 100
-    prices = 100.0 * np.exp(np.cumsum(log_ret, axis=1))
-    prices = np.concatenate([np.full((N_PATHS, 1), 100.0), prices], axis=1)
-
-    # CAGR: yol sonu değerlerinin ortalamasından
-    terminal = prices[:, -1]
-    cagr = float(np.mean(terminal / 100.0) - 1.0)
-
-    # Yıllıklandırılmış volatilite: günlük log getirilerden
-    vol = float(np.std(log_ret) * np.sqrt(TRADING_DAYS))
-
-    # Sharpe: (getiri - risksiz) / volatilite
-    sharpe = (cagr - RISK_FREE) / vol if vol > 0 else 0.0
-
-    # Maksimum düşüş: her yolun kendi MDD'sinin ortalaması
-    running_max = np.maximum.accumulate(prices, axis=1)
-    drawdowns = prices / running_max - 1.0
-    mdd = float(np.mean(np.min(drawdowns, axis=1)))
-
-    return {
-        "model": model,
-        "cagr": round(cagr * 100, 2),    # %
-        "vol": round(vol * 100, 2),      # %
-        "sharpe": round(sharpe, 2),
-        "mdd": round(mdd * 100, 2),      # % (negatif)
-    }
-
-
-def _seed_from_prompt(prompt: str) -> int:
-    """Aynı prompt -> aynı sonuç (tekrarlanabilirlik).
-    Farklı prompt -> farklı senaryo."""
-    return int(hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:8], 16)
+# Monte Carlo cekirdegi findatalytix_engine.simulation'a tasindi (Faz 1).
 
 
 # ----------------------------------------------------------

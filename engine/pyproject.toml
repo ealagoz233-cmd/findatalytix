@@ -1,0 +1,26 @@
+# ==========================================================
+# findatalytix-engine — çekirdek finansal motor (MUTFAK)
+# FastAPI backend'i (GARSON) bu paketi "pip install -e ." ile
+# kurar ve yalnızca import eder; motor hiçbir web bilgisi içermez.
+# ==========================================================
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "findatalytix-engine"
+version = "0.1.0"
+description = "FinDatalytix çekirdek motoru: Monte Carlo simülasyonu, piyasa verisi, RAG ve AI analiz katmanı"
+requires-python = ">=3.11"
+# Bağımlılıklar modüller taşındıkça büyür (Faz 1 planı):
+#   simulation -> numpy                          (şu an)
+#   market/analysis/watchlist -> pandas, yfinance (sıradaki adım)
+#   rag -> chromadb, pymupdf, python-docx
+#   ai -> anthropic, google-generativeai
+dependencies = [
+    "numpy>=1.26",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
