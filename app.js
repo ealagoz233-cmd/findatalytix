@@ -396,6 +396,7 @@
       renderFileList(state.vectordb.files);
       renderVectorStats(state.vectordb);
       renderQuery(state.vectordb);
+      renderRagChips(state.vectordb);
     }
 
     /* ---- Simulasyon gecmisi + dongu sayaci ---- */
@@ -624,8 +625,8 @@
   }
 
   function renderSettings(st) {
-    const fb = $("#cfgFeedback");
-    const saveBtn = $("#cfgSaveBtn");
+    const fb = $("#configSaveMsg");
+    const saveBtn = $("#saveConfigBtn");
     if (!fb || !saveBtn) return;
 
     saveBtn.disabled = st.status === "saving";
@@ -894,6 +895,39 @@
       : "—";
   }
 
+  /* Simulasyon sayfasindaki "RAG Referans Kaynaklari" chip'leri artik
+     gercek yuklu belgelerden dolar (eski sabit "SPK 2024..." yalani gitti).
+     Chip'ler yalniz gosterimlik: hangi belgeler indeksli, onu durustce soyler. */
+  function renderRagChips(v) {
+    const wrap = $("#ragChips");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    const note = text => {
+      const span = document.createElement("span");
+      span.className = "rag-empty";
+      span.textContent = text;
+      wrap.appendChild(span);
+    };
+
+    if (v.statsError) { note("Belge listesi alınamadı (sunucu çalışıyor mu?)"); return; }
+    if (!v.stats) { note("Belgeler yükleniyor…"); return; }
+
+    const docs = v.stats.documents || [];
+    if (!docs.length) {
+      note("Henüz belge yüklenmedi — Vektör Veri Tabanı sayfasından PDF/Word ekle.");
+      return;
+    }
+
+    docs.forEach(d => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = d.name;
+      chip.title = (d.chunks || 0) + " chunk indeksli";
+      wrap.appendChild(chip);
+    });
+  }
+
   function renderQuery(v) {
     const box = $("#queryResults");
     const btn = $("#queryBtn");
@@ -996,9 +1030,6 @@
 
     $("#reportBtn").addEventListener("click", () => FDX.api.generateReport());
 
-    $$(".rag-chips .chip").forEach(chip =>
-      chip.addEventListener("click", () => chip.classList.toggle("active")));
-
     /* ---- Dropzone: fare + klavye + gerçek dosya yakalama ---- */
     const dz = $("#dropzone");
     const fileInput = $("#fileInput");
@@ -1042,7 +1073,7 @@
       // Hakem her zaman digeridir - ayna aninda guncellensin
       $("#cfgReferee").value = cfgAnalyst.value === "claude" ? "gemini" : "claude";
     });
-    $("#cfgSaveBtn").addEventListener("click", () => {
+    $("#saveConfigBtn").addEventListener("click", () => {
       FDX.api.saveSettings({
         analyst: cfgAnalyst.value,
         chunkTarget: parseInt($("#cfgChunk").value, 10),
