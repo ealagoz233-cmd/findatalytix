@@ -25,6 +25,7 @@ import os
 import re
 import json
 import logging
+import urllib.request
 
 logger = logging.getLogger("findatalytix.ai")
 
@@ -46,6 +47,12 @@ CLAUDE_MODEL_STRONG = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
 CLAUDE_MODEL_CHEAP = os.getenv("CLAUDE_MODEL_CHEAP", "claude-haiku-4-5-20251001")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
+# GROQ: ucretsiz + cok comert kota + hizli (Llama 3.3 70B). Anahtar varsa
+# tum AI cagrilari buraya gider; Gemini'nin dar dakikalik limitine takilmaz.
+GROQ_KEY = os.getenv("GROQ_API_KEY", "").strip()
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")        # guclu analist
+GROQ_MODEL_CHEAP = os.getenv("GROQ_MODEL_CHEAP", "llama-3.1-8b-instant")  # sembol/sorgu
+
 import settings as app_settings
 
 def _current_analyst() -> str:
@@ -56,6 +63,7 @@ SIMPLE_PROMPT_CHARS = 200                              # bunun altı → ucuz mo
 
 _claude = None
 _gemini = None
+_groq = True if GROQ_KEY else None   # SDK yok; urllib ile REST cagrisi
 
 if ANTHROPIC_KEY:
     try:
@@ -74,10 +82,15 @@ if GEMINI_KEY:
 
 
 def status() -> dict:
+    # Groq varsa oncelikli: tum roller Groq (comert ucretsiz kota).
+    if _groq:
+        return {"claude": _claude is not None, "gemini": _gemini is not None,
+                "groq": True, "analyst": "groq", "referee": "groq"}
     analyst = _current_analyst()
     return {
         "claude": _claude is not None,
         "gemini": _gemini is not None,
+        "groq": False,
         "analyst": analyst,
         "referee": "gemini" if analyst == "claude" else "claude",
     }
@@ -108,7 +121,36 @@ def _call_gemini(system: str, user: str, cheap: bool) -> tuple[str, int, int]:
     return resp.text.strip(), tin, tout
 
 
+def _call_groq(system: str, user: str, cheap: bool) -> tuple[str, int, int]:
+    """Groq (OpenAI-uyumlu REST). SDK gerektirmez; stdlib urllib yeter.
+    Hata (429/timeout vb.) Exception olarak yukselir, cagiranlar zaten yakalar."""
+    model = GROQ_MODEL_CHEAP if cheap else GROQ_MODEL
+    payload = json.dumps({
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        "max_tokens": 800,
+        "temperature": 0.4,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=payload,
+        headers={"Authorization": f"Bearer {GROQ_KEY}",
+                 "Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=45) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    text = data["choices"][0]["message"]["content"]
+    usage = data.get("usage", {})
+    return text.strip(), usage.get("prompt_tokens", 0) or 0, usage.get("completion_tokens", 0) or 0
+
+
 def _analyst_call(system: str, user: str, cheap: bool):
+    if _groq:                                    # Groq oncelikli (comert ucretsiz)
+        return "groq", *_call_groq(system, user, cheap)
     if _current_analyst() == "gemini" and _gemini:
         return "gemini", *_call_gemini(system, user, cheap)
     if _claude:
@@ -119,6 +161,8 @@ def _analyst_call(system: str, user: str, cheap: bool):
 
 
 def _referee_call(system: str, user: str):
+    if _groq:                                    # Groq varsa hakem de Groq
+        return "groq", *_call_groq(system, user, cheap=True)
     referee = "gemini" if _current_analyst() == "claude" else "claude"
     if referee == "gemini" and _gemini:
         return "gemini", *_call_gemini(system, user, cheap=True)
@@ -145,7 +189,7 @@ _SYMBOL_RE = re.compile(r"^[A-Z0-9.^-]{2,12}$")
 
 def extract_symbols(prompt: str) -> list[str]:
     """Prompt'tan sembol listesi. Model yoksa/hata olursa/geçersizse []."""
-    if _claude is None and _gemini is None:
+    if _claude is None and _gemini is None and _groq is None:
         return []
     try:
         _, raw, _tin, _tout = _analyst_call(EXTRACTOR_SYSTEM, prompt, cheap=True)
@@ -179,7 +223,7 @@ ROUTER_SYSTEM = (
 def route_query(prompt: str) -> list[str]:
     """Prompt'u 1-3 spesifik RAG aramasina ayristirir.
     Model yoksa/parse bozulursa: [prompt] (tek arama) - sistem asla durmaz."""
-    if _claude is None and _gemini is None:
+    if _claude is None and _gemini is None and _groq is None:
         return [prompt]
     try:
         _, raw, _ti, _to = _analyst_call(ROUTER_SYSTEM, prompt, cheap=True)
@@ -253,7 +297,7 @@ def analyze(prompt: str, metrics: dict, sources_note: str,
     rag_sources = sorted({f"{c['source']} (s.{c['page']})" for c in chunks})
 
     # ---- Hiç model yoksa: dürüst şablon (dinamik N varlık) ----
-    if _claude is None and _gemini is None:
+    if _claude is None and _gemini is None and _groq is None:
         parts = [f"{k}: %{m['cagr']} getiri / {m['sharpe']} Sharpe / %{m['mdd']} MDD"
                  for k, m in metrics.items()]
         winner = max(metrics.items(), key=lambda kv: kv[1]["sharpe"])[0]
