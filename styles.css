@@ -396,6 +396,9 @@ body {
 }
 .rag-toggle input { accent-color: var(--gold); cursor: pointer; }
 
+/* Piyasalar tahtasi: etiket altindaki ham Yahoo sembolu */
+.mk-sym { display: block; font-size: 0.66rem; color: var(--text-dim); letter-spacing: 0.03em; }
+
 /* 3D grafik yuklenemezse kart icinde durust not */
 .chart-na {
   display: flex; align-items: center; justify-content: center; height: 100%;

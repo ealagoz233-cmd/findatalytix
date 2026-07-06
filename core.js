@@ -61,6 +61,9 @@
       error: null
     },
 
+    /* Piyasalar sayfası: sabit enstrüman tahtası (FDX.MARKETS listesi) */
+    markets: { quotes: {}, status: "idle", error: null },
+
     vectordb: {
       files: [],        // { name, sizeKB, ext, status, reason, chunks }
       stats: null,      // GET /api/documents cevabı
@@ -98,7 +101,7 @@
 
   // "watchlist" ayri bir sayfa DEGIL (izleme listesi overview icinde yasar);
   // KNOWN'da tutmak #watchlist'te bos sayfa + "undefined" baslik uretiyordu.
-  const KNOWN = ["overview", "simulation", "vectordb", "assets", "report", "config", "settings"];
+  const KNOWN = ["overview", "markets", "simulation", "vectordb", "assets", "report", "config", "settings"];
   const DEFAULT = "simulation";
 
   function parse(hash) {
@@ -444,6 +447,39 @@
     }
   }
 
+  /* ---- Piyasalar: sabit enstrüman tahtası (döviz/altın/endeks/kripto) ----
+     Ayni /api/watchlist endpoint'ini kullanır — backend değişikliği yok.
+     Semboller FDX.MARKETS'ten gelir (config.js). */
+  async function fetchMarkets() {
+    const s = FDX.store;
+    const syms = (FDX.MARKETS || []).map(m => m.sym);
+    if (!syms.length) return;
+    s.set({ markets: { ...s.get().markets, status: "loading" } });
+    try {
+      const data = await request("/watchlist?symbols=" +
+                                 encodeURIComponent(syms.join(",")));
+      const quotes = {};
+      (data.quotes || []).forEach(raw => {
+        const num = v => (typeof v === "number" && isFinite(v)) ? v : null;
+        const q = {
+          symbol: raw.symbol,
+          resolved: raw.resolved || raw.symbol,
+          error: raw.error || null,
+          last: num(raw.last) !== null ? num(raw.last) : num(raw.price),
+          changePct: num(raw.changePct) !== null ? num(raw.changePct) : num(raw.change),
+          spark: Array.isArray(raw.spark) ? raw.spark : []
+        };
+        if (!q.error && (q.last === null || q.spark.length < 2)) {
+          q.error = "veri alınamadı";
+        }
+        quotes[q.symbol] = q;
+      });
+      s.set({ markets: { quotes, status: "done", error: null } });
+    } catch (err) {
+      s.set({ markets: { ...s.get().markets, status: "error", error: err.message } });
+    }
+  }
+
   /* ---- Çalışma zamanı ayarları (Konfigürasyon) ---- */
   async function fetchSettings() {
     const s = FDX.store;
@@ -487,5 +523,5 @@
   FDX.api = { runSimulation, generateReport, addFiles, removeFile,
               refreshVectorStats, queryDocs, refreshHistory, fetchAsset,
               refreshAiStatus, fetchWatchlist, addWatchSymbol, removeWatchSymbol,
-              fetchSettings, saveSettings, setUseRag };
+              fetchSettings, saveSettings, setUseRag, fetchMarkets };
 })();

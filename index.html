@@ -40,6 +40,10 @@
           <svg viewBox="0 0 24 24"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1Z"/></svg>
           <span data-i18n="views.overview">Genel Bakış</span>
         </button>
+        <button class="nav-item" data-view="markets">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 4 5.7 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.7-4-9s1.5-6.4 4-9Z"/></svg>
+          <span data-i18n="views.markets">Piyasalar</span>
+        </button>
         <button class="nav-item" data-view="simulation">
           <svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/></svg>
           <span data-i18n="views.simulation">Simülasyon Oluştur</span>
@@ -155,6 +159,34 @@
             </thead>
             <tbody id="historyBody">
               <tr><td colspan="4" class="table-empty">Geçmiş yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: PİYASALAR — canlı döviz/altın/endeks/kripto tahtası
+      =================================================== -->
+      <section class="view" id="view-markets">
+        <div class="phase-note glass">
+          <span class="phase-badge">CANLI</span>
+          Kurlar, emtia, endeks ve kripto Yahoo Finance'ten canlı çekilir; sayfa açıkken 60 saniyede bir tazelenir.
+        </div>
+
+        <div class="panel glass">
+          <h3>Canlı Piyasa Tahtası</h3>
+          <p class="ai-error" id="marketsError" role="alert" hidden></p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Enstrüman</th>
+                <th style="text-align: right;">Fiyat</th>
+                <th style="text-align: right;">Değişim</th>
+                <th style="text-align: right; width: 120px;">7 Günlük Trend</th>
+              </tr>
+            </thead>
+            <tbody id="marketsBody">
+              <tr><td colspan="4" class="table-empty">Veriler yükleniyor…</td></tr>
             </tbody>
           </table>
         </div>

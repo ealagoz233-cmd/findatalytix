@@ -341,6 +341,12 @@
         } else {
           WatchPoller.stop();
         }
+        if (state.view === "markets") {
+          FDX.api.fetchMarkets();
+          MarketsPoller.start();
+        } else {
+          MarketsPoller.stop();
+        }
         if (state.view === "config") {
           FDX.api.refreshAiStatus();
           FDX.api.fetchSettings();
@@ -440,6 +446,11 @@
                       prev.watchlist ? prev.watchlist.quotes : {});
     }
 
+    /* ---- Piyasalar tahtasi ---- */
+    if (state.markets !== prev.markets) {
+      renderMarkets(state.markets);
+    }
+
     renderStatusBar(state);   // ucuz islem, her degisimde tazelenir
 
     prev = state;
@@ -512,6 +523,21 @@
     }
     document.addEventListener("visibilitychange", () => {
       // Sekme geri gelince beklemeden tazele
+      if (document.visibilityState === "visible" && timer) tick();
+    });
+    return { start, stop };
+  })();
+
+  /* Piyasalar tahtasi polling motoru — WatchPoller ile ayni desen:
+     60 sn periyot, sekme gizliyken atlar, sayfadan cikinca durur. */
+  const MarketsPoller = (function () {
+    let timer = null;
+    function tick() {
+      if (document.visibilityState === "visible") FDX.api.fetchMarkets();
+    }
+    function start() { if (!timer) timer = setInterval(tick, 60000); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && timer) tick();
     });
     return { start, stop };
@@ -618,6 +644,71 @@
       tdDel.appendChild(del);
 
       tr.append(tdSym, tdPrice, tdChange, tdSpark, tdDel);
+      body.appendChild(tr);
+    });
+  }
+
+  /* Piyasalar tahtasi: FDX.MARKETS sirasiyla sabit satirlar,
+     hucre mantigi izleme listesiyle ayni (fiyat + degisim + sparkline). */
+  function renderMarkets(mk) {
+    const body = $("#marketsBody");
+    if (!body) return;
+    const err = $("#marketsError");
+    if (err) {
+      err.hidden = !mk.error;
+      if (mk.error) err.textContent = mk.error;
+    }
+
+    // Ilk yukleme: henuz hic veri yoksa placeholder'i birak
+    if (!Object.keys(mk.quotes).length) {
+      if (mk.status === "error") body.innerHTML =
+        '<tr><td colspan="4" class="table-empty">Veri alınamadı — backend çalışıyor mu?</td></tr>';
+      return;
+    }
+
+    body.innerHTML = "";
+    (FDX.MARKETS || []).forEach(item => {
+      const q = mk.quotes[item.sym];
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      const label = document.createElement("span");
+      label.textContent = item.label;
+      const sym = document.createElement("span");
+      sym.className = "mk-sym mono";
+      sym.textContent = item.sym;
+      tdName.append(label, sym);
+
+      const tdPrice = document.createElement("td");
+      tdPrice.className = "mono";
+      tdPrice.style.textAlign = "right";
+      const tdChange = document.createElement("td");
+      tdChange.style.textAlign = "right";
+      const tdSpark = document.createElement("td");
+      tdSpark.style.textAlign = "right";
+
+      if (!q) {
+        tdPrice.textContent = "…";
+      } else if (q.error) {
+        tdPrice.textContent = "—";
+        const tag = document.createElement("span");
+        tag.className = "tag wait";
+        tag.textContent = q.error;
+        tdChange.appendChild(tag);
+      } else {
+        tdPrice.textContent = trNumber(q.last);
+        const ch = (typeof q.changePct === "number") ? q.changePct : 0;
+        const up = ch >= 0;
+        const chip = document.createElement("span");
+        chip.className = "watch-change " + (up ? "up" : "down");
+        chip.textContent = (up ? "▲ +" : "▼ ") + trNumber(ch) + "%";
+        tdChange.appendChild(chip);
+        if (q.spark && q.spark.length > 1) {
+          tdSpark.innerHTML = sparklineSVG(q.spark, up);
+        }
+      }
+
+      tr.append(tdName, tdPrice, tdChange, tdSpark);
       body.appendChild(tr);
     });
   }

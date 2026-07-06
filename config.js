@@ -46,6 +46,23 @@ FDX.CONFIG = {
   cycle: { done: 452, total: 600 }
 };
 
+/* ----------------------------------------------------------
+   PİYASALAR sayfası — canlı tahta enstrümanları (Yahoo sembolleri).
+   Satır eklemek/çıkarmak için sadece bu listeyi düzenle.
+---------------------------------------------------------- */
+FDX.MARKETS = [
+  { sym: "USDTRY=X", label: "Dolar / TL" },
+  { sym: "EURTRY=X", label: "Euro / TL" },
+  { sym: "GBPTRY=X", label: "Sterlin / TL" },
+  { sym: "GC=F",     label: "Altın (ons, $)" },
+  { sym: "SI=F",     label: "Gümüş (ons, $)" },
+  { sym: "BZ=F",     label: "Brent Petrol ($)" },
+  { sym: "XU100.IS", label: "BIST 100" },
+  { sym: "^GSPC",    label: "S&P 500" },
+  { sym: "BTC-USD",  label: "Bitcoin ($)" },
+  { sym: "ETH-USD",  label: "Ethereum ($)" }
+];
+
 /* İlk açılış görünümü — ilk /simulate cevabıyla ezilir */
 FDX.SEED = {
   promptText:
@@ -69,7 +86,8 @@ FDX.SEED = {
 ---------------------------------------------------------- */
 FDX.I18N = {
   tr: {
-    views: { overview: "Genel Bakış", simulation: "Simülasyon Oluştur",
+    views: { overview: "Genel Bakış", markets: "Piyasalar",
+             simulation: "Simülasyon Oluştur",
              vectordb: "Vektör Veri Tabanı", assets: "Varlık Analizi",
              report: "Risk Raporu", config: "Konfigürasyon", settings: "Ayarlar" },
     status: { system: "Sistem Durumu", db: "Vektör Veri Tabanı",
@@ -96,7 +114,8 @@ FDX.I18N = {
     }
   },
   en: {
-    views: { overview: "Overview", simulation: "Create Simulation",
+    views: { overview: "Overview", markets: "Markets",
+             simulation: "Create Simulation",
              vectordb: "Vector Database", assets: "Asset Analysis",
              report: "Risk Report", config: "Configuration", settings: "Settings" },
     status: { system: "System Status", db: "Vector Database",
