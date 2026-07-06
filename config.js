@@ -76,7 +76,24 @@ FDX.I18N = {
               cycle: "Haftalık Simülasyon Döngüsü" },
     sys: { ready: "Hazır", running: "Simülasyon Çalışıyor",
            reporting: "Rapor Üretiliyor", offline: "Sunucuya Ulaşılamıyor",
-           dbOffline: "Bağlantı yok", doc: "doküman" }
+           dbOffline: "Bağlantı yok", doc: "doküman", chunk: "chunk" },
+    app: {
+      errSim: "Simülasyon başarısız: ",
+      btnReport: "Raporu Oluştur",
+      btnAnalyze: "Analiz Et", btnAnalyzing: "Yükleniyor…",
+      errAsset: "veri yok", errConn: "bağlantı yok",
+      errAI: "AI durumu alınamadı: ",
+      btnSave: "Kaydet", btnSaving: "Kaydediliyor…",
+      errGeneric: "Hata: ", saved: "Kaydedildi ✓ (restart gerekmez)",
+      errHist: "Geçmiş alınamadı: ",
+      tpl: "Şablon", aiErr: "AI hatası",
+      serverFail: "sunucuya ulaşılamadı",
+      noDocs: "henüz doküman yok", idxLive: "indeks canlı",
+      btnSearch: "Ara", btnSearching: "Aranıyor…",
+      searching: "Aranıyor…", searchErr: "Arama hatası: ",
+      noResults: "Sonuç yok — önce doküman yükle ya da soruyu değiştir.",
+      promptText: "Varlık A (BIST-30 Endeks Fonu) vs Varlık B (Nasdaq-100 Teknoloji ETF) için dinamik Monte Carlo simülasyonu çalıştır ve karşılaştırmalı risk raporu oluştur."
+    }
   },
   en: {
     views: { overview: "Overview", simulation: "Create Simulation",
@@ -86,6 +103,23 @@ FDX.I18N = {
               cycle: "Weekly Simulation Cycle" },
     sys: { ready: "Ready", running: "Simulation Running",
            reporting: "Generating Report", offline: "Server Unreachable",
-           dbOffline: "No connection", doc: "documents" }
+           dbOffline: "No connection", doc: "documents", chunk: "chunks" },
+    app: {
+      errSim: "Simulation failed: ",
+      btnReport: "Generate Report",
+      btnAnalyze: "Analyze", btnAnalyzing: "Loading…",
+      errAsset: "no data", errConn: "no connection",
+      errAI: "Couldn't read AI status: ",
+      btnSave: "Save", btnSaving: "Saving…",
+      errGeneric: "Error: ", saved: "Saved ✓ (no restart needed)",
+      errHist: "Couldn't load history: ",
+      tpl: "Template", aiErr: "AI error",
+      serverFail: "server unreachable",
+      noDocs: "no documents yet", idxLive: "index live",
+      btnSearch: "Search", btnSearching: "Searching…",
+      searching: "Searching…", searchErr: "Search error: ",
+      noResults: "No results — upload a document or change the query.",
+      promptText: "Run a dynamic Monte Carlo simulation comparing Asset A (BIST-30 Index Fund) vs Asset B (Nasdaq-100 Tech ETF) and generate a comparative risk report."
+    }
   }
 };

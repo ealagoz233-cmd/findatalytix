@@ -296,6 +296,7 @@
   ======================================================== */
 
   let prev = {};   // gereksiz DOM işlemini önlemek için önceki state
+  let viewFetched = null;   // hangi view icin veri cekildi (re-entrancy dongu korumasi)
 
   function render(state) {
 
@@ -318,18 +319,25 @@
       Charts.setRotation(inSim);
       if (inSim) Charts.resize();
 
-      if (state.view === "vectordb") FDX.api.refreshVectorStats();
-      if (state.view === "overview") FDX.api.refreshHistory();
-      if (state.view === "config") {
-        FDX.api.refreshAiStatus();
-        FDX.api.fetchSettings();
-      }
+      // Veri getirme yalniz view GERCEKTEN degisince TEK kez calissin.
+      // refreshHistory/refreshVectorStats vb. store.set yapip render'i
+      // yeniden tetikliyor; bu guard olmadan sonsuz dongu olusuyordu
+      // (57 bin /api/history cagrisinin sebebi buydu).
+      if (viewFetched !== state.view) {
+        viewFetched = state.view;
 
-      if (state.view === "watchlist") {
-        FDX.api.fetchWatchlist();
-        WatchPoller.start();
-      } else {
-        WatchPoller.stop();
+        if (state.view === "vectordb") FDX.api.refreshVectorStats();
+        if (state.view === "overview") {
+          FDX.api.refreshHistory();
+          FDX.api.fetchWatchlist();   // izleme listesi overview sayfasinda
+          WatchPoller.start();
+        } else {
+          WatchPoller.stop();
+        }
+        if (state.view === "config") {
+          FDX.api.refreshAiStatus();
+          FDX.api.fetchSettings();
+        }
       }
 
       if (state.view === "assets") {
@@ -522,7 +530,7 @@
   }
 
   function renderWatchlist(w, prevQuotes) {
-    const body = $("#watchBody");
+    const body = $("#watchlistBody");
     const err = $("#watchError");
     if (!body) return;
 
