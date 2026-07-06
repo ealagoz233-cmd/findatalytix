@@ -1,3 +1,16 @@
+# Gizli anahtarlar — ASLA repoya girmez
 .env
-chroma_db/
-history.json
+
+# Çalışma zamanı verileri
+backend/chroma_db/
+backend/history.json
+backend/settings.json
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db

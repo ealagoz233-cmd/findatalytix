@@ -342,8 +342,15 @@ def analyze(prompt: str, metrics: dict, sources_note: str,
 
 def analyze_fallback_after_error(prompt, metrics, sources_note, rag_sources, error) -> dict:
     parts = [f"{k} %{m['cagr']} / {m['sharpe']} Sharpe" for k, m in metrics.items()]
+    
+    err_str = str(error).lower()
+    if "429" in err_str or "quota" in err_str or "rate limit" in err_str or "exhausted" in err_str:
+        user_error = "Ücretsiz API Katmanı / Hız Limiti Doldu. Lütfen 1-2 dakika bekleyip tekrar deneyin."
+    else:
+        user_error = error[:120]
+        
     text = (
-        f"AI servisine ulaşılamadı ({error[:120]}). Ham sonuçlar: "
+        f"AI servisine ulaşılamadı ({user_error}). Ham sonuçlar: "
         f"{'; '.join(parts)}. Kaynak: {sources_note}."
     )
     return {"aiText": text, "meta": {

@@ -38,7 +38,19 @@
         const path = el.dataset.i18n.split(".");
         let val = d;
         for (const k of path) val = val && val[k];
-        if (val) el.textContent = val;
+        if (val) {
+          if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+            el.placeholder = val;
+          } else {
+            el.textContent = val;
+          }
+        }
+      });
+      document.querySelectorAll("[data-i18n-title]").forEach(el => {
+        const path = el.dataset.i18nTitle.split(".");
+        let val = d;
+        for (const k of path) val = val && val[k];
+        if (val) el.title = val;
       });
       const title = $("#viewTitle");
       const view = FDX.store.get().view;
@@ -306,29 +318,32 @@
       Charts.setRotation(inSim);
       if (inSim) Charts.resize();
 
-      if (state.view === "vectordb") {
-        FDX.api.refreshVectorStats();
-      }
+      if (state.view === "vectordb") FDX.api.refreshVectorStats();
+      if (state.view === "overview") FDX.api.refreshHistory();
       if (state.view === "config") {
         FDX.api.refreshAiStatus();
         FDX.api.fetchSettings();
       }
 
-      if (state.view === "overview") {
-        FDX.api.refreshHistory();
+      if (state.view === "watchlist") {
         FDX.api.fetchWatchlist();
         WatchPoller.start();
       } else {
         WatchPoller.stop();
       }
 
-      if (state.view === "assets" && state.params.symbol) {
-        const sym = state.params.symbol.toUpperCase();
-        const a = state.asset;
-        if (a.symbol !== sym || (a.status !== "done" && a.status !== "loading")) {
-          const input = $("#assetInput");
-          if (input) input.value = sym;
-          FDX.api.fetchAsset(sym);
+      if (state.view === "assets") {
+        if (state.params && state.params.symbol) {
+          const sym = state.params.symbol.toUpperCase();
+          const a = state.asset;
+          if (a.symbol !== sym || (a.status !== "done" && a.status !== "loading")) {
+            const input = $("#assetInput");
+            if (input) input.value = sym;
+            FDX.api.fetchAsset(sym);
+          }
+        } else if (!state.asset.symbol) {
+          // Varsayılan grafik
+          FDX.router.navigate("assets", { symbol: "THYAO.IS" });
         }
       }
     }
@@ -343,7 +358,7 @@
       const errBox = $("#aiError");
       if (sim.status === "error") {
         errBox.hidden = false;
-        errBox.textContent = "Simülasyon başarısız: " + sim.error +
+        errBox.textContent = Prefs.dict().app.errSim + sim.error +
           " — Prompt'u düzenleyip tekrar gönderebilirsin.";
       } else {
         errBox.hidden = true;
@@ -371,7 +386,7 @@
         rep.status === "generating" ? "Oluşturuluyor…" :
         rep.status === "ready"      ? "Rapor Hazır ✓" :
         rep.status === "error"      ? "Hata — tekrar dene" :
-                                      "Raporu Oluştur";
+                                      Prefs.dict().app.btnReport;
       btn.classList.toggle("error", rep.status === "error");
       btn.title = rep.status === "error" ? rep.error : "";
     }
@@ -406,7 +421,7 @@
     /* ---- Izleme Listesi ---- */
     if (state.watchlist !== prev.watchlist) {
       renderWatchlist(state.watchlist,
-                      prev.watchlist && prev.watchlist.data ? prev.watchlist.data.quotes : {});
+                      prev.watchlist ? prev.watchlist.quotes : {});
     }
 
     renderStatusBar(state);   // ucuz islem, her degisimde tazelenir
@@ -423,7 +438,7 @@
 
     btn.disabled = a.status === "loading";
     btn.querySelector(".report-btn-label").textContent =
-      a.status === "loading" ? "Yukleniyor\u2026" : "Analiz Et";
+      a.status === "loading" ? Prefs.dict().app.btnAnalyzing : Prefs.dict().app.btnAnalyze;
     btn.classList.toggle("loading", a.status === "loading");
 
     if (a.status === "error") {
@@ -506,7 +521,7 @@
   }
 
   function renderWatchlist(w, prevQuotes) {
-    const body = $("#watchlistBody");
+    const body = $("#watchBody");
     const err = $("#watchError");
     if (!body) return;
 
@@ -527,14 +542,14 @@
     }
 
     w.symbols.forEach(sym => {
-      const q = w.data && w.data.quotes ? w.data.quotes[sym] : null;
+      const q = w.quotes[sym];
       const tr = document.createElement("tr");
 
       // Fiyat degistiyse flas (yesil/kirmizi)
       const prevQ = prevQuotes[sym];
-      if (q && prevQ && typeof q.price === "number" &&
-          typeof prevQ.price === "number" && q.price !== prevQ.price) {
-        tr.className = q.price > prevQ.price ? "flash-up" : "flash-down";
+      if (q && prevQ && typeof q.last === "number" &&
+          typeof prevQ.last === "number" && q.last !== prevQ.last) {
+        tr.className = q.last > prevQ.last ? "flash-up" : "flash-down";
       }
 
       const tdSym = document.createElement("td");
@@ -547,8 +562,17 @@
       const tdSpark = document.createElement("td");
 
       if (!q) {
-        tdPrice.textContent = "\u2026";
-        tdChange.textContent = "";
+        if (w.status === "loading") {
+          tdPrice.textContent = "\u2026";
+          tdChange.textContent = "";
+        } else {
+          // yukleme bitti ama kotasyon yok: sonsuz "..." yerine rozet
+          tdPrice.textContent = "\u2014";
+          const tag = document.createElement("span");
+          tag.className = "tag wait";
+          tag.textContent = w.error ? Prefs.dict().app.errConn : Prefs.dict().app.errAsset;
+          tdChange.appendChild(tag);
+        }
         tdSpark.textContent = "";
       } else if (q.error) {
         tdPrice.textContent = "\u2014";
@@ -559,13 +583,14 @@
         tdChange.appendChild(tag);
         tdSpark.textContent = "";
       } else {
-        tdPrice.textContent = trNumber(q.price);
-        const up = q.changePct >= 0;
+        tdPrice.textContent = trNumber(q.last);
+        const up = (q.changePct === null ? 0 : q.changePct) >= 0;
         const chip = document.createElement("span");
         chip.className = "watch-change " + (up ? "up" : "down");
-        chip.textContent = (up ? "\u25b2 +" : "\u25bc ") + trNumber(q.changePct) + "%";
+        chip.textContent = q.changePct === null ? "\u2014"
+          : (up ? "\u25b2 +" : "\u25bc ") + trNumber(q.changePct) + "%";
         tdChange.appendChild(chip);
-        tdSpark.innerHTML = sparklineSVG(q.sparkline, up);
+        tdSpark.innerHTML = sparklineSVG(q.spark, up);
       }
 
       const tdDel = document.createElement("td");
@@ -586,7 +611,7 @@
     const line = $("#aiStatusLine");
     if (!line || !st) return;
     if (st.error) {
-      line.textContent = "AI durumu alinamadi: " + st.error;
+      line.textContent = Prefs.dict().app.errAI + st.error;
       return;
     }
     const mark = ok => ok ? "\u2713" : "\u2717 (anahtar yok)";
@@ -605,13 +630,13 @@
 
     saveBtn.disabled = st.status === "saving";
     saveBtn.querySelector(".report-btn-label").textContent =
-      st.status === "saving" ? "Kaydediliyor\u2026" : "Kaydet";
+      st.status === "saving" ? Prefs.dict().app.btnSaving : Prefs.dict().app.btnSave;
 
     if (st.status === "error") {
-      fb.textContent = "Hata: " + st.error;
+      fb.textContent = Prefs.dict().app.errGeneric + st.error;
       fb.className = "cfg-feedback err";
     } else if (st.status === "saved") {
-      fb.textContent = st.warning || "Kaydedildi \u2713 (restart gerekmez)";
+      fb.textContent = st.warning || Prefs.dict().app.saved;
       fb.className = "cfg-feedback " + (st.warning ? "warn" : "ok");
     } else if (st.warning) {
       fb.textContent = st.warning;
@@ -663,7 +688,7 @@
       db.textContent = d.dbOffline;
       db.className = "status-value red";
     } else if (st) {
-      db.textContent = st.documentCount + " " + d.doc + " \u00b7 " + st.totalChunks + " chunk";
+      db.textContent = st.documentCount + " " + d.doc + " \u00b7 " + st.totalChunks + " " + d.chunk;
       db.className = "status-value";
     }
   }
@@ -684,7 +709,7 @@
     if (h.error) {
       const tr = document.createElement("tr");
       tr.innerHTML = '<td colspan="4" class="table-empty"></td>';
-      tr.firstChild.textContent = "Gecmis alinamadi: " + h.error;
+      tr.firstChild.textContent = Prefs.dict().app.errHist + h.error;
       body.appendChild(tr);
       return;
     }
@@ -726,7 +751,7 @@
           ? "AI \u2713 " + item.confidence + "/100" : "AI \u2713";
       } else {
         tag.className = "tag wait";
-        tag.textContent = item.mode === "template" ? "Sablon" : "AI hatasi";
+        tag.textContent = item.mode === "template" ? Prefs.dict().app.tpl : Prefs.dict().app.aiErr;
       }
       tdStatus.appendChild(tag);
 
@@ -833,6 +858,8 @@
       if (meta.confidence !== null && meta.confidence !== undefined)
         bits.push("Hakem (" + meta.referee + "): " + meta.confidence + "/100" +
                   (meta.refereeNote ? " — " + meta.refereeNote : ""));
+      if (meta.ragMode === "off")
+        bits.push("RAG: kapali (kullanici tercihi)");
       if (meta.rounds > 1) {
         const scores = (meta.roundLog || []).map(r => r.score).join(" \u2192 ");
         bits.push("\u267b Oz-duzeltme: " + meta.rounds + " tur (" + scores + ")");
@@ -854,13 +881,13 @@
           updated = $("#statUpdated"), note = $("#statDocsNote");
     if (v.statsError) {
       docs.textContent = "—"; chunks.textContent = "—"; updated.textContent = "—";
-      note.textContent = "sunucuya ulaşılamadı";
+      note.textContent = Prefs.dict().app.serverFail;
       return;
     }
     if (!v.stats) return;
     docs.textContent = v.stats.documentCount;
     chunks.textContent = v.stats.totalChunks;
-    note.textContent = v.stats.documentCount === 0 ? "henüz doküman yok" : "indeks canlı";
+    note.textContent = v.stats.documentCount === 0 ? Prefs.dict().app.noDocs : Prefs.dict().app.idxLive;
     updated.textContent = v.stats.lastUpdated
       ? new Date(v.stats.lastUpdated * 1000).toLocaleTimeString("tr-TR",
           { hour: "2-digit", minute: "2-digit" })
@@ -872,13 +899,21 @@
     const btn = $("#queryBtn");
     btn.disabled = v.queryStatus === "running";
     btn.querySelector(".report-btn-label").textContent =
-      v.queryStatus === "running" ? "Aranıyor…" : "Ara";
+      v.queryStatus === "running" ? Prefs.dict().app.btnSearching : Prefs.dict().app.btnSearch;
 
+    if (v.queryStatus === "running") {
+      box.innerHTML = "";
+      const p = document.createElement("div");
+      p.className = "query-loading";
+      p.textContent = Prefs.dict().app.searching;
+      box.appendChild(p);
+      return;
+    }
     if (v.queryStatus === "error") {
       box.innerHTML = "";
       const p = document.createElement("p");
       p.className = "ai-error";
-      p.textContent = "Arama hatası: " + v.queryError;
+      p.textContent = Prefs.dict().app.searchErr + v.queryError;
       box.appendChild(p);
       return;
     }
@@ -888,7 +923,7 @@
     if (!v.queryResults || v.queryResults.length === 0) {
       const p = document.createElement("p");
       p.className = "query-empty";
-      p.textContent = "Sonuç yok — önce doküman yükle ya da soruyu değiştir.";
+      p.textContent = Prefs.dict().app.noResults;
       box.appendChild(p);
       return;
     }
@@ -994,47 +1029,42 @@
       fileInput.value = "";   // aynı dosya tekrar seçilebilsin
     });
 
+    /* ---- RAG toggle (topbar) ---- */
+    const ragToggle = $("#ragToggle");
+    if (ragToggle) {
+      ragToggle.checked = FDX.store.get().useRag;
+      ragToggle.addEventListener("change", () => FDX.api.setUseRag(ragToggle.checked));
+    }
+
     /* ---- Konfigurasyon ---- */
     const cfgAnalyst = $("#cfgAnalyst");
     cfgAnalyst.addEventListener("change", () => {
       // Hakem her zaman digeridir - ayna aninda guncellensin
       $("#cfgReferee").value = cfgAnalyst.value === "claude" ? "gemini" : "claude";
     });
-    const cfgSaveBtn = $("#saveConfigBtn");
-    if (cfgSaveBtn) {
-      cfgSaveBtn.addEventListener("click", () => {
-        FDX.api.updateSettings({
-          analyst: cfgAnalyst.value,
-          chunkTarget: parseInt($("#cfgChunk").value, 10),
-          topK: parseInt($("#cfgTopK").value, 10)
-        }).then(() => {
-          const msg = $("#configSaveMsg");
-          if (msg) {
-            msg.style.opacity = 1;
-            setTimeout(() => msg.style.opacity = 0, 2000);
-          }
-        });
+    $("#cfgSaveBtn").addEventListener("click", () => {
+      FDX.api.saveSettings({
+        analyst: cfgAnalyst.value,
+        chunkTarget: parseInt($("#cfgChunk").value, 10),
+        topK: parseInt($("#cfgTopK").value, 10)
       });
-    }
+    });
 
     /* ---- Izleme Listesi: sembol ekleme ---- */
     const watchInput = $("#watchInput");
-    const watchAddBtn = $("#watchAddBtn");
     const addWatch = () => {
       const errBox = $("#watchError");
       const msg = FDX.api.addWatchSymbol(watchInput.value);
       if (msg) {
-        if (errBox) {
-          errBox.hidden = false;
-          errBox.textContent = msg;
-        }
+        errBox.hidden = false;
+        errBox.textContent = msg;
       } else {
-        if (errBox) errBox.hidden = true;
-        if (watchInput) watchInput.value = "";
+        errBox.hidden = true;
+        watchInput.value = "";
       }
     };
-    if (watchAddBtn) watchAddBtn.addEventListener("click", addWatch);
-    if (watchInput) watchInput.addEventListener("keydown", e => { if (e.key === "Enter") addWatch(); });
+    $("#watchAddBtn").addEventListener("click", addWatch);
+    watchInput.addEventListener("keydown", e => { if (e.key === "Enter") addWatch(); });
 
     /* ---- Varlik Analizi arama ---- */
     const assetInput = $("#assetInput");
@@ -1080,7 +1110,7 @@
   function runSimIntro() {
     // textarea daktilo (value'ya yazar, textContent'e değil)
     const input = $("#promptInput");
-    const text = FDX.SEED.promptText;
+    const text = Prefs.dict().app.promptText;
     let i = 0;
     input.value = "";
     const t = setInterval(() => {

@@ -56,6 +56,16 @@ Uç noktalar: `POST /api/simulate`, `POST /api/report` (docx indirir),
 - **İlk kullanım notu:** İlk doküman yüklemesinde ChromaDB ~80MB embedding
   modelini bir kez indirir; 1-2 dk sürebilir.
 
+## Testler
+
+```bash
+cd backend
+python -m pytest            # 16 test: göstergeler, ayarlar, simülasyon, RAG, ajan döngüsü
+```
+
+Her değişiklikten sonra tek komutla tüm sistemin hâlâ çalıştığını doğrular.
+Testler ağ gerektirmez (sahte AI + sahte embedder enjekte edilir).
+
 ## Canlıya Alma (Deploy)
 
 1. **CORS'u daralt:** `.env` içine `CORS_ORIGINS=https://alanadin.com` yaz

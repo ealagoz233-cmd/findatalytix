@@ -113,6 +113,7 @@ def _seed_from_prompt(prompt: str) -> int:
 
 class SimulateRequest(BaseModel):
     prompt: str = Field(min_length=3, max_length=2000)
+    useRag: bool = True   # kapalıysa doküman bağlamı hiç aranmaz (hız/maliyet)
 
 
 class SimulateResponse(BaseModel):
@@ -161,7 +162,11 @@ def simulate(req: SimulateRequest) -> SimulateResponse:
     # sonuçlar tekilleştirilerek birleştirilir (v1.0 Ajan Beyni)
     top_k = app_settings.get("topK")
     chunks: list = []
-    try:
+    fetch_more = None
+    if not req.useRag:
+        pass   # kullanıcı tercihi: RAG kapalı → aramaya hiç girilmez
+    else:
+      try:
         store = get_store()
         seen = set()
         for sub_q in ai.route_query(req.prompt):
@@ -172,11 +177,12 @@ def simulate(req: SimulateRequest) -> SimulateResponse:
                     chunks.append(c)
         chunks = chunks[:top_k * 2]   # bağlam şişmesin (maliyet freni)
         fetch_more = lambda q: store.query(q, top_k=top_k)
-    except Exception:
+      except Exception:
         chunks, fetch_more = [], None
 
     result = ai.analyze(req.prompt, metrics, sources_note, chunks,
                         fetch_more=fetch_more)
+    result["meta"]["ragMode"] = "on" if req.useRag else "off"
 
     history.record(req.prompt, metrics,
                    result["meta"]["mode"], result["meta"].get("confidence"))

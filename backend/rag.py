@@ -33,6 +33,7 @@ logger = logging.getLogger("findatalytix.rag")
 CHUNK_TARGET_CHARS = 800
 CHUNK_OVERLAP_CHARS = 150
 COLLECTION_NAME = "findatalytix_docs"
+MIN_SCORE = 0.50
 
 
 # ----------------------------------------------------------
@@ -164,7 +165,7 @@ class RagStore:
         out = []
         for text, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]):
             score = round(1.0 / (1.0 + dist), 4)   # mesafe → 0-1 benzerlik
-            if score < 0.50:
+            if score < MIN_SCORE:
                 continue
             out.append({
                 "text": text,

@@ -25,9 +25,15 @@
     return WATCH_DEFAULTS.slice();
   }
 
+  function _loadUseRag() {
+    try { return localStorage.getItem("fdx-userag") !== "0"; }
+    catch (e) { return true; }
+  }
+
   const initialState = {
     view: "simulation",
     params: {},                       // örn: { symbol: "THYAO" }
+    useRag: _loadUseRag(),            // simülasyonda doküman bağlamı kullanılsın mı
 
     simulation: {
       status: "idle",                 // idle | running | done | error
@@ -90,7 +96,7 @@
 ---------------------------------------------------------- */
 (function () {
 
-  const KNOWN = ["overview", "simulation", "vectordb", "assets", "report", "config", "settings"];
+  const KNOWN = ["overview", "simulation", "vectordb", "assets", "report", "config", "settings", "watchlist"];
   const DEFAULT = "simulation";
 
   function parse(hash) {
@@ -173,7 +179,7 @@
     try {
       const data = await request("/simulate", {
         method: "POST",
-        body: { prompt }
+        body: { prompt, useRag: s.get().useRag }
       });
       s.set({
         simulation: {
@@ -460,6 +466,11 @@
     }
   }
 
+  function setUseRag(on) {
+    try { localStorage.setItem("fdx-userag", on ? "1" : "0"); } catch (e) {}
+    FDX.store.set({ useRag: !!on });
+  }
+
   async function refreshAiStatus() {
     const s = FDX.store;
     try {
@@ -473,5 +484,5 @@
   FDX.api = { runSimulation, generateReport, addFiles, removeFile,
               refreshVectorStats, queryDocs, refreshHistory, fetchAsset,
               refreshAiStatus, fetchWatchlist, addWatchSymbol, removeWatchSymbol,
-              fetchSettings, saveSettings };
+              fetchSettings, saveSettings, setUseRag };
 })();
