@@ -374,7 +374,7 @@
 
       if (sim.status === "done" && prev.simulation && prev.simulation.status === "running") {
         FDX.api.refreshHistory();
-        renderSimCards(sim.metrics);          // kartlar once DOM'a
+        renderSimCards(sim.metrics, sim.quotes);   // kartlar once DOM'a (+ canli fiyat)
         Charts.renderFor(sim.metrics);        // sonra yuzeyler
         $("#aiCursor").classList.remove("done");
         typeInto($("#aiText"), sim.aiText, FDX.CONFIG.typing.aiMs,
@@ -769,8 +769,8 @@
     });
   }
 
-  /* v0.9: N varlik icin dinamik kart uretimi */
-  function renderSimCards(metrics) {
+  /* v0.9: N varlik icin dinamik kart uretimi (+ canli anlik fiyat) */
+  function renderSimCards(metrics, quotes) {
     const grid = $("#simResultsGrid");
     if (!grid) return;
     grid.innerHTML = "";
@@ -790,6 +790,31 @@
       title.className = "asset-title";
       title.textContent = sym;
       card.appendChild(title);
+
+      // Canli anlik fiyat + gunluk degisim (Uzmanpara gibi) — baslik altinda
+      const q = quotes ? quotes[sym] : null;
+      const live = document.createElement("div");
+      live.className = "asset-live";
+      if (q && !q.error && typeof q.last === "number") {
+        const ch = (typeof q.changePct === "number") ? q.changePct : 0;
+        const up = ch >= 0;
+        const price = document.createElement("span");
+        price.className = "live-price mono";
+        price.textContent = trNumber(q.last);
+        const change = document.createElement("span");
+        change.className = "live-change " + (up ? "up" : "down");
+        change.textContent = (up ? "▲ +" : "▼ ") + trNumber(ch) + "%";
+        const tag = document.createElement("span");
+        tag.className = "live-tag";
+        tag.textContent = "canlı";
+        live.append(price, change, tag);
+      } else {
+        const na = document.createElement("span");
+        na.className = "live-na";
+        na.textContent = "anlık fiyat yok";
+        live.appendChild(na);
+      }
+      card.appendChild(live);
 
       const body = document.createElement("div");
       body.className = "asset-body";

@@ -122,6 +122,7 @@ class SimulateResponse(BaseModel):
     dataSources: dict
     aiMeta: dict
     symbols: list       # AI'ın prompt'tan çıkardığı (veya varsayılan) semboller
+    quotes: dict = {}   # sembol -> {last, changePct, spark} canlı anlık fiyat (Uzmanpara gibi)
 
 
 class ReportRequest(BaseModel):
@@ -187,12 +188,20 @@ def simulate(req: SimulateRequest) -> SimulateResponse:
     history.record(req.prompt, metrics,
                    result["meta"]["mode"], result["meta"].get("confidence"))
 
+    # Canlı anlik fiyat + gunluk degisim (Uzmanpara benzeri kart ustu bilgisi).
+    # watchlist.get_quotes zaten batch cekiyor + .IS cozumleme yapiyor; yeniden kullaniyoruz.
+    try:
+        quotes = {q["symbol"]: q for q in watchlist.get_quotes(symbols)}
+    except Exception:
+        quotes = {}
+
     return SimulateResponse(
         metrics=metrics,
         aiText=result["aiText"],
         dataSources=sources,
         aiMeta=result["meta"],
         symbols=symbols,   # şeffaflık: AI prompt'u böyle yorumladı
+        quotes=quotes,
     )
 
 

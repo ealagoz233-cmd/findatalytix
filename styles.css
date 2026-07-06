@@ -293,6 +293,22 @@ body {
   border-bottom: 1px solid var(--stroke);
 }
 
+/* Canli anlik fiyat + gunluk degisim (Uzmanpara gibi) */
+.asset-live {
+  display: flex; align-items: baseline; justify-content: center;
+  gap: 10px; margin: -6px 0 16px; flex-wrap: wrap;
+}
+.live-price { font-size: 1.35rem; font-weight: 600; color: var(--text); }
+.live-change { font-size: 0.92rem; font-weight: 600; }
+.live-change.up { color: #4ade80; }
+.live-change.down { color: #f87171; }
+.live-tag {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-dim); border: 1px solid var(--stroke-strong);
+  border-radius: 6px; padding: 1px 6px; align-self: center;
+}
+.live-na { font-size: 0.85rem; color: var(--text-dim); font-style: italic; }
+
 .asset-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

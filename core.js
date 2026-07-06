@@ -189,7 +189,8 @@
           metrics: data.metrics,
           aiText: data.aiText,
           aiMeta: data.aiMeta || null,
-          dataSources: data.dataSources || {}
+          dataSources: data.dataSources || {},
+          quotes: data.quotes || {}          // canlı anlık fiyat (Uzmanpara gibi)
         }
       });
     } catch (err) {
