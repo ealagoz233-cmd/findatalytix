@@ -186,7 +186,9 @@ def _referee_call(system: str, user: str):
 EXTRACTOR_SYSTEM = (
     "Kullanicinin finansal analiz isteginden varlik sembollerini cikart. "
     "KURALLAR: BIST hisseleri/endeksleri icin '.IS' uzantisi ekle (THYAO.IS, XU030.IS); "
-    "ABD varliklarinda ham sembol (AAPL, QQQ). Sektor/tema ima edilirse uygun BIST "
+    "ABD varliklarinda ham sembol (AAPL, QQQ). "
+    "ENDEKS ESLEME: 'bist30'/'bist 30' -> XU030.IS, 'bist100'/'bist 100' -> XU100.IS "
+    "(ikisini KARISTIRMA). Sektor/tema ima edilirse uygun BIST "
     "endeksini sec (bankacilik->XBANK.IS, sinai->XUSIN.IS, teknoloji->XUTEK.IS). "
     "En fazla 4 sembol. SADECE gecerli bir JSON dizisi dondur, baska hicbir sey yazma. "
     'Ornek: ["THYAO.IS","AAPL"]. Sembol cikarilamiyorsa [] dondur.'
@@ -246,9 +248,13 @@ def route_query(prompt: str) -> list[str]:
 
 ANALYST_SYSTEM = (
     "Sen FinDatalytix'in finansal analiz asistanısın. Türkçe, net ve ölçülü yaz. "
-    "Sana verilen Monte Carlo metriklerini yorumla; RAG bağlamı verildiyse "
-    "iddialarını o kaynaklara dayandır ve kaynağı 'dosya_adı (sayfa N)' "
-    "biçiminde an. Bağlamda olmayan bilgiyi uydurma. En fazla iki kısa paragraf. "
+    "Sana verilen Monte Carlo metriklerini yorumla. "
+    "KAYNAK GÖSTERİMİ: Yalnızca aşağıda gerçek bir RAG bağlamı verildiyse iddialarını "
+    "o kaynaklara dayandır ve kaynağı bağlamdaki GERÇEK dosya adı ve sayfa numarasıyla "
+    "parantez içinde an (örnek biçim: 'rapor.pdf (s.3)'). "
+    "'dosya_adı', 'sayfa N', 'dosya_adı (sayfa N)' gibi yer tutucu/örnek ifadeleri "
+    "ASLA olduğu gibi yazma. RAG bağlamı yoksa hiç kaynak belirtme, bilgi uydurma. "
+    "En fazla iki kısa paragraf yaz; madde işareti (-) kullanma. "
     "Yatırım tavsiyesi verme; risk-getiri karşılaştırması yap."
 )
 
