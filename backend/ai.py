@@ -26,6 +26,7 @@ import re
 import json
 import logging
 import urllib.request
+import urllib.error
 
 logger = logging.getLogger("findatalytix.ai")
 
@@ -138,11 +139,18 @@ def _call_groq(system: str, user: str, cheap: bool) -> tuple[str, int, int]:
         "https://api.groq.com/openai/v1/chat/completions",
         data=payload,
         headers={"Authorization": f"Bearer {GROQ_KEY}",
-                 "Content-Type": "application/json"},
+                 "Content-Type": "application/json",
+                 # Cloudflare varsayilan Python-urllib UA'sini bot sanip 403/1010
+                 # veriyor; duzgun bir UA ile engel kalkar.
+                 "User-Agent": "Mozilla/5.0 (compatible; FinDatalytix/0.9)"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=45) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(req, timeout=45) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "replace")[:400]
+        raise RuntimeError(f"Groq HTTP {exc.code}: {detail}") from None
     text = data["choices"][0]["message"]["content"]
     usage = data.get("usage", {})
     return text.strip(), usage.get("prompt_tokens", 0) or 0, usage.get("completion_tokens", 0) or 0
@@ -192,7 +200,7 @@ def extract_symbols(prompt: str) -> list[str]:
     if _claude is None and _gemini is None and _groq is None:
         return []
     try:
-        _, raw, _tin, _tout = _analyst_call(EXTRACTOR_SYSTEM, prompt, cheap=True)
+        _, raw, _tin, _tout = _analyst_call(EXTRACTOR_SYSTEM, prompt, cheap=False)
         clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         data = json.loads(clean)
         if not isinstance(data, list):
@@ -226,7 +234,7 @@ def route_query(prompt: str) -> list[str]:
     if _claude is None and _gemini is None and _groq is None:
         return [prompt]
     try:
-        _, raw, _ti, _to = _analyst_call(ROUTER_SYSTEM, prompt, cheap=True)
+        _, raw, _ti, _to = _analyst_call(ROUTER_SYSTEM, prompt, cheap=False)
         clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         data = json.loads(clean)
         subs = [str(q).strip() for q in data.get("sub_queries", []) if str(q).strip()]
