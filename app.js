@@ -143,14 +143,21 @@
       Object.entries(metrics).forEach(([sym, m], i) => {
         const el = document.getElementById("chart-" + cssSafe(sym));
         if (!el || !window.echarts) return;
-        const chart = echarts.init(el, null, { renderer: "canvas" });
-        chart.setOption(option(volSurface({
-          baseVol: (typeof m.vol === "number" && m.vol > 0) ? m.vol : 18,
-          smile: 0.55 + (i % 3) * 0.15,
-          termSlope: 0.8 - (i % 2) * 0.25,
-          noise: 0.9 + i * 0.2
-        })));
-        instances.push({ chart });
+        // ZERO-CRASH: echarts-gl (CDN) yuklenemezse 'surface' serisi patlar;
+        // grafik atlanir ama metrik kartlari + AI yorumu yasamaya devam eder.
+        try {
+          const chart = echarts.init(el, null, { renderer: "canvas" });
+          chart.setOption(option(volSurface({
+            baseVol: (typeof m.vol === "number" && m.vol > 0) ? m.vol : 18,
+            smile: 0.55 + (i % 3) * 0.15,
+            termSlope: 0.8 - (i % 2) * 0.25,
+            noise: 0.9 + i * 0.2
+          })));
+          instances.push({ chart });
+        } catch (err) {
+          console.warn("3D yuzey cizilemedi (" + sym + "):", err.message);
+          el.innerHTML = '<p class="chart-na">3D grafik yüklenemedi — metrikler geçerli</p>';
+        }
       });
     }
 

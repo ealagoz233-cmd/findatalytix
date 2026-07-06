@@ -186,7 +186,12 @@
         <div class="lower-grid">
           <div class="lower-left">
             <div class="rag-panel glass">
-              <h3>RAG Referans Kaynakları</h3>
+              <h3>RAG Referans Kaynakları
+                <label class="rag-toggle" title="Kapalıyken simülasyon belgelere hiç bakmaz (daha hızlı, daha az token)">
+                  <input type="checkbox" id="ragToggle" checked />
+                  <span>simülasyonda kullan</span>
+                </label>
+              </h3>
               <div class="rag-chips" id="ragChips"></div>
             </div>
 
@@ -454,7 +459,8 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts-gl/2.0.9/echarts-gl.min.js"></script>
+  <!-- echarts-gl cdnjs'te YOK (404 donuyordu, 3D yuzey hic cizilmiyordu) -> jsdelivr -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
   <script src="config.js"></script>

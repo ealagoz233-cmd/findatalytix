@@ -96,7 +96,9 @@
 ---------------------------------------------------------- */
 (function () {
 
-  const KNOWN = ["overview", "simulation", "vectordb", "assets", "report", "config", "settings", "watchlist"];
+  // "watchlist" ayri bir sayfa DEGIL (izleme listesi overview icinde yasar);
+  // KNOWN'da tutmak #watchlist'te bos sayfa + "undefined" baslik uretiyordu.
+  const KNOWN = ["overview", "simulation", "vectordb", "assets", "report", "config", "settings"];
   const DEFAULT = "simulation";
 
   function parse(hash) {

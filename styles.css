@@ -388,6 +388,20 @@ body {
 }
 .rag-empty { color: var(--text-dim); font-size: 0.84rem; font-style: italic; }
 
+/* RAG ac/kapa dugmesi (panel basliginin saginda) */
+.rag-toggle {
+  float: right; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; font-weight: 400; color: var(--text-dim);
+  cursor: pointer; text-transform: none; letter-spacing: 0;
+}
+.rag-toggle input { accent-color: var(--gold); cursor: pointer; }
+
+/* 3D grafik yuklenemezse kart icinde durust not */
+.chart-na {
+  display: flex; align-items: center; justify-content: center; height: 100%;
+  color: var(--text-dim); font-size: 0.8rem; font-style: italic; text-align: center;
+}
+
 .ai-panel { flex: 1; }
 .ai-panel p {
   font-size: 0.92rem;
