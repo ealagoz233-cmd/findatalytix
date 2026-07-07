@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.4" />
+  <link rel="stylesheet" href="styles.css?v=0.9.5" />
 </head>
 <body>
 
@@ -101,29 +101,30 @@
       <section class="view" id="view-overview">
         <div class="phase-note glass">
           <span class="phase-badge">CANLI</span>
-          Son Simülasyonlar tablosu ve döngü sayacı artık gerçek geçmişinden besleniyor. Üstteki portföy kartları Ay 6 sonrası hedefinde.
+          Bu sayfadaki her kart ve tablo gerçek veriden beslenir — sahte rakam yok.
         </div>
 
+        <!-- Kartlar GERCEK veriden dolar (eski sahte portfoy rakamlari kaldirildi) -->
         <div class="ov-grid">
           <div class="ov-card glass">
-            <span class="ov-label">Toplam Varlık</span>
-            <span class="ov-value mono">₺1.284.500</span>
-            <span class="ov-delta up">+2,4% bu hafta</span>
+            <span class="ov-label">Toplam Simülasyon</span>
+            <span class="ov-value mono" id="ovRuns">—</span>
+            <span class="ov-delta">tümü gerçek geçmişten</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Günlük K/Z</span>
-            <span class="ov-value mono">+₺8.320</span>
-            <span class="ov-delta up">+0,65%</span>
+            <span class="ov-label">Bu Hafta</span>
+            <span class="ov-value mono" id="ovWeekly">—</span>
+            <span class="ov-delta" id="ovWeeklyNote">haftalık döngü</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Haftalık Getiri</span>
-            <span class="ov-value mono">%1,92</span>
-            <span class="ov-delta down">endeksin 0,3 puan altında</span>
+            <span class="ov-label">İndeksli Belge</span>
+            <span class="ov-value mono" id="ovDocs">—</span>
+            <span class="ov-delta" id="ovDocsNote">vektör veri tabanında</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Aktif Simülasyon</span>
-            <span class="ov-value mono">3</span>
-            <span class="ov-delta">2 tamamlandı, 1 kuyruğa alındı</span>
+            <span class="ov-label">İzleme Listesi</span>
+            <span class="ov-value mono" id="ovWatch">—</span>
+            <span class="ov-delta">sembol takipte</span>
           </div>
         </div>
 
@@ -409,6 +410,10 @@
 
         <div class="panel glass">
           <h3>AI Model Rolleri <em class="cfg-note">(Claude ve Gemini rolleri dinamik olarak değiştirilebilir)</em></h3>
+          <p class="cfg-groq-note" id="groqNote" hidden>
+            ⚡ Groq (Llama 3.3) aktif: tüm AI rollerini şu an Groq yürütüyor.
+            Aşağıdaki analist/hakem seçimi yalnızca Groq anahtarı kaldırılırsa devreye girer.
+          </p>
           <div class="form-row">
             <label for="cfgAnalyst">Analist Model</label>
             <select id="cfgAnalyst">
@@ -428,8 +433,8 @@
         <div class="panel glass">
           <h3>RAG Parametreleri</h3>
           <div class="form-row">
-            <label for="cfgChunk">Chunk Boyutu (token)</label>
-            <input id="cfgChunk" type="number" value="512" />
+            <label for="cfgChunk">Chunk Boyutu (karakter, 300-1200) <em class="cfg-note">yeni yüklemelerde geçerli</em></label>
+            <input id="cfgChunk" type="number" min="300" max="1200" step="50" value="800" />
           </div>
           <div class="form-row">
             <label for="cfgTopK">Getirilecek Chunk Sayısı (top-k)</label>
@@ -515,8 +520,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.4"></script>
-  <script src="core.js?v=0.9.4"></script>
-  <script src="app.js?v=0.9.4"></script>
+  <script src="config.js?v=0.9.5"></script>
+  <script src="core.js?v=0.9.5"></script>
+  <script src="app.js?v=0.9.5"></script>
 </body>
 </html>

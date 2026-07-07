@@ -70,21 +70,24 @@ def extract_text(filename: str, data: bytes) -> list[tuple[int, str]]:
 # 2) CHUNK'LAMA — paragraf sınırlarına saygılı
 # ----------------------------------------------------------
 
-def chunk_pages(pages: list[tuple[int, str]]) -> list[dict]:
-    """[{text, page, chunk}] listesi üretir."""
+def chunk_pages(pages: list[tuple[int, str]], target_chars: int | None = None) -> list[dict]:
+    """[{text, page, chunk}] listesi üretir.
+    target_chars: hedef chunk boyutu (KARAKTER); None -> modül varsayılanı.
+    Arayüzdeki 'Chunk Boyutu' ayarı main.py üzerinden buraya enjekte edilir."""
+    target = target_chars or CHUNK_TARGET_CHARS
     chunks: list[dict] = []
     index = 0
 
     for page_no, page_text in pages:
         paragraphs = [p.strip() for p in page_text.split("\n\n") if p.strip()]
         # Tek büyük blok geldiyse satırlardan böl
-        if len(paragraphs) <= 1 and len(page_text) > CHUNK_TARGET_CHARS:
+        if len(paragraphs) <= 1 and len(page_text) > target:
             paragraphs = [p.strip() for p in page_text.split("\n") if p.strip()]
 
         buffer = ""
         for para in paragraphs:
             candidate = (buffer + "\n\n" + para).strip() if buffer else para
-            if len(candidate) >= CHUNK_TARGET_CHARS and buffer:
+            if len(candidate) >= target and buffer:
                 chunks.append({"text": buffer, "page": page_no, "chunk": index})
                 index += 1
                 # örtüşme: önceki chunk'ın kuyruğu yeni chunk'ın başı olur
@@ -111,7 +114,8 @@ class RagStore:
 
     # ---- yazma ----
 
-    def add_document(self, filename: str, data: bytes) -> dict:
+    def add_document(self, filename: str, data: bytes,
+                     chunk_target: int | None = None) -> dict:
         if self.has_document(filename):
             raise ValueError(f"'{filename}' zaten indeksli. Önce silin.")
 
@@ -119,7 +123,7 @@ class RagStore:
         if not pages:
             raise ValueError(f"'{filename}' içinden metin çıkarılamadı (boş ya da taranmış görüntü olabilir).")
 
-        chunks = chunk_pages(pages)
+        chunks = chunk_pages(pages, chunk_target)
         now = time.time()
         self.col.add(
             ids=[f"{filename}::{c['chunk']}" for c in chunks],

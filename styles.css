@@ -396,6 +396,14 @@ body {
 }
 .rag-toggle input { accent-color: var(--gold); cursor: pointer; }
 
+/* Konfigurasyon: Groq aktifken durustluk notu + kilitli secimler */
+.cfg-groq-note {
+  margin: 6px 0 14px; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid rgba(217, 179, 106, 0.45); background: var(--gold-soft);
+  color: var(--gold); font-size: 0.82rem;
+}
+select:disabled { opacity: 0.45; cursor: not-allowed; }
+
 /* ---- Yan yana belge onizleme (RAG arama sonuclari + PDF) ---- */
 .query-split { display: flex; gap: 14px; align-items: flex-start; }
 .query-split .query-results { flex: 1 1 42%; min-width: 0; }

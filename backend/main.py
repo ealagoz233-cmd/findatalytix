@@ -203,7 +203,8 @@ class SettingsPatch(BaseModel):
 def get_settings() -> dict:
     data = app_settings.load()
     st = ai.status()
-    data["available"] = {"claude": st["claude"], "gemini": st["gemini"]}
+    data["available"] = {"claude": st["claude"], "gemini": st["gemini"],
+                         "groq": st.get("groq", False)}
     data["referee"] = "gemini" if data["analyst"] == "claude" else "claude"
     return data
 
@@ -213,10 +214,15 @@ def update_settings(patch: SettingsPatch) -> dict:
     body = {k: v for k, v in patch.model_dump().items() if v is not None}
     if "analyst" in body and body["analyst"].lower() not in app_settings.VALID_ANALYSTS:
         raise HTTPException(422, "analyst 'claude' ya da 'gemini' olmalı")
+    # Embedding modeli (MiniLM) uzun metni kirptigi icin ust sinir sart;
+    # cok kucuk chunk da baglami parcalar.
+    if "chunkTarget" in body and not (300 <= body["chunkTarget"] <= 1200):
+        raise HTTPException(422, "chunkTarget 300-1200 karakter arasında olmalı")
     saved = app_settings.save(body)
     st = ai.status()
     warning = None
-    key_map = {"claude": st["claude"], "gemini": st["gemini"]}
+    key_map = {"claude": st["claude"], "gemini": st["gemini"],
+               "groq": st.get("groq", False)}
     if not key_map.get(saved["analyst"], False):
         warning = (f"Uyarı: {saved['analyst']} için API anahtarı algılanmadı; "
                    f"anahtar eklenene dek şablon/yedek akış çalışır.")
@@ -291,7 +297,10 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
         # ChromaDB indekslemesi CPU-yoğun ve senkron; async endpoint'in
         # event loop'unu kilitlememesi için threadpool'a itilir.
         from starlette.concurrency import run_in_threadpool
-        result = await run_in_threadpool(get_store().add_document, file.filename, data)
+        # Arayuzdeki "Chunk Boyutu (karakter)" ayari YENI yuklemelerde gecerli
+        result = await run_in_threadpool(get_store().add_document,
+                                         file.filename, data,
+                                         app_settings.get("chunkTarget"))
     except ValueError as exc:
         raise HTTPException(422, str(exc))
 

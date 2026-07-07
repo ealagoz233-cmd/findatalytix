@@ -451,7 +451,8 @@
       renderMarkets(state.markets);
     }
 
-    renderStatusBar(state);   // ucuz islem, her degisimde tazelenir
+    renderStatusBar(state);      // ucuz islem, her degisimde tazelenir
+    renderOverviewCards(state);  // genel bakis kartlari da gercek veriyle
 
     prev = state;
   }
@@ -785,6 +786,39 @@
       chunk.value = d.chunkTarget;
       topk.value = d.topK;
     }
+
+    // DURUSTLUK: Groq aktifken analist/hakem secimi ETKISIZ — kullaniciyi
+    // "Gemini analiz ediyor" saniyor durumuna dusurme; kilitle ve soyle.
+    const groqOn = !!(d.available && d.available.groq);
+    const note = $("#groqNote");
+    if (note) note.hidden = !groqOn;
+    analystSel.disabled = groqOn;
+    refereeSel.disabled = groqOn;
+  }
+
+  /* Genel Bakis kartlari: sahte portfoy rakamlari yerine GERCEK sayilar.
+     history + vectordb + watchlist state'lerinden beslenir. */
+  function renderOverviewCards(state) {
+    const runs = $("#ovRuns"), weekly = $("#ovWeekly"),
+          wNote = $("#ovWeeklyNote"), docs = $("#ovDocs"),
+          dNote = $("#ovDocsNote"), watch = $("#ovWatch");
+    if (!runs) return;
+
+    const h = state.history;
+    if (h.totalRuns !== null && h.totalRuns !== undefined)
+      runs.textContent = h.totalRuns;
+    if (h.weeklyRuns !== null && h.weeklyRuns !== undefined) {
+      weekly.textContent = h.weeklyRuns;
+      wNote.textContent = "haftalık limit: " + (h.weeklyLimit || 600);
+    }
+
+    const st = state.vectordb.stats;
+    if (st) {
+      docs.textContent = st.documentCount;
+      dNote.textContent = st.totalChunks + " chunk indeksli";
+    }
+
+    watch.textContent = state.watchlist.symbols.length;
   }
 
   /* Status bar artik makyaj degil: gercek sistem durumunun aynasi */

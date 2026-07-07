@@ -5,7 +5,7 @@ def test_upload_saves_serves_and_deletes_file(client, monkeypatch):
     import main
 
     class FakeStore:
-        def add_document(self, fn, data):
+        def add_document(self, fn, data, chunk_target=None):
             return {"filename": fn, "pages": 1, "chunks": 1}
         def delete_document(self, fn):
             return 1
