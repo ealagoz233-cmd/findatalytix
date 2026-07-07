@@ -1118,12 +1118,69 @@
       div.className = "query-hit";
       const head = document.createElement("div");
       head.className = "query-hit-head";
-      head.textContent = r.source + " · sayfa " + r.page + " · benzerlik " + r.score;
+      const info = document.createElement("span");
+      info.textContent = r.source + " · sayfa " + r.page + " · benzerlik " + r.score;
+      const open = document.createElement("button");
+      open.className = "hit-open";
+      open.textContent = "belgede aç →";
+      open.title = "Kaynağı yan panelde, tam bu sayfada göster";
+      open.addEventListener("click", () => openDocViewer(r.source, r.page));
+      head.append(info, open);
       const body = document.createElement("p");
       body.textContent = r.text.length > 300 ? r.text.slice(0, 300) + "…" : r.text;
       div.append(head, body);
       box.appendChild(div);
     });
+  }
+
+  /* ========================================================
+     BELGE ONIZLEME — arama sonucundan yan panelde PDF acma.
+     Tarayicinin yerlesik PDF goruntuleyicisi #page=N ile tam
+     sayfaya atlar. .docx tarayicida acilamaz -> indirme onerilir.
+  ======================================================== */
+
+  async function openDocViewer(name, page) {
+    const wrap = $("#docViewer"), frame = $("#docFrame");
+    const title = $("#docViewerTitle"), note = $("#docViewerNote");
+    if (!wrap) return;
+    wrap.hidden = false;
+    title.textContent = name + " · sayfa " + page;
+    note.hidden = true;
+    frame.hidden = true;
+    frame.removeAttribute("src");
+
+    const url = FDX.CONFIG.api.baseUrl + "/documents/" +
+                encodeURIComponent(name) + "/file";
+
+    if (name.toLowerCase().endsWith(".docx")) {
+      note.hidden = false;
+      note.innerHTML = "";
+      note.appendChild(document.createTextNode(
+        "Word belgeleri tarayıcıda önizlenemez. "));
+      const a = document.createElement("a");
+      a.href = url; a.textContent = "Belgeyi indir"; a.download = name;
+      note.appendChild(a);
+      return;
+    }
+
+    try {
+      const head = await fetch(url, { method: "HEAD" });
+      if (!head.ok) throw new Error("HTTP " + head.status);
+      frame.hidden = false;
+      frame.src = url + "#page=" + page;
+    } catch (err) {
+      note.hidden = false;
+      note.textContent = "Belge dosyası sunucuda yok — bu belge önizleme " +
+        "özelliğinden ÖNCE yüklenmiş. Listeden silip yeniden yüklersen " +
+        "yan yana önizleme çalışır.";
+    }
+  }
+
+  function closeDocViewer() {
+    const wrap = $("#docViewer"), frame = $("#docFrame");
+    if (!wrap) return;
+    wrap.hidden = true;
+    frame.removeAttribute("src");   // PDF belleğini bırak
   }
 
   /* ========================================================
@@ -1259,6 +1316,10 @@
     };
     $("#assetBtn").addEventListener("click", runAsset);
     assetInput.addEventListener("keydown", e => { if (e.key === "Enter") runAsset(); });
+
+    /* ---- Belge onizleme kapatma ---- */
+    const dvClose = $("#docViewerClose");
+    if (dvClose) dvClose.addEventListener("click", closeDocViewer);
 
     /* ---- RAG arama testi ---- */
     const qInput = $("#queryInput");

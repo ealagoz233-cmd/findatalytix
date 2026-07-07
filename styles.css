@@ -396,6 +396,35 @@ body {
 }
 .rag-toggle input { accent-color: var(--gold); cursor: pointer; }
 
+/* ---- Yan yana belge onizleme (RAG arama sonuclari + PDF) ---- */
+.query-split { display: flex; gap: 14px; align-items: flex-start; }
+.query-split .query-results { flex: 1 1 42%; min-width: 0; }
+.doc-viewer {
+  flex: 1 1 58%; min-width: 0;
+  border: 1px solid var(--stroke-strong); border-radius: 12px;
+  overflow: hidden; background: rgba(17, 28, 49, 0.5);
+}
+.doc-viewer-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; border-bottom: 1px solid var(--stroke);
+  font-size: 0.78rem; color: var(--text-dim);
+}
+.doc-viewer iframe { width: 100%; height: 72vh; border: 0; background: #fff; display: block; }
+.doc-note { padding: 16px; font-size: 0.85rem; color: var(--text-dim); font-style: italic; }
+.doc-note a { color: var(--gold); }
+.hit-open {
+  margin-left: 10px; padding: 2px 8px; border-radius: 6px;
+  border: 1px solid var(--stroke-strong); background: transparent;
+  color: var(--gold); font-size: 0.72rem; cursor: pointer; white-space: nowrap;
+}
+.hit-open:hover { border-color: var(--gold); }
+.query-hit-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+@media (max-width: 980px) {
+  .query-split { flex-direction: column; }
+  .doc-viewer { width: 100%; }
+  .doc-viewer iframe { height: 56vh; }
+}
+
 /* Piyasalar tahtasi: etiket altindaki ham Yahoo sembolu */
 .mk-sym { display: block; font-size: 0.66rem; color: var(--text-dim); letter-spacing: 0.03em; }
 

@@ -257,6 +257,11 @@ from fastapi import UploadFile, File, HTTPException
 MAX_UPLOAD_MB = 20
 _store: rag.RagStore | None = None
 
+# Yuklenen orijinal dosyalar burada saklanir; /api/documents/{ad}/file ile
+# servis edilir (yan yana PDF onizleme / provenance icin).
+from pathlib import Path as _Path
+UPLOAD_DIR = _Path("./uploads")
+
 
 def get_store() -> rag.RagStore:
     """Tembel başlatma: ChromaDB (ve embedding modeli) yalnızca
@@ -289,6 +294,15 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
         result = await run_in_threadpool(get_store().add_document, file.filename, data)
     except ValueError as exc:
         raise HTTPException(422, str(exc))
+
+    # Indeksleme basarili -> orijinali sakla (yan yana onizleme icin).
+    # Path(...).name: yol karakterlerini soyar (path traversal onlemi).
+    try:
+        UPLOAD_DIR.mkdir(exist_ok=True)
+        (UPLOAD_DIR / _Path(file.filename or "belge").name).write_bytes(data)
+    except OSError:
+        pass   # onizleme kaydi basarisiz olsa bile indeksleme gecerli
+
     return {"status": "indexed", **result}
 
 
@@ -302,7 +316,27 @@ def delete_document(filename: str) -> dict:
     deleted = get_store().delete_document(filename)
     if deleted == 0:
         raise HTTPException(404, f"'{filename}' indekste bulunamadı")
+    try:
+        (UPLOAD_DIR / _Path(filename).name).unlink(missing_ok=True)
+    except OSError:
+        pass
     return {"status": "deleted", "filename": filename, "chunksRemoved": deleted}
+
+
+@app.get("/api/documents/{filename}/file")
+def get_document_file(filename: str):
+    """Yuklenen orijinal belgeyi servis eder (PDF tarayicida acilir;
+    #page=N ile arama sonucundaki sayfaya atlanabilir)."""
+    from fastapi.responses import FileResponse
+    safe = _Path(filename).name
+    path = UPLOAD_DIR / safe
+    if not path.is_file():
+        raise HTTPException(404, "Belge dosyası sunucuda yok — bu belge eski "
+                                 "sürümde yüklenmiş olabilir; silip yeniden yükleyin.")
+    media = ("application/pdf" if safe.lower().endswith(".pdf") else
+             "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    return FileResponse(path, media_type=media, filename=safe,
+                        content_disposition_type="inline")
 
 
 @app.post("/api/query")

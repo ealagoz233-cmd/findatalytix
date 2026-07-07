@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.2" />
+  <link rel="stylesheet" href="styles.css?v=0.9.3" />
 </head>
 <body>
 
@@ -310,7 +310,18 @@
               <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
             </button>
           </div>
-          <div id="queryResults" class="query-results"></div>
+          <div class="query-split">
+            <div id="queryResults" class="query-results"></div>
+            <!-- Yan yana belge onizleme: sonuca tiklaninca PDF o sayfada acilir -->
+            <div class="doc-viewer" id="docViewer" hidden>
+              <div class="doc-viewer-head">
+                <span id="docViewerTitle">—</span>
+                <button class="file-del" id="docViewerClose" title="Önizlemeyi kapat">✕</button>
+              </div>
+              <p class="doc-note" id="docViewerNote" hidden></p>
+              <iframe id="docFrame" title="Belge önizleme"></iframe>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -497,8 +508,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.2"></script>
-  <script src="core.js?v=0.9.2"></script>
-  <script src="app.js?v=0.9.2"></script>
+  <script src="config.js?v=0.9.3"></script>
+  <script src="core.js?v=0.9.3"></script>
+  <script src="app.js?v=0.9.3"></script>
 </body>
 </html>
