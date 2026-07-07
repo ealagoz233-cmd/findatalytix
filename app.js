@@ -1045,6 +1045,45 @@
       ? new Date(v.stats.lastUpdated * 1000).toLocaleTimeString("tr-TR",
           { hour: "2-digit", minute: "2-digit" })
       : "—";
+
+    renderIndexedDocs(v.stats);
+  }
+
+  /* Eski oturumlar dahil TUM indeksli belgeler + sil dugmesi.
+     Silme kalicidir (chunk'lar ChromaDB'den gider) -> onay istenir. */
+  function renderIndexedDocs(stats) {
+    const wrap = $("#indexedDocsWrap"), list = $("#indexedDocs");
+    if (!wrap || !list) return;
+    const docs = (stats && stats.documents) || [];
+    wrap.hidden = docs.length === 0;
+    list.innerHTML = "";
+    docs.forEach(d => {
+      const li = document.createElement("li");
+      li.className = "file-row";
+
+      const name = document.createElement("span");
+      name.className = "file-name";
+      name.textContent = d.name;
+
+      const meta = document.createElement("span");
+      meta.className = "file-meta";
+      meta.textContent = d.chunks + " chunk indeksli";
+
+      const del = document.createElement("button");
+      del.className = "file-del";
+      del.setAttribute("aria-label", d.name + " belgesini indeksten sil");
+      del.title = "Belgeyi indeksten kalıcı olarak sil";
+      del.textContent = "✕";
+      del.addEventListener("click", () => {
+        if (confirm("'" + d.name + "' indeksten KALICI olarak silinecek (" +
+                    d.chunks + " chunk). Emin misin?")) {
+          FDX.api.deleteDocument(d.name);
+        }
+      });
+
+      li.append(name, meta, del);
+      list.appendChild(li);
+    });
   }
 
   /* Simulasyon sayfasindaki "RAG Referans Kaynaklari" chip'leri artik

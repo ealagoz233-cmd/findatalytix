@@ -325,6 +325,18 @@
     refreshVectorStats();
   }
 
+  /* Indeksli belgeyi sil — oturumda yuklenmemis (eski) belgeler icin de
+     calisir; "zaten indeksli, once silin" duvarinin arayuzdeki cozumu. */
+  async function deleteDocument(name) {
+    try {
+      await request("/documents/" + encodeURIComponent(name), { method: "DELETE" });
+    } catch (err) { /* indekste yoksa bile liste tazelensin */ }
+    const s = FDX.store;
+    s.set({ vectordb: { ...s.get().vectordb,
+      files: s.get().vectordb.files.filter(f => f.name !== name) } });
+    refreshVectorStats();
+  }
+
   /* Vektör DB istatistikleri */
   async function refreshVectorStats() {
     const s = FDX.store;
@@ -524,5 +536,6 @@
   FDX.api = { runSimulation, generateReport, addFiles, removeFile,
               refreshVectorStats, queryDocs, refreshHistory, fetchAsset,
               refreshAiStatus, fetchWatchlist, addWatchSymbol, removeWatchSymbol,
-              fetchSettings, saveSettings, setUseRag, fetchMarkets };
+              fetchSettings, saveSettings, setUseRag, fetchMarkets,
+              deleteDocument };
 })();

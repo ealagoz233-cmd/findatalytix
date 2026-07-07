@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.3" />
+  <link rel="stylesheet" href="styles.css?v=0.9.4" />
 </head>
 <body>
 
@@ -300,6 +300,13 @@
           <ul class="file-list" id="fileList"></ul>
         </div>
 
+        <!-- Eski oturumlar dahil TUM indeksli belgeler; buradan silinebilir
+             ("zaten indeksli, once silin" duvarinin cozumu) -->
+        <div class="panel glass" id="indexedDocsWrap" hidden>
+          <h3>İndeksli Belgeler</h3>
+          <ul class="file-list" id="indexedDocs"></ul>
+        </div>
+
         <div class="panel glass">
           <h3>RAG Arama Testi</h3>
           <div class="query-row">
@@ -508,8 +515,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.3"></script>
-  <script src="core.js?v=0.9.3"></script>
-  <script src="app.js?v=0.9.3"></script>
+  <script src="config.js?v=0.9.4"></script>
+  <script src="core.js?v=0.9.4"></script>
+  <script src="app.js?v=0.9.4"></script>
 </body>
 </html>
