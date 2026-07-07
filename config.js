@@ -55,6 +55,15 @@ FDX.MARKETS = [
   { sym: "EURTRY=X", label: "Euro / TL" },
   { sym: "GBPTRY=X", label: "Sterlin / TL" },
   { sym: "GC=F",     label: "Altın (ons, $)" },
+  /* Hesaplı satırlar: ons altın x dolar kuru'ndan türetilir (calc=true).
+     factor: ons->gram = 1/31.1035; çeyrek = gram x 1.603 (1.75g, 22 ayar).
+     Not: külçe karşılığıdır; kuyumcu alış-satış makası dahil değildir. */
+  { calc: true, label: "Gram Altın (TL)",
+    needs: ["GC=F", "USDTRY=X"], factor: 1 / 31.1035,
+    note: "hesaplanan: ons × kur" },
+  { calc: true, label: "Çeyrek Altın (TL)",
+    needs: ["GC=F", "USDTRY=X"], factor: 1.603 / 31.1035,
+    note: "hesaplanan: külçe karşılığı" },
   { sym: "SI=F",     label: "Gümüş (ons, $)" },
   { sym: "BZ=F",     label: "Brent Petrol ($)" },
   { sym: "XU100.IS", label: "BIST 100" },

@@ -452,7 +452,8 @@
      Semboller FDX.MARKETS'ten gelir (config.js). */
   async function fetchMarkets() {
     const s = FDX.store;
-    const syms = (FDX.MARKETS || []).map(m => m.sym);
+    // calc=true satırlar Yahoo'dan çekilmez; bileşenlerinden hesaplanır (app.js)
+    const syms = (FDX.MARKETS || []).filter(m => m.sym).map(m => m.sym);
     if (!syms.length) return;
     s.set({ markets: { ...s.get().markets, status: "loading" } });
     try {

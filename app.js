@@ -648,6 +648,27 @@
     });
   }
 
+  /* Hesapli satir (orn. Gram Altin TL = ons x kur x faktor).
+     Degisim: iki bilesenin gunluk degisiminin bileskesi.
+     Sparkline: iki serinin eleman-eleman carpimi (kuyruklar hizalanir). */
+  function computedQuote(item, quotes) {
+    const a = quotes[(item.needs || [])[0]];
+    const b = quotes[(item.needs || [])[1]];
+    if (!a || !b || a.error || b.error ||
+        typeof a.last !== "number" || typeof b.last !== "number") return null;
+    const last = a.last * b.last * item.factor;
+    const chA = (typeof a.changePct === "number") ? a.changePct : 0;
+    const chB = (typeof b.changePct === "number") ? b.changePct : 0;
+    const changePct = ((1 + chA / 100) * (1 + chB / 100) - 1) * 100;
+    let spark = [];
+    const n = Math.min((a.spark || []).length, (b.spark || []).length);
+    if (n > 1) {
+      const as = a.spark.slice(-n), bs = b.spark.slice(-n);
+      spark = as.map((v, i) => v * bs[i] * item.factor);
+    }
+    return { last: last, changePct: changePct, spark: spark };
+  }
+
   /* Piyasalar tahtasi: FDX.MARKETS sirasiyla sabit satirlar,
      hucre mantigi izleme listesiyle ayni (fiyat + degisim + sparkline). */
   function renderMarkets(mk) {
@@ -668,7 +689,7 @@
 
     body.innerHTML = "";
     (FDX.MARKETS || []).forEach(item => {
-      const q = mk.quotes[item.sym];
+      const q = item.calc ? computedQuote(item, mk.quotes) : mk.quotes[item.sym];
       const tr = document.createElement("tr");
 
       const tdName = document.createElement("td");
@@ -676,7 +697,7 @@
       label.textContent = item.label;
       const sym = document.createElement("span");
       sym.className = "mk-sym mono";
-      sym.textContent = item.sym;
+      sym.textContent = item.calc ? (item.note || "hesaplanan") : item.sym;
       tdName.append(label, sym);
 
       const tdPrice = document.createElement("td");
