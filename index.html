@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.6" />
+  <link rel="stylesheet" href="styles.css?v=0.9.8" />
 </head>
 <body>
 
@@ -318,18 +318,7 @@
               <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
             </button>
           </div>
-          <div class="query-split">
-            <div id="queryResults" class="query-results"></div>
-            <!-- Yan yana belge onizleme: sonuca tiklaninca PDF o sayfada acilir -->
-            <div class="doc-viewer" id="docViewer" hidden>
-              <div class="doc-viewer-head">
-                <span id="docViewerTitle">—</span>
-                <button class="file-del" id="docViewerClose" title="Önizlemeyi kapat">✕</button>
-              </div>
-              <p class="doc-note" id="docViewerNote" hidden></p>
-              <iframe id="docFrame" title="Belge önizleme"></iframe>
-            </div>
-          </div>
+          <div id="queryResults" class="query-results"></div>
         </div>
       </section>
 
@@ -527,13 +516,29 @@
 
   </div>
 
+  <!-- KAYNAK ATIF ÇEKMECESİ (provenance) — her sayfadan açılır.
+       RAG aramasında "belgede aç" ve AI yorumundaki kaynak adı buraya bağlanır;
+       belge sağ panelde tam ilgili sayfada gösterilir. -->
+  <div class="drawer-overlay" id="drawerOverlay" hidden></div>
+  <aside class="prov-drawer" id="provDrawer" hidden aria-label="Kaynak belge önizleme">
+    <div class="prov-drawer-head">
+      <div class="prov-drawer-title">
+        <strong>Kaynak Belge</strong>
+        <span id="provDrawerName">—</span>
+      </div>
+      <button class="file-del" id="provDrawerClose" title="Kapat">✕</button>
+    </div>
+    <p class="doc-note" id="provDrawerNote" hidden></p>
+    <iframe id="provDrawerFrame" title="Kaynak belge"></iframe>
+  </aside>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
   <!-- echarts-gl cdnjs'te YOK (404 donuyordu, 3D yuzey hic cizilmiyordu) -> jsdelivr -->
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.6"></script>
-  <script src="core.js?v=0.9.6"></script>
-  <script src="app.js?v=0.9.6"></script>
+  <script src="config.js?v=0.9.8"></script>
+  <script src="core.js?v=0.9.8"></script>
+  <script src="app.js?v=0.9.8"></script>
 </body>
 </html>

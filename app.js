@@ -1132,9 +1132,25 @@
         ? "Şablon mod — .env'e API anahtarı (örn. ücretsiz GROQ_API_KEY) eklenince gerçek AI devreye girer"
         : "AI hatası — ham sonuçlar gösterildi");
     }
-    if (meta.ragSources && meta.ragSources.length)
-      bits.push("RAG kaynakları: " + meta.ragSources.join(", "));
     box.textContent = bits.join("  ·  ");
+
+    // RAG kaynaklari TIKLANABILIR: tikla -> belge o sayfada acilir (provenance)
+    if (meta.ragSources && meta.ragSources.length) {
+      box.appendChild(document.createTextNode("  ·  "));
+      const lbl = document.createElement("span");
+      lbl.textContent = "RAG kaynakları: ";
+      box.appendChild(lbl);
+      meta.ragSources.forEach((src, i) => {
+        if (i) box.appendChild(document.createTextNode(", "));
+        const { name, page } = parseSource(src);
+        const link = document.createElement("button");
+        link.className = "src-link";
+        link.textContent = src;
+        link.title = "Kaynağı belgede aç (sayfa " + page + ")";
+        link.addEventListener("click", () => openDocViewer(name, page));
+        box.appendChild(link);
+      });
+    }
     box.hidden = false;
   }
 
@@ -1282,17 +1298,26 @@
   }
 
   /* ========================================================
-     BELGE ONIZLEME — arama sonucundan yan panelde PDF acma.
-     Tarayicinin yerlesik PDF goruntuleyicisi #page=N ile tam
-     sayfaya atlar. .docx tarayicida acilamaz -> indirme onerilir.
+     KAYNAK ATIF ÇEKMECESİ (provenance) — her sayfadan açılır.
+     RAG arama sonucundan VE AI yorumundaki kaynak adından çağrılır;
+     belge sağ çekmecede tam ilgili sayfada gösterilir (PDF #page=N).
+     .docx tarayıcıda açılamaz -> indirme önerilir.
   ======================================================== */
 
   async function openDocViewer(name, page) {
-    const wrap = $("#docViewer"), frame = $("#docFrame");
-    const title = $("#docViewerTitle"), note = $("#docViewerNote");
-    if (!wrap) return;
-    wrap.hidden = false;
-    title.textContent = name + " · sayfa " + page;
+    const drawer = $("#provDrawer"), overlay = $("#drawerOverlay");
+    const frame = $("#provDrawerFrame"), nameEl = $("#provDrawerName");
+    const note = $("#provDrawerNote");
+    if (!drawer) return;
+
+    overlay.hidden = false;
+    drawer.hidden = false;
+    // Senkron reflow ile geçiş tetiklenir. requestAnimationFrame KULLANILMAZ:
+    // tarayıcı gizli/odaksız sekmede rAF'ı durdurur -> çekmece ekran dışında kalırdı.
+    void drawer.offsetWidth;
+    drawer.classList.add("open");
+    overlay.classList.add("open");
+    nameEl.textContent = name + (page ? " · sayfa " + page : "");
     note.hidden = true;
     frame.hidden = true;
     frame.removeAttribute("src");
@@ -1315,20 +1340,32 @@
       const head = await fetch(url, { method: "HEAD" });
       if (!head.ok) throw new Error("HTTP " + head.status);
       frame.hidden = false;
-      frame.src = url + "#page=" + page;
+      frame.src = url + "#page=" + (page || 1);
     } catch (err) {
       note.hidden = false;
       note.textContent = "Belge dosyası sunucuda yok — bu belge önizleme " +
-        "özelliğinden ÖNCE yüklenmiş. Listeden silip yeniden yüklersen " +
-        "yan yana önizleme çalışır.";
+        "özelliğinden ÖNCE yüklenmiş. Vektör Veri Tabanı'ndan silip yeniden " +
+        "yüklersen kaynak önizlemesi çalışır.";
     }
   }
 
   function closeDocViewer() {
-    const wrap = $("#docViewer"), frame = $("#docFrame");
-    if (!wrap) return;
-    wrap.hidden = true;
-    frame.removeAttribute("src");   // PDF belleğini bırak
+    const drawer = $("#provDrawer"), overlay = $("#drawerOverlay");
+    const frame = $("#provDrawerFrame");
+    if (!drawer) return;
+    drawer.classList.remove("open");
+    overlay.classList.remove("open");
+    setTimeout(() => {
+      drawer.hidden = true; overlay.hidden = true;
+      frame.removeAttribute("src");   // PDF belleğini bırak
+    }, 260);
+  }
+
+  /* "dosya.pdf (s.3)" veya "dosya.pdf (sayfa 3)" -> {name, page} */
+  function parseSource(src) {
+    const m = src.match(/^(.*?)\s*\((?:s\.|sayfa)\s*(\d+)\)\s*$/i);
+    if (m) return { name: m[1].trim(), page: parseInt(m[2], 10) };
+    return { name: src.trim(), page: 1 };
   }
 
   /* ========================================================
@@ -1466,8 +1503,17 @@
     assetInput.addEventListener("keydown", e => { if (e.key === "Enter") runAsset(); });
 
     /* ---- Belge onizleme kapatma ---- */
-    const dvClose = $("#docViewerClose");
+    /* ---- Kaynak atif cekmecesi: kapatma (buton + overlay + Esc) ---- */
+    const dvClose = $("#provDrawerClose");
     if (dvClose) dvClose.addEventListener("click", closeDocViewer);
+    const ovl = $("#drawerOverlay");
+    if (ovl) ovl.addEventListener("click", closeDocViewer);
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        const d = $("#provDrawer");
+        if (d && !d.hidden) closeDocViewer();
+      }
+    });
 
     /* ---- RAG arama testi ---- */
     const qInput = $("#queryInput");

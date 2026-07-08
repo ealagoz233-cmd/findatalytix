@@ -404,34 +404,42 @@ body {
 }
 select:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* ---- Yan yana belge onizleme (RAG arama sonuclari + PDF) ---- */
-.query-split { display: flex; gap: 14px; align-items: flex-start; }
-.query-split .query-results { flex: 1 1 42%; min-width: 0; }
-.doc-viewer {
-  flex: 1 1 58%; min-width: 0;
-  border: 1px solid var(--stroke-strong); border-radius: 12px;
-  overflow: hidden; background: rgba(17, 28, 49, 0.5);
+/* ---- Kaynak atif cekmecesi (provenance drawer) — sagdan kayar panel ---- */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(5, 9, 18, 0.55); backdrop-filter: blur(2px);
+  opacity: 0; transition: opacity 0.25s ease;
 }
-.doc-viewer-head {
+.drawer-overlay.open { opacity: 1; }
+.prov-drawer {
+  position: fixed; top: 0; right: 0; z-index: 91;
+  width: min(760px, 92vw); height: 100vh;
+  display: flex; flex-direction: column;
+  background: var(--panel, #111c31); border-left: 1px solid var(--stroke-strong);
+  box-shadow: -18px 0 50px rgba(0, 0, 0, 0.45);
+  transform: translateX(100%); transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.prov-drawer.open { transform: translateX(0); }
+.prov-drawer-head {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 12px; border-bottom: 1px solid var(--stroke);
-  font-size: 0.78rem; color: var(--text-dim);
+  padding: 14px 18px; border-bottom: 1px solid var(--stroke);
 }
-.doc-viewer iframe { width: 100%; height: 72vh; border: 0; background: #fff; display: block; }
-.doc-note { padding: 16px; font-size: 0.85rem; color: var(--text-dim); font-style: italic; }
+.prov-drawer-title strong { display: block; font-size: 0.95rem; }
+.prov-drawer-title span { font-size: 0.76rem; color: var(--text-dim); font-family: var(--font-mono); }
+.prov-drawer iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+.doc-note { padding: 18px; font-size: 0.85rem; color: var(--text-dim); font-style: italic; }
 .doc-note a { color: var(--gold); }
-.hit-open {
-  margin-left: 10px; padding: 2px 8px; border-radius: 6px;
+
+/* Tiklanabilir ogeler: arama sonucu "belgede ac" + AI yorumu kaynak adi */
+.hit-open, .src-link {
+  padding: 2px 8px; border-radius: 6px;
   border: 1px solid var(--stroke-strong); background: transparent;
   color: var(--gold); font-size: 0.72rem; cursor: pointer; white-space: nowrap;
 }
-.hit-open:hover { border-color: var(--gold); }
+.hit-open { margin-left: 10px; }
+.src-link { font-family: var(--font-mono); }
+.hit-open:hover, .src-link:hover { border-color: var(--gold); background: var(--gold-soft); }
 .query-hit-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-@media (max-width: 980px) {
-  .query-split { flex-direction: column; }
-  .doc-viewer { width: 100%; }
-  .doc-viewer iframe { height: 56vh; }
-}
 
 /* Piyasalar tahtasi: etiket altindaki ham Yahoo sembolu */
 .mk-sym { display: block; font-size: 0.66rem; color: var(--text-dim); letter-spacing: 0.03em; }
