@@ -3,7 +3,7 @@ FinDatalytix — main.py (v0.9: Dinamik Portföy Motoru)
 =====================================================
 Çalıştırma:
     pip install -r requirements.txt
-    uvicorn main:app --reload --port 8000
+    uvicorn main:app --port 8000    # --reload KULLANMA: Windows'ta .env okumasini bozar
 
 Endpoint'ler:
     POST /api/simulate        -> AI sembol çıkarma + N varlık Monte Carlo + analist/hakem
