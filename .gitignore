@@ -16,3 +16,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 *.egg-info/
+
+# Claude Code oturum dosyalari
+.claude/
