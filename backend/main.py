@@ -19,6 +19,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from pathlib import Path as _Path
+
 import market
 import ai
 import history
@@ -244,17 +246,68 @@ def ai_status() -> dict:
 
 @app.post("/api/report")
 def generate_report(req: ReportRequest):
-    """Ekrandaki son simülasyon durumundan gerçek .docx üretir ve indirtir."""
+    """Ekrandaki son simülasyon durumundan gerçek .docx üretir ve indirtir.
+    Bir kopya reports/ altına kaydedilir -> Risk Raporu sayfasindaki gecmis
+    listesi buradan beslenir (tekrar indirilebilir)."""
     import report as report_builder
     from fastapi.responses import Response
 
     data, filename = report_builder.build_report(req.model_dump())
+
+    try:
+        REPORTS_DIR.mkdir(exist_ok=True)
+        (REPORTS_DIR / _Path(filename).name).write_bytes(data)
+    except OSError:
+        pass   # arsiv yazilamasa bile indirme calisir (zarif dusus)
+
     return Response(
         content=data,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f'attachment; filename="{filename}"',
                  "Access-Control-Expose-Headers": "Content-Disposition"},
     )
+
+
+# ----------------------------------------------------------
+# Rapor arsivi (Risk Raporu sayfasi) — uretilen .docx'ler
+# ----------------------------------------------------------
+
+REPORTS_DIR = _Path("./reports")
+
+
+@app.get("/api/reports")
+def list_reports() -> dict:
+    """Uretilmis raporlar, yeniden eskiye."""
+    items = []
+    if REPORTS_DIR.is_dir():
+        for p in REPORTS_DIR.glob("*.docx"):
+            st = p.stat()
+            items.append({"name": p.name, "sizeKB": round(st.st_size / 1024),
+                          "ts": st.st_mtime})
+    items.sort(key=lambda x: x["ts"], reverse=True)
+    return {"reports": items, "count": len(items)}
+
+
+@app.get("/api/reports/{filename}")
+def download_report(filename: str):
+    from fastapi.responses import FileResponse
+    safe = _Path(filename).name
+    path = REPORTS_DIR / safe
+    if not (safe.lower().endswith(".docx") and path.is_file()):
+        raise HTTPException(404, f"'{safe}' rapor arşivinde bulunamadı")
+    return FileResponse(
+        path, filename=safe,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+
+@app.delete("/api/reports/{filename}")
+def delete_report(filename: str) -> dict:
+    safe = _Path(filename).name
+    path = REPORTS_DIR / safe
+    if not (safe.lower().endswith(".docx") and path.is_file()):
+        raise HTTPException(404, f"'{safe}' rapor arşivinde bulunamadı")
+    path.unlink()
+    return {"status": "deleted", "filename": safe}
 
 
 # ----------------------------------------------------------
@@ -269,8 +322,7 @@ _store: rag.RagStore | None = None
 
 # Yuklenen orijinal dosyalar burada saklanir; /api/documents/{ad}/file ile
 # servis edilir (yan yana PDF onizleme / provenance icin).
-from pathlib import Path as _Path
-UPLOAD_DIR = _Path("./uploads")
+UPLOAD_DIR = _Path("./uploads")   # _Path importu dosya basinda
 
 
 def get_store() -> rag.RagStore:

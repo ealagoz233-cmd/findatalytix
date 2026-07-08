@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.5" />
+  <link rel="stylesheet" href="styles.css?v=0.9.6" />
 </head>
 <body>
 
@@ -388,14 +388,26 @@
       =================================================== -->
       <section class="view" id="view-report">
         <div class="phase-note glass">
-          <span class="phase-badge">BİLGİ</span>
-          Rapor üretimi canlı: Simülasyon sayfasındaki "Raporu Oluştur" butonu gerçek .docx indirir. Bu sayfadaki rapor geçmişi listesi gelecek sürüm hedefinde.
+          <span class="phase-badge">CANLI</span>
+          Üretilen her .docx rapor sunucuda arşivlenir; buradan tekrar indirebilir ya da silebilirsin.
         </div>
 
-        <div class="empty-state glass">
-          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
-          <h3>Rapor geçmişi boş</h3>
-          <p>Oluşturduğun her risk raporu burada listelenecek; tekrar indirebilecek ve karşılaştırabileceksin.</p>
+        <div class="panel glass">
+          <h3>Rapor Arşivi</h3>
+          <p class="ai-error" id="reportsError" role="alert" hidden></p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rapor</th>
+                <th style="text-align: right;">Boyut</th>
+                <th style="text-align: right;">Tarih</th>
+                <th style="text-align: right; width: 150px;"></th>
+              </tr>
+            </thead>
+            <tbody id="reportsBody">
+              <tr><td colspan="4" class="table-empty">Yükleniyor…</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -520,8 +532,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.5"></script>
-  <script src="core.js?v=0.9.5"></script>
-  <script src="app.js?v=0.9.5"></script>
+  <script src="config.js?v=0.9.6"></script>
+  <script src="core.js?v=0.9.6"></script>
+  <script src="app.js?v=0.9.6"></script>
 </body>
 </html>

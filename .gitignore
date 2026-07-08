@@ -6,6 +6,7 @@ backend/chroma_db/
 backend/history.json
 backend/settings.json
 backend/uploads/
+backend/reports/
 
 # Python
 __pycache__/

@@ -351,6 +351,7 @@
           FDX.api.refreshAiStatus();
           FDX.api.fetchSettings();
         }
+        if (state.view === "report") FDX.api.fetchReports();
       }
 
       if (state.view === "assets") {
@@ -449,6 +450,11 @@
     /* ---- Piyasalar tahtasi ---- */
     if (state.markets !== prev.markets) {
       renderMarkets(state.markets);
+    }
+
+    /* ---- Rapor arsivi ---- */
+    if (state.reports !== prev.reports) {
+      renderReports(state.reports);
     }
 
     renderStatusBar(state);      // ucuz islem, her degisimde tazelenir
@@ -736,6 +742,66 @@
       }
 
       tr.append(tdName, tdPrice, tdChange, tdSpark);
+      body.appendChild(tr);
+    });
+  }
+
+  /* Rapor arsivi: uretilen .docx'ler — indir + sil (Risk Raporu sayfasi) */
+  function renderReports(rp) {
+    const body = $("#reportsBody");
+    if (!body) return;
+    const err = $("#reportsError");
+    if (err) {
+      err.hidden = !rp.error;
+      if (rp.error) err.textContent = rp.error;
+    }
+
+    body.innerHTML = "";
+    if (!rp.items.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td colspan="4" class="table-empty">Henüz rapor üretilmedi — ' +
+        'Simülasyon sayfasında bir simülasyon çalıştırıp "Raporu Oluştur"a bas.</td>';
+      body.appendChild(tr);
+      return;
+    }
+
+    rp.items.forEach(r => {
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.className = "mono";
+      tdName.textContent = r.name;
+
+      const tdSize = document.createElement("td");
+      tdSize.className = "mono";
+      tdSize.style.textAlign = "right";
+      tdSize.textContent = r.sizeKB + " KB";
+
+      const tdDate = document.createElement("td");
+      tdDate.style.textAlign = "right";
+      tdDate.textContent = new Date(r.ts * 1000).toLocaleString("tr-TR",
+        { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+      const tdAct = document.createElement("td");
+      tdAct.style.textAlign = "right";
+      const dl = document.createElement("a");
+      dl.className = "hit-open";
+      dl.textContent = "indir ↓";
+      dl.href = FDX.CONFIG.api.baseUrl + "/reports/" + encodeURIComponent(r.name);
+      dl.download = r.name;
+      const del = document.createElement("button");
+      del.className = "file-del";
+      del.setAttribute("aria-label", r.name + " raporunu sil");
+      del.textContent = "✕";
+      del.style.marginLeft = "10px";
+      del.addEventListener("click", () => {
+        if (confirm("'" + r.name + "' arşivden kalıcı olarak silinecek. Emin misin?")) {
+          FDX.api.deleteReport(r.name);
+        }
+      });
+      tdAct.append(dl, del);
+
+      tr.append(tdName, tdSize, tdDate, tdAct);
       body.appendChild(tr);
     });
   }

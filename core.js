@@ -64,6 +64,9 @@
     /* Piyasalar sayfası: sabit enstrüman tahtası (FDX.MARKETS listesi) */
     markets: { quotes: {}, status: "idle", error: null },
 
+    /* Risk Raporu sayfası: üretilen .docx arşivi */
+    reports: { items: [], status: "idle", error: null },
+
     vectordb: {
       files: [],        // { name, sizeKB, ext, status, reason, chunks }
       stats: null,      // GET /api/documents cevabı
@@ -251,6 +254,7 @@
       URL.revokeObjectURL(url);
 
       s.set({ report: { status: "ready", error: null } });
+      fetchReports();   // yeni rapor arşiv listesine anında düşsün
       setTimeout(() => {
         if (s.get().report.status === "ready") {
           s.set({ report: { status: "idle", error: null } });
@@ -470,6 +474,24 @@
     }
   }
 
+  /* ---- Rapor arşivi (Risk Raporu sayfası) ---- */
+  async function fetchReports() {
+    const s = FDX.store;
+    try {
+      const data = await request("/reports");
+      s.set({ reports: { items: data.reports || [], status: "done", error: null } });
+    } catch (err) {
+      s.set({ reports: { items: [], status: "error", error: err.message } });
+    }
+  }
+
+  async function deleteReport(name) {
+    try {
+      await request("/reports/" + encodeURIComponent(name), { method: "DELETE" });
+    } catch (err) { /* zaten yoksa da liste tazelensin */ }
+    fetchReports();
+  }
+
   /* ---- Piyasalar: sabit enstrüman tahtası (döviz/altın/endeks/kripto) ----
      Ayni /api/watchlist endpoint'ini kullanır — backend değişikliği yok.
      Semboller FDX.MARKETS'ten gelir (config.js). */
@@ -554,5 +576,5 @@
               refreshVectorStats, queryDocs, refreshHistory, fetchAsset,
               refreshAiStatus, fetchWatchlist, addWatchSymbol, removeWatchSymbol,
               fetchSettings, saveSettings, setUseRag, fetchMarkets,
-              deleteDocument };
+              deleteDocument, fetchReports, deleteReport };
 })();
