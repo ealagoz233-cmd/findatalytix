@@ -218,6 +218,10 @@ def update_settings(patch: SettingsPatch) -> dict:
     # cok kucuk chunk da baglami parcalar.
     if "chunkTarget" in body and not (300 <= body["chunkTarget"] <= 1200):
         raise HTTPException(422, "chunkTarget 300-1200 karakter arasında olmalı")
+    # topK=0 kaydedilebiliyordu -> ChromaDB n_results=0'i reddediyor,
+    # tum RAG aramasi 500'e dusuyordu. Sinir: 1-20 (QueryRequest ile ayni).
+    if "topK" in body and not (1 <= body["topK"] <= 20):
+        raise HTTPException(422, "topK 1-20 arasında olmalı")
     saved = app_settings.save(body)
     st = ai.status()
     warning = None

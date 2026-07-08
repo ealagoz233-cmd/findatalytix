@@ -371,7 +371,10 @@
                          weeklyRuns: data.weeklyRuns || 0,
                          weeklyLimit: data.weeklyLimit || 600, error: null } });
     } catch (err) {
-      s.set({ history: { items: [], totalRuns: null, error: err.message } });
+      // weeklyRuns/weeklyLimit BURADA DA verilmeli: alan eksik kalirsa
+      // (undefined) durum cubugu "undefined/undefined" yaziyordu.
+      s.set({ history: { items: [], totalRuns: null,
+                         weeklyRuns: null, weeklyLimit: 600, error: err.message } });
     }
   }
 

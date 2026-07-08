@@ -318,8 +318,8 @@ def analyze(prompt: str, metrics: dict, sources_note: str,
         text = (
             f"Monte Carlo Analizi — {'; '.join(parts)}. "
             f"Risk-ayarlı bazda öne çıkan: {winner}. Veri kaynağı — {sources_note}. "
-            f"(Şablon yorum: .env dosyasına ANTHROPIC_API_KEY veya GEMINI_API_KEY "
-            f"eklendiğinde gerçek AI analizi devreye girer.)"
+            f"(Şablon yorum: .env dosyasına GROQ_API_KEY (ücretsiz), ANTHROPIC_API_KEY "
+            f"veya GEMINI_API_KEY eklendiğinde gerçek AI analizi devreye girer.)"
         )
         return {"aiText": text, "meta": {
             "mode": "template", "analyst": None, "referee": None,

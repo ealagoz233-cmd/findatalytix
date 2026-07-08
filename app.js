@@ -488,12 +488,17 @@
     $("#asRange").textContent = trNumber(s.low52) + " \u2014 " + trNumber(s.high52);
     $("#asVol").textContent = "%" + trNumber(s.volAnnual);
     const rsiEl = $("#asRsi"), rsiNote = $("#asRsiNote");
-    if (s.rsiNow !== null) {
+    if (s.rsiNow != null) {
       rsiEl.textContent = trNumber(s.rsiNow, 1);
       rsiNote.textContent = s.rsiNow >= 70 ? "asiri alim bolgesi"
                           : s.rsiNow <= 30 ? "asiri satim bolgesi" : "notr bolge";
       rsiNote.className = "ov-delta " +
         (s.rsiNow >= 70 ? "down" : s.rsiNow <= 30 ? "up" : "");
+    } else {
+      // onceki sembolun RSI'i ekranda KALMASIN (bayat veri yalani)
+      rsiEl.textContent = "—";
+      rsiNote.textContent = "yetersiz veri";
+      rsiNote.className = "ov-delta";
     }
 
     $("#assetChartTitle").textContent =
@@ -744,8 +749,11 @@
       return;
     }
     const mark = ok => ok ? "\u2713" : "\u2717 (anahtar yok)";
+    // Groq da listelenir: sistem fiilen Groq'la kosarken satirin onu
+    // gizlemesi "Claude/Gemini yok, AI nasil calisiyor?" kafasi yaratiyordu.
     line.textContent =
-      "Algilanan anahtarlar - Claude: " + mark(st.claude) +
+      "Algilanan anahtarlar - Groq: " + mark(st.groq) +
+      " \u00b7 Claude: " + mark(st.claude) +
       " \u00b7 Gemini: " + mark(st.gemini) +
       " \u00b7 Roller: analist=" + st.analyst + ", hakem=" + st.referee;
 
@@ -857,7 +865,8 @@
 
   function renderHistory(h) {
     const cycle = $("#cycleText");
-    if (h.weeklyRuns !== null) {
+    // != null: hem null hem undefined'i yakalar (eksik alan = "undefined/undefined" kazasi)
+    if (h.weeklyRuns != null) {
       cycle.textContent = h.weeklyRuns + "/" + h.weeklyLimit;
       cycle.title = "Bu hafta: " + h.weeklyRuns + " simulasyon \u00b7 Toplam: " + h.totalRuns;
     } else {
@@ -1054,7 +1063,7 @@
       bits.push("Token: " + meta.tokensIn + "\u2192" + meta.tokensOut);
     } else {
       bits.push(meta.mode === "template"
-        ? "Şablon mod — .env'e API anahtarı eklenince gerçek AI devreye girer"
+        ? "Şablon mod — .env'e API anahtarı (örn. ücretsiz GROQ_API_KEY) eklenince gerçek AI devreye girer"
         : "AI hatası — ham sonuçlar gösterildi");
     }
     if (meta.ragSources && meta.ragSources.length)
