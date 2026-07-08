@@ -173,6 +173,12 @@ def build_report(payload: dict) -> tuple[bytes, str]:
             f"Token kullanımı: {meta.get('tokensIn', 0)} giriş / {meta.get('tokensOut', 0)} çıkış",
             style="List Bullet",
         )
+    elif mode == "error-fallback":
+        # Dürüstlük: anahtar VARDI ama çağrı başarısız oldu — "anahtar yok"
+        # demek yanlış teşhis koydurur (kullanıcı boşuna .env kurcalar).
+        _para(doc, "AI servisine bu çalıştırmada ulaşılamadı (kota/ağ hatası); "
+                   "yorum ham sayısal sonuçlarla sınırlıdır. Sayısal bulgular geçerlidir.",
+              color=GREY, italic=True)
     else:
         _para(doc, "Bu raporun yorumu şablon modunda üretildi (AI anahtarı tanımlı değildi). "
                    "Gerçek analist + hakem değerlendirmesi için .env dosyasına API anahtarı ekleyin.",

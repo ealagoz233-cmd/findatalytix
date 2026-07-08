@@ -94,7 +94,11 @@ def get_quotes(symbols: list[str]) -> list[dict]:
             elif "." not in s:
                 retry.append(s)          # .IS ile tekrar denenecek
             else:
-                results[s] = {"symbol": s, "resolved": s, "error": "veri bulunamadı"}
+                # Hata da önbelleğe yazılır: bozuk sembol her 60 sn'lik
+                # poll'da Yahoo'yu yeniden dövmesin (ban riski + boşa istek)
+                item = {"symbol": s, "resolved": s, "error": "veri bulunamadı"}
+                _cache[s] = (now, item)
+                results[s] = item
 
         # 3) İkinci batch: BIST çözümlemesi (THYAO -> THYAO.IS)
         if retry:
@@ -104,10 +108,10 @@ def get_quotes(symbols: list[str]) -> list[dict]:
                 q = _extract(df2, cand)
                 if q is not None:
                     item = {"symbol": s, "resolved": cand, **q}
-                    _cache[s] = (now, item)
-                    results[s] = item
                 else:
-                    results[s] = {"symbol": s, "resolved": s, "error": "veri bulunamadı"}
+                    item = {"symbol": s, "resolved": s, "error": "veri bulunamadı"}
+                _cache[s] = (now, item)
+                results[s] = item
 
     # İstenen sırayı koru
     return [results[s] for s in symbols if s in results]

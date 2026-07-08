@@ -423,13 +423,19 @@
     s.set({ watchlist: { ...w, symbols, quotes } });
   }
 
+  /* Ust uste binme freni: istek Yahoo'da askida kalirsa (timeout 60 sn =
+     poll periyodu) bir sonraki tick ikinci istegi BINDIRMESIN. */
+  let _watchBusy = false;
+
   async function fetchWatchlist() {
+    if (_watchBusy) return;
     const s = FDX.store;
     const w = s.get().watchlist;
     if (!w.symbols.length) {
       s.set({ watchlist: { ...w, quotes: {}, status: "done", error: null } });
       return;
     }
+    _watchBusy = true;
     s.set({ watchlist: { ...s.get().watchlist, status: "loading" } });
     try {
       const data = await request("/watchlist?symbols=" +
@@ -459,17 +465,23 @@
     } catch (err) {
       s.set({ watchlist: { ...s.get().watchlist,
                            status: "error", error: err.message } });
+    } finally {
+      _watchBusy = false;
     }
   }
 
   /* ---- Piyasalar: sabit enstrüman tahtası (döviz/altın/endeks/kripto) ----
      Ayni /api/watchlist endpoint'ini kullanır — backend değişikliği yok.
      Semboller FDX.MARKETS'ten gelir (config.js). */
+  let _marketsBusy = false;   // ust uste binme freni (fetchWatchlist ile ayni)
+
   async function fetchMarkets() {
+    if (_marketsBusy) return;
     const s = FDX.store;
     // calc=true satırlar Yahoo'dan çekilmez; bileşenlerinden hesaplanır (app.js)
     const syms = (FDX.MARKETS || []).filter(m => m.sym).map(m => m.sym);
     if (!syms.length) return;
+    _marketsBusy = true;
     s.set({ markets: { ...s.get().markets, status: "loading" } });
     try {
       const data = await request("/watchlist?symbols=" +
@@ -493,6 +505,8 @@
       s.set({ markets: { quotes, status: "done", error: null } });
     } catch (err) {
       s.set({ markets: { ...s.get().markets, status: "error", error: err.message } });
+    } finally {
+      _marketsBusy = false;
     }
   }
 
