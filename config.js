@@ -174,6 +174,22 @@ FDX.I18N = {
       export: "Dışa Aktar (JSON indir)", import: "İçe Aktar (yedek yükle)"
     },
     prov: { title: "Kaynak Belge" },
+    tip: {
+      home: "Ana sayfaya dön (Genel Bakış)",
+      share: "Bu sayfanın bağlantısını kopyala",
+      shareCopied: "Bağlantı kopyalandı",
+      shareBlocked: "Pano erişimi engellendi — adres çubuğundan kopyalayabilirsin",
+      auth: "Üyelik ve yetkilendirme (Auth) Ay 6 sonrası yol haritasında",
+      runSim: "Simülasyonu çalıştır",
+      ragToggle: "Kapalıyken simülasyon belgelere hiç bakmaz (daha hızlı, daha az token)",
+      close: "Kapat",
+      srcDoc: "Kaynak belge",
+      openInDoc: "Kaynağı belgede aç (sayfa ",
+      openInDocBtn: "belgede aç →",
+      deleteDoc: "Belgeyi indeksten kalıcı olarak sil",
+      openSide: "Kaynağı yan panelde, tam bu sayfada göster",
+      cycleWeek: "Bu hafta: ", cycleTotal: " simülasyon · Toplam: "
+    },
     app: {
       errSim: "Simülasyon başarısız: ",
       btnReport: "Raporu Oluştur",
@@ -274,6 +290,22 @@ FDX.I18N = {
       export: "Export (download JSON)", import: "Import (load backup)"
     },
     prov: { title: "Source Document" },
+    tip: {
+      home: "Go to home (Overview)",
+      share: "Copy this page's link",
+      shareCopied: "Link copied",
+      shareBlocked: "Clipboard access blocked — copy from the address bar",
+      auth: "Membership & authorization (Auth) is on the roadmap after Month 6",
+      runSim: "Run the simulation",
+      ragToggle: "When off, the simulation never looks at documents (faster, fewer tokens)",
+      close: "Close",
+      srcDoc: "Source document",
+      openInDoc: "Open the source in the document (page ",
+      openInDocBtn: "open in document →",
+      deleteDoc: "Permanently delete this document from the index",
+      openSide: "Show the source in the side panel, at this exact page",
+      cycleWeek: "This week: ", cycleTotal: " simulations · Total: "
+    },
     app: {
       errSim: "Simulation failed: ",
       btnReport: "Generate Report",

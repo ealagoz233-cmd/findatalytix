@@ -1067,7 +1067,7 @@
     // != null: hem null hem undefined'i yakalar (eksik alan = "undefined/undefined" kazasi)
     if (h.weeklyRuns != null) {
       cycle.textContent = h.weeklyRuns + "/" + h.weeklyLimit;
-      cycle.title = "Bu hafta: " + h.weeklyRuns + " simulasyon \u00b7 Toplam: " + h.totalRuns;
+      cycle.title = Prefs.dict().tip.cycleWeek + h.weeklyRuns + Prefs.dict().tip.cycleTotal + h.totalRuns;
     } else {
       cycle.textContent = "\u2014";
     }
@@ -1279,7 +1279,7 @@
         const link = document.createElement("button");
         link.className = "src-link";
         link.textContent = src;
-        link.title = "Kaynağı belgede aç (sayfa " + page + ")";
+        link.title = Prefs.dict().tip.openInDoc + page + ")";
         link.addEventListener("click", () => openDocViewer(name, page));
         box.appendChild(link);
       });
@@ -1330,7 +1330,7 @@
       const del = document.createElement("button");
       del.className = "file-del";
       del.setAttribute("aria-label", d.name + " belgesini indeksten sil");
-      del.title = "Belgeyi indeksten kalıcı olarak sil";
+      del.title = Prefs.dict().tip.deleteDoc;
       del.textContent = "✕";
       del.addEventListener("click", () => {
         if (confirm("'" + d.name + "' indeksten KALICI olarak silinecek (" +
@@ -1372,7 +1372,7 @@
       const chip = document.createElement("span");
       chip.className = "chip";
       chip.textContent = d.name;
-      chip.title = (d.chunks || 0) + " chunk indeksli";
+      chip.title = (d.chunks || 0) + Prefs.dict().ov.chunksIndexed;
       wrap.appendChild(chip);
     });
   }
@@ -1428,8 +1428,8 @@
       }
       const open = document.createElement("button");
       open.className = "hit-open";
-      open.textContent = "belgede aç →";
-      open.title = "Kaynağı yan panelde, tam bu sayfada göster";
+      open.textContent = Prefs.dict().tip.openInDocBtn;
+      open.title = Prefs.dict().tip.openSide;
       open.addEventListener("click", () => openDocViewer(r.source, r.page));
       head.append(info, open);
       const body = document.createElement("p");
@@ -1597,13 +1597,13 @@
       try {
         await navigator.clipboard.writeText(location.href);
         shareBtn.classList.add("ok");
-        shareBtn.title = "Baglanti kopyalandi";
+        shareBtn.title = Prefs.dict().tip.shareCopied;
         setTimeout(() => {
           shareBtn.classList.remove("ok");
-          shareBtn.title = "Bu sayfanin baglantisini kopyala";
+          shareBtn.title = Prefs.dict().tip.share;
         }, 1600);
       } catch (err) {
-        shareBtn.title = "Pano erisimi engellendi - adres cubugundan kopyalayabilirsin";
+        shareBtn.title = Prefs.dict().tip.shareBlocked;
       }
     });
 
