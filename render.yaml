@@ -1,0 +1,32 @@
+# ==========================================================
+# FinDatalytix — Render.com Blueprint (tek servis deploy)
+# Kullanim: render.com -> New -> Blueprint -> bu repoyu sec.
+# Render bu dosyayi okur, servisi kurar; senden yalnizca
+# GROQ_API_KEY degerini ister (dashboard'da yapistirirsin).
+#
+# Mimari: FastAPI hem /api/* endpointlerini hem de frontend'in
+# 5 statik dosyasini sunar (main.py sonundaki beyaz liste).
+# Tek servis = CORS derdi yok, tek uyuyan servis.
+#
+# Ucretsiz plan notlari:
+# - 15 dk istek gelmezse uyur; ilk acilis ~1 dk surer.
+# - Disk KALICI DEGIL: yuklenen belgeler / raporlar / RAG indeksi
+#   her yeniden baslatmada silinir (demo icin kabul edilebilir).
+# ==========================================================
+services:
+  - type: web
+    name: findatalytix
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt && pip install ./engine
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: GROQ_API_KEY
+        sync: false          # degeri dashboard'da elle girilir (repoya asla yazilmaz)
+      - key: AI_ANALYST
+        value: gemini        # Groq anahtari varken tum roller zaten Groq'a gider
+      - key: CORS_ORIGINS
+        value: https://findatalytix.onrender.com   # ayni-origin istekler CORS'a takilmaz; bu satir yabanci origin'leri kapali tutar

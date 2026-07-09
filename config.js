@@ -14,7 +14,14 @@ FDX.CONFIG = {
 
   api: {
     useMock: false,                         // ← MOTOR TAKILDI
-    baseUrl: "http://127.0.0.1:8000/api",
+    // baseUrl otomatik secilir:
+    //   file://  veya gelistirme sunuculari (8080/8091/...)  -> yerel backend 127.0.0.1:8000
+    //   port yok (80/443 = deploy, or. Render) veya 8000     -> ayni origin (backend siteyi de sunar)
+    baseUrl: (() => {
+      if (location.protocol === "file:") return "http://127.0.0.1:8000/api";
+      if (location.port === "" || location.port === "8000") return location.origin + "/api";
+      return "http://127.0.0.1:8000/api";
+    })(),
     timeoutMs: 60000
   },
 

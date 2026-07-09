@@ -482,3 +482,28 @@ def query_documents(req: QueryRequest) -> dict:
                                 req.top_k or app_settings.get("topK"),
                                 min_score=0.0)
     return {"question": req.question, "results": results, "count": len(results)}
+
+
+# ----------------------------------------------------------
+# FRONTEND SUNUMU — deploy'da tek servis yeter (CORS derdi yok).
+# GUVENLIK: StaticFiles ile TUM klasoru acmak .env/main.py gibi
+# dosyalari da sunardi; o yuzden SADECE beyaz listedeki 5 dosya.
+# Bu route'lar en SONDA tanimli: /api/* her zaman once eslesir,
+# /{fname} yalnizca tek parcali yollari yakalar.
+# ----------------------------------------------------------
+from fastapi.responses import FileResponse as _FileResponse
+
+_FRONTEND_DIR = _Path(__file__).resolve().parent.parent
+_FRONTEND_FILES = {"index.html", "app.js", "core.js", "config.js", "styles.css"}
+
+
+@app.get("/", include_in_schema=False)
+def serve_index():
+    return _FileResponse(_FRONTEND_DIR / "index.html", media_type="text/html")
+
+
+@app.get("/{fname}", include_in_schema=False)
+def serve_frontend(fname: str):
+    if fname not in _FRONTEND_FILES:
+        raise HTTPException(404, "Böyle bir sayfa yok")
+    return _FileResponse(_FRONTEND_DIR / fname)
