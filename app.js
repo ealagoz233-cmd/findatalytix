@@ -1015,13 +1015,13 @@
       runs.textContent = h.totalRuns;
     if (h.weeklyRuns !== null && h.weeklyRuns !== undefined) {
       weekly.textContent = h.weeklyRuns;
-      wNote.textContent = "haftalık limit: " + (h.weeklyLimit || 600);
+      wNote.textContent = Prefs.dict().ov.weekLimit + (h.weeklyLimit || 600);
     }
 
     const st = state.vectordb.stats;
     if (st) {
       docs.textContent = st.documentCount;
-      dNote.textContent = st.totalChunks + " chunk indeksli";
+      dNote.textContent = st.totalChunks + Prefs.dict().ov.chunksIndexed;
     }
 
     watch.textContent = state.watchlist.symbols.length;

@@ -102,6 +102,19 @@ FDX.I18N = {
     sys: { ready: "Hazır", running: "Simülasyon Çalışıyor",
            reporting: "Rapor Üretiliyor", offline: "Sunucuya Ulaşılamıyor",
            dbOffline: "Bağlantı yok", doc: "doküman", chunk: "chunk" },
+    ui: { live: "CANLI", loading: "Veriler yükleniyor…" },
+    tbl: { symbol: "Sembol", price: "Fiyat", change: "Değişim", trend7: "7 Günlük Trend", sharpe: "Sharpe" },
+    ov: {
+      note: "Bu sayfadaki her kart ve tablo gerçek veriden beslenir — sahte rakam yok.",
+      totalSim: "Toplam Simülasyon", totalSimNote: "tümü gerçek geçmişten",
+      week: "Bu Hafta", weekNote: "haftalık döngü",
+      docs: "İndeksli Belge", docsNote: "vektör veri tabanında",
+      watch: "İzleme Listesi", watchNote: "sembol takipte",
+      watchTitle: "Canlı İzleme Listesi", watchPh: "Örn: THYAO", add: "Ekle",
+      recentSim: "Son Simülasyonlar", date: "Tarih", compare: "Karşılaştırma",
+      status: "Durum", histLoading: "Geçmiş yükleniyor…",
+      weekLimit: "haftalık limit: ", chunksIndexed: " chunk indeksli"
+    },
     app: {
       errSim: "Simülasyon başarısız: ",
       btnReport: "Raporu Oluştur",
@@ -130,6 +143,19 @@ FDX.I18N = {
     sys: { ready: "Ready", running: "Simulation Running",
            reporting: "Generating Report", offline: "Server Unreachable",
            dbOffline: "No connection", doc: "documents", chunk: "chunks" },
+    ui: { live: "LIVE", loading: "Loading data…" },
+    tbl: { symbol: "Symbol", price: "Price", change: "Change", trend7: "7-Day Trend", sharpe: "Sharpe" },
+    ov: {
+      note: "Every card and table on this page is backed by real data — no fake numbers.",
+      totalSim: "Total Simulations", totalSimNote: "all from real history",
+      week: "This Week", weekNote: "weekly cycle",
+      docs: "Indexed Documents", docsNote: "in the vector database",
+      watch: "Watchlist", watchNote: "symbols tracked",
+      watchTitle: "Live Watchlist", watchPh: "e.g. THYAO", add: "Add",
+      recentSim: "Recent Simulations", date: "Date", compare: "Comparison",
+      status: "Status", histLoading: "Loading history…",
+      weekLimit: "weekly limit: ", chunksIndexed: " chunks indexed"
+    },
     app: {
       errSim: "Simulation failed: ",
       btnReport: "Generate Report",

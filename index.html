@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.16" />
+  <link rel="stylesheet" href="styles.css?v=0.9.17" />
 </head>
 <body>
 
@@ -101,41 +101,41 @@
       =================================================== -->
       <section class="view" id="view-overview">
         <div class="phase-note glass">
-          <span class="phase-badge">CANLI</span>
-          Bu sayfadaki her kart ve tablo gerçek veriden beslenir — sahte rakam yok.
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span data-i18n="ov.note">Bu sayfadaki her kart ve tablo gerçek veriden beslenir — sahte rakam yok.</span>
         </div>
 
         <!-- Kartlar GERCEK veriden dolar (eski sahte portfoy rakamlari kaldirildi) -->
         <div class="ov-grid">
           <div class="ov-card glass">
-            <span class="ov-label">Toplam Simülasyon</span>
+            <span class="ov-label" data-i18n="ov.totalSim">Toplam Simülasyon</span>
             <span class="ov-value mono" id="ovRuns">—</span>
-            <span class="ov-delta">tümü gerçek geçmişten</span>
+            <span class="ov-delta" data-i18n="ov.totalSimNote">tümü gerçek geçmişten</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Bu Hafta</span>
+            <span class="ov-label" data-i18n="ov.week">Bu Hafta</span>
             <span class="ov-value mono" id="ovWeekly">—</span>
-            <span class="ov-delta" id="ovWeeklyNote">haftalık döngü</span>
+            <span class="ov-delta" id="ovWeeklyNote" data-i18n="ov.weekNote">haftalık döngü</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">İndeksli Belge</span>
+            <span class="ov-label" data-i18n="ov.docs">İndeksli Belge</span>
             <span class="ov-value mono" id="ovDocs">—</span>
-            <span class="ov-delta" id="ovDocsNote">vektör veri tabanında</span>
+            <span class="ov-delta" id="ovDocsNote" data-i18n="ov.docsNote">vektör veri tabanında</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">İzleme Listesi</span>
+            <span class="ov-label" data-i18n="ov.watch">İzleme Listesi</span>
             <span class="ov-value mono" id="ovWatch">—</span>
-            <span class="ov-delta">sembol takipte</span>
+            <span class="ov-delta" data-i18n="ov.watchNote">sembol takipte</span>
           </div>
         </div>
 
         <div class="panel glass">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="margin: 0;">Canlı İzleme Listesi</h3>
+            <h3 style="margin: 0;" data-i18n="ov.watchTitle">Canlı İzleme Listesi</h3>
             <div class="query-row" style="margin: 0; width: auto;">
-              <input type="text" id="watchInput" maxlength="12" placeholder="Örn: THYAO" style="width: 130px; margin-right: 8px;" />
+              <input type="text" id="watchInput" maxlength="12" placeholder="Örn: THYAO" data-i18n="ov.watchPh" style="width: 130px; margin-right: 8px;" />
               <button class="report-btn" id="watchAddBtn" style="padding: 0 1rem; flex-shrink: 0;">
-                <span class="report-btn-label">Ekle</span>
+                <span class="report-btn-label" data-i18n="ov.add">Ekle</span>
               </button>
             </div>
           </div>
@@ -143,26 +143,26 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Sembol</th>
-                <th style="text-align: right;">Fiyat</th>
-                <th style="text-align: right;">Değişim</th>
-                <th style="text-align: right; width: 120px;">7 Günlük Trend</th>
+                <th data-i18n="tbl.symbol">Sembol</th>
+                <th style="text-align: right;" data-i18n="tbl.price">Fiyat</th>
+                <th style="text-align: right;" data-i18n="tbl.change">Değişim</th>
+                <th style="text-align: right; width: 120px;" data-i18n="tbl.trend7">7 Günlük Trend</th>
               </tr>
             </thead>
             <tbody id="watchlistBody">
-              <tr><td colspan="4" class="table-empty">Veriler yükleniyor…</td></tr>
+              <tr><td colspan="4" class="table-empty" data-i18n="ui.loading">Veriler yükleniyor…</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="panel glass">
-          <h3>Son Simülasyonlar</h3>
+          <h3 data-i18n="ov.recentSim">Son Simülasyonlar</h3>
           <table class="data-table">
             <thead>
-              <tr><th>Tarih</th><th>Karşılaştırma</th><th>Sharpe</th><th>Durum</th></tr>
+              <tr><th data-i18n="ov.date">Tarih</th><th data-i18n="ov.compare">Karşılaştırma</th><th data-i18n="tbl.sharpe">Sharpe</th><th data-i18n="ov.status">Durum</th></tr>
             </thead>
             <tbody id="historyBody">
-              <tr><td colspan="4" class="table-empty">Geçmiş yükleniyor…</td></tr>
+              <tr><td colspan="4" class="table-empty" data-i18n="ov.histLoading">Geçmiş yükleniyor…</td></tr>
             </tbody>
           </table>
         </div>
@@ -623,8 +623,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.16"></script>
-  <script src="core.js?v=0.9.16"></script>
-  <script src="app.js?v=0.9.16"></script>
+  <script src="config.js?v=0.9.17"></script>
+  <script src="core.js?v=0.9.17"></script>
+  <script src="app.js?v=0.9.17"></script>
 </body>
 </html>
