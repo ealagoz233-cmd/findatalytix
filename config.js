@@ -41,9 +41,7 @@ FDX.CONFIG = {
     maxSizeMB: 20
   },
 
-  typing: { promptMs: 22, aiMs: 14 },
-
-  cycle: { done: 452, total: 600 }
+  typing: { promptMs: 22, aiMs: 14 }
 };
 
 /* ----------------------------------------------------------

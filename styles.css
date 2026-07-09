@@ -197,14 +197,6 @@ body {
 }
 .icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .icon-btn:hover { color: var(--gold); border-color: var(--stroke-strong); transform: translateY(-2px); }
-.icon-btn.has-dot::after {
-  content: "";
-  position: absolute; top: 9px; right: 9px;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 8px var(--gold);
-}
 
 .user { display: flex; align-items: center; gap: 10px; }
 .user-name { font-size: 0.88rem; color: var(--text-dim); }
