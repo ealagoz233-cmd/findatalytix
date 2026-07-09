@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.17" />
+  <link rel="stylesheet" href="styles.css?v=0.9.19" />
 </head>
 <body>
 
@@ -173,24 +173,24 @@
       =================================================== -->
       <section class="view" id="view-markets">
         <div class="phase-note glass">
-          <span class="phase-badge">CANLI</span>
-          Kurlar, emtia, endeks ve kripto Yahoo Finance'ten canlı çekilir; sayfa açıkken 60 saniyede bir tazelenir.
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span data-i18n="mk.note">Kurlar, emtia, endeks ve kripto Yahoo Finance'ten canlı çekilir; sayfa açıkken 60 saniyede bir tazelenir.</span>
         </div>
 
         <div class="panel glass">
-          <h3>Canlı Piyasa Tahtası</h3>
+          <h3 data-i18n="mk.title">Canlı Piyasa Tahtası</h3>
           <p class="ai-error" id="marketsError" role="alert" hidden></p>
           <table class="data-table">
             <thead>
               <tr>
-                <th>Enstrüman</th>
-                <th style="text-align: right;">Fiyat</th>
-                <th style="text-align: right;">Değişim</th>
-                <th style="text-align: right; width: 120px;">7 Günlük Trend</th>
+                <th data-i18n="mk.instrument">Enstrüman</th>
+                <th style="text-align: right;" data-i18n="tbl.price">Fiyat</th>
+                <th style="text-align: right;" data-i18n="tbl.change">Değişim</th>
+                <th style="text-align: right; width: 120px;" data-i18n="tbl.trend7">7 Günlük Trend</th>
               </tr>
             </thead>
             <tbody id="marketsBody">
-              <tr><td colspan="4" class="table-empty">Veriler yükleniyor…</td></tr>
+              <tr><td colspan="4" class="table-empty" data-i18n="ui.loading">Veriler yükleniyor…</td></tr>
             </tbody>
           </table>
         </div>
@@ -201,60 +201,60 @@
       =================================================== -->
       <section class="view" id="view-portfolio">
         <div class="phase-note glass">
-          <span class="phase-badge">CANLI</span>
-          Kendi varlıklarını gir (adet + alış fiyatı); güncel piyasa fiyatıyla anlık değer ve kâr/zararını hesaplar. Veriler yalnızca senin tarayıcında saklanır.
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span data-i18n="pf.note">Kendi varlıklarını gir (adet + alış fiyatı); güncel piyasa fiyatıyla anlık değer ve kâr/zararını hesaplar. Veriler yalnızca senin tarayıcında saklanır.</span>
         </div>
 
         <div class="ov-grid">
           <div class="ov-card glass">
-            <span class="ov-label">Toplam Değer</span>
+            <span class="ov-label" data-i18n="pf.totalValue">Toplam Değer</span>
             <span class="ov-value mono" id="pfValue">—</span>
-            <span class="ov-delta" id="pfValueNote">güncel piyasa fiyatıyla</span>
+            <span class="ov-delta" id="pfValueNote" data-i18n="pf.totalValueNote">güncel piyasa fiyatıyla</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Toplam Maliyet</span>
+            <span class="ov-label" data-i18n="pf.totalCost">Toplam Maliyet</span>
             <span class="ov-value mono" id="pfCost">—</span>
-            <span class="ov-delta">alış tutarların</span>
+            <span class="ov-delta" data-i18n="pf.totalCostNote">alış tutarların</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Toplam Kâr / Zarar</span>
+            <span class="ov-label" data-i18n="pf.pnl">Toplam Kâr / Zarar</span>
             <span class="ov-value mono" id="pfPnl">—</span>
             <span class="ov-delta" id="pfPnlPct">—</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Varlık Sayısı</span>
+            <span class="ov-label" data-i18n="pf.count">Varlık Sayısı</span>
             <span class="ov-value mono" id="pfCount">—</span>
-            <span class="ov-delta">portföydeki satır</span>
+            <span class="ov-delta" data-i18n="pf.countNote">portföydeki satır</span>
           </div>
         </div>
 
         <div class="panel glass">
-          <h3>Varlık Ekle</h3>
+          <h3 data-i18n="pf.addTitle">Varlık Ekle</h3>
           <div class="query-row pf-add">
-            <input type="text" id="pfSym" maxlength="12" placeholder="Sembol (örn: THYAO, AAPL)" />
-            <input type="number" id="pfQty" min="0" step="any" placeholder="Adet" />
-            <input type="number" id="pfCostIn" min="0" step="any" placeholder="Alış fiyatı" />
-            <button class="report-btn" id="pfAddBtn"><span class="report-btn-label">Ekle</span></button>
+            <input type="text" id="pfSym" maxlength="12" placeholder="Sembol (örn: THYAO, AAPL)" data-i18n="pf.phSym" />
+            <input type="number" id="pfQty" min="0" step="any" placeholder="Adet" data-i18n="pf.phQty" />
+            <input type="number" id="pfCostIn" min="0" step="any" placeholder="Alış fiyatı" data-i18n="pf.phCost" />
+            <button class="report-btn" id="pfAddBtn"><span class="report-btn-label" data-i18n="ov.add">Ekle</span></button>
           </div>
           <p class="ai-error" id="pfError" role="alert" hidden></p>
         </div>
 
         <div class="panel glass">
-          <h3>Varlıklarım</h3>
+          <h3 data-i18n="pf.mine">Varlıklarım</h3>
           <table class="data-table">
             <thead>
               <tr>
-                <th>Sembol</th>
-                <th style="text-align: right;">Adet</th>
-                <th style="text-align: right;">Alış</th>
-                <th style="text-align: right;">Güncel</th>
-                <th style="text-align: right;">Değer</th>
-                <th style="text-align: right;">K/Z</th>
+                <th data-i18n="tbl.symbol">Sembol</th>
+                <th style="text-align: right;" data-i18n="pf.qty">Adet</th>
+                <th style="text-align: right;" data-i18n="pf.buy">Alış</th>
+                <th style="text-align: right;" data-i18n="pf.current">Güncel</th>
+                <th style="text-align: right;" data-i18n="pf.value">Değer</th>
+                <th style="text-align: right;" data-i18n="pf.pnlShort">K/Z</th>
                 <th style="width: 40px;"></th>
               </tr>
             </thead>
             <tbody id="portfolioBody">
-              <tr><td colspan="7" class="table-empty">Henüz varlık eklenmedi.</td></tr>
+              <tr><td colspan="7" class="table-empty" data-i18n="pf.empty">Henüz varlık eklenmedi.</td></tr>
             </tbody>
           </table>
         </div>
@@ -278,25 +278,25 @@
         <div class="compare-grid" id="simResultsGrid">
           <div class="empty-state glass" id="simEmpty">
             <svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/></svg>
-            <h3>Henüz simülasyon çalıştırılmadı</h3>
-            <p>Prompt'a analiz etmek istediğin varlıkları yaz (örn: "THYAO ile Apple'ı karşılaştır") — AI sembolleri çıkarır, her biri için Monte Carlo koşar ve kartlar burada belirir.</p>
+            <h3 data-i18n="sim.emptyTitle">Henüz simülasyon çalıştırılmadı</h3>
+            <p data-i18n="sim.emptyBody">Prompt'a analiz etmek istediğin varlıkları yaz (örn: "THYAO ile Apple'ı karşılaştır") — AI sembolleri çıkarır, her biri için Monte Carlo koşar ve kartlar burada belirir.</p>
           </div>
         </div>
 
         <div class="lower-grid">
           <div class="lower-left">
             <div class="rag-panel glass">
-              <h3>RAG Referans Kaynakları
+              <h3><span data-i18n="sim.ragTitle">RAG Referans Kaynakları</span>
                 <label class="rag-toggle" title="Kapalıyken simülasyon belgelere hiç bakmaz (daha hızlı, daha az token)">
                   <input type="checkbox" id="ragToggle" checked />
-                  <span>simülasyonda kullan</span>
+                  <span data-i18n="sim.ragUse">simülasyonda kullan</span>
                 </label>
               </h3>
               <div class="rag-chips" id="ragChips"></div>
             </div>
 
             <div class="ai-panel glass">
-              <h3>Claude &amp; Gemini Analiz Yorumu</h3>
+              <h3 data-i18n="sim.aiTitle">Claude &amp; Gemini Analiz Yorumu</h3>
 
               <p id="aiText"></p>
               <span class="cursor" id="aiCursor"></span>
@@ -306,17 +306,17 @@
           </div>
 
           <aside class="report-card glass" id="reportCard">
-            <h3>Risk Raporu Üret</h3>
+            <h3 data-i18n="sim.reportTitle">Risk Raporu Üret</h3>
             <div class="report-icons">
               <div class="doc-badge">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
               </div>
               <button class="report-btn" id="reportBtn">
-                <span class="report-btn-label">Raporu Oluştur</span>
+                <span class="report-btn-label" data-i18n="app.btnReport">Raporu Oluştur</span>
                 <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
               </button>
             </div>
-            <p class="report-hint">Word (.docx) formatında, RAG kaynaklı teknik risk raporu.</p>
+            <p class="report-hint" data-i18n="sim.reportHint">Word (.docx) formatında, RAG kaynaklı teknik risk raporu.</p>
           </aside>
         </div>
       </section>
@@ -326,60 +326,60 @@
       =================================================== -->
       <section class="view" id="view-vectordb">
         <div class="phase-note glass">
-          <span class="phase-badge">CANLI</span>
-          RAG boru hattı aktif: yüklediğin PDF/Word dosyaları ChromaDB'de vektörlenir ve aranabilir hale gelir.
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span data-i18n="vdb.note">RAG boru hattı aktif: yüklediğin PDF/Word dosyaları ChromaDB'de vektörlenir ve aranabilir hale gelir.</span>
         </div>
 
         <div class="ov-grid">
           <div class="ov-card glass">
-            <span class="ov-label">Yüklü Doküman</span>
+            <span class="ov-label" data-i18n="vdb.docs">Yüklü Doküman</span>
             <span class="ov-value mono" id="statDocs">—</span>
-            <span class="ov-delta" id="statDocsNote">sunucu bekleniyor</span>
+            <span class="ov-delta" id="statDocsNote" data-i18n="vdb.docsNote">sunucu bekleniyor</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Toplam Chunk</span>
+            <span class="ov-label" data-i18n="vdb.chunks">Toplam Chunk</span>
             <span class="ov-value mono" id="statChunks">—</span>
-            <span class="ov-delta">vektörlenmiş parça</span>
+            <span class="ov-delta" data-i18n="vdb.chunksNote">vektörlenmiş parça</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Embedding Modeli</span>
+            <span class="ov-label" data-i18n="vdb.embModel">Embedding Modeli</span>
             <span class="ov-value small">ONNX MiniLM-L6</span>
-            <span class="ov-delta">ChromaDB yerleşik (~80MB)</span>
+            <span class="ov-delta" data-i18n="vdb.embNote">ChromaDB yerleşik (~80MB)</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Son Güncelleme</span>
+            <span class="ov-label" data-i18n="vdb.updated">Son Güncelleme</span>
             <span class="ov-value mono" id="statUpdated">—</span>
-            <span class="ov-delta">indeksin son yazımı</span>
+            <span class="ov-delta" data-i18n="vdb.updatedNote">indeksin son yazımı</span>
           </div>
         </div>
 
         <div class="dropzone glass" id="dropzone" role="button" tabindex="0"
              aria-label="Dosya seçmek için tıkla ya da Enter'a bas; PDF veya Word dosyasını sürükleyip bırakabilirsin">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <p><strong>PDF veya Word dosyasını sürükle</strong> ya da tıklayıp seç</p>
-          <p class="dz-hint">Dosyalar doğrulanır, ChromaDB'de anında vektörlenir ve aramaya açılır.</p>
+          <p><strong data-i18n="vdb.dropStrong">PDF veya Word dosyasını sürükle</strong> <span data-i18n="vdb.dropRest">ya da tıklayıp seç</span></p>
+          <p class="dz-hint" data-i18n="vdb.dzHint">Dosyalar doğrulanır, ChromaDB'de anında vektörlenir ve aramaya açılır.</p>
           <input type="file" id="fileInput" accept=".pdf,.docx" multiple hidden />
         </div>
 
         <div class="panel glass" id="fileListWrap" hidden>
-          <h3>Yükleme Kuyruğu</h3>
+          <h3 data-i18n="vdb.queue">Yükleme Kuyruğu</h3>
           <ul class="file-list" id="fileList"></ul>
         </div>
 
         <!-- Eski oturumlar dahil TUM indeksli belgeler; buradan silinebilir
              ("zaten indeksli, once silin" duvarinin cozumu) -->
         <div class="panel glass" id="indexedDocsWrap" hidden>
-          <h3>İndeksli Belgeler</h3>
+          <h3 data-i18n="vdb.indexed">İndeksli Belgeler</h3>
           <ul class="file-list" id="indexedDocs"></ul>
         </div>
 
         <div class="panel glass">
-          <h3>RAG Arama Testi</h3>
+          <h3 data-i18n="vdb.searchTitle">RAG Arama Testi</h3>
           <div class="query-row">
-            <input type="text" id="queryInput"
+            <input type="text" id="queryInput" data-i18n="vdb.searchPh"
                    placeholder="Örn: politika faizi ne kadar? (indeksli dokümanlarda arar)" />
             <button class="report-btn" id="queryBtn">
-              <span class="report-btn-label">Ara</span>
+              <span class="report-btn-label" data-i18n="app.btnSearch">Ara</span>
               <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
             </button>
           </div>
@@ -392,16 +392,16 @@
       =================================================== -->
       <section class="view" id="view-assets">
         <div class="phase-note glass">
-          <span class="phase-badge">CANLI</span>
-          Sembol yaz, 1 yıllık gerçek piyasa verisi RSI ve MACD göstergeleriyle çizilsin. BIST için sadece kod yeterli (THYAO), sistem .IS ekini kendisi dener.
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span data-i18n="as.note">Sembol yaz, 1 yıllık gerçek piyasa verisi RSI ve MACD göstergeleriyle çizilsin. BIST için sadece kod yeterli (THYAO), sistem .IS ekini kendisi dener.</span>
         </div>
 
         <div class="panel glass">
           <div class="query-row">
-            <input type="text" id="assetInput" maxlength="12"
+            <input type="text" id="assetInput" maxlength="12" data-i18n="as.ph"
                    placeholder="Örn: THYAO, GARAN, XU030, AAPL, QQQ…" />
             <button class="report-btn" id="assetBtn">
-              <span class="report-btn-label">Analiz Et</span>
+              <span class="report-btn-label" data-i18n="app.btnAnalyze">Analiz Et</span>
               <svg class="arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
             </button>
           </div>
@@ -410,29 +410,29 @@
 
         <div class="ov-grid" id="assetSummary" hidden>
           <div class="ov-card glass">
-            <span class="ov-label">Son Fiyat</span>
+            <span class="ov-label" data-i18n="as.last">Son Fiyat</span>
             <span class="ov-value mono" id="asLast">—</span>
             <span class="ov-delta" id="asChange">—</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">52 Hafta Aralığı</span>
+            <span class="ov-label" data-i18n="as.range">52 Hafta Aralığı</span>
             <span class="ov-value mono" id="asRange">—</span>
-            <span class="ov-delta">düşük — yüksek</span>
+            <span class="ov-delta" data-i18n="as.rangeNote">düşük — yüksek</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">Yıllık Volatilite</span>
+            <span class="ov-label" data-i18n="as.vol">Yıllık Volatilite</span>
             <span class="ov-value mono" id="asVol">—</span>
-            <span class="ov-delta">günlük getirilerden</span>
+            <span class="ov-delta" data-i18n="as.volNote">günlük getirilerden</span>
           </div>
           <div class="ov-card glass">
-            <span class="ov-label">RSI (14)</span>
+            <span class="ov-label" data-i18n="as.rsi">RSI (14)</span>
             <span class="ov-value mono" id="asRsi">—</span>
             <span class="ov-delta" id="asRsiNote">—</span>
           </div>
         </div>
 
         <div class="panel glass" id="assetChartWrap" hidden>
-          <h3 id="assetChartTitle">Fiyat Grafiği</h3>
+          <h3 id="assetChartTitle" data-i18n="as.chartTitle">Fiyat Grafiği</h3>
           <div id="assetChart" class="asset-chart"></div>
         </div>
       </section>
@@ -442,24 +442,24 @@
       =================================================== -->
       <section class="view" id="view-report">
         <div class="phase-note glass">
-          <span class="phase-badge">CANLI</span>
-          Üretilen her .docx rapor sunucuda arşivlenir; buradan tekrar indirebilir ya da silebilirsin.
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span data-i18n="rep.note">Üretilen her .docx rapor sunucuda arşivlenir; buradan tekrar indirebilir ya da silebilirsin.</span>
         </div>
 
         <div class="panel glass">
-          <h3>Rapor Arşivi</h3>
+          <h3 data-i18n="rep.title">Rapor Arşivi</h3>
           <p class="ai-error" id="reportsError" role="alert" hidden></p>
           <table class="data-table">
             <thead>
               <tr>
-                <th>Rapor</th>
-                <th style="text-align: right;">Boyut</th>
-                <th style="text-align: right;">Tarih</th>
+                <th data-i18n="rep.report">Rapor</th>
+                <th style="text-align: right;" data-i18n="rep.size">Boyut</th>
+                <th style="text-align: right;" data-i18n="ov.date">Tarih</th>
                 <th style="text-align: right; width: 150px;"></th>
               </tr>
             </thead>
             <tbody id="reportsBody">
-              <tr><td colspan="4" class="table-empty">Yükleniyor…</td></tr>
+              <tr><td colspan="4" class="table-empty" data-i18n="ui.loadingShort">Yükleniyor…</td></tr>
             </tbody>
           </table>
         </div>
@@ -470,25 +470,25 @@
       =================================================== -->
       <section class="view" id="view-config">
         <div class="phase-note glass">
-          <span class="phase-badge">CANLI</span>
-          <span id="aiStatusLine">AI durumu sunucudan okunuyor…</span>
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span id="aiStatusLine" data-i18n="cfg.aiLoading">AI durumu sunucudan okunuyor…</span>
         </div>
 
         <div class="panel glass">
-          <h3>AI Model Rolleri <em class="cfg-note">(Claude ve Gemini rolleri dinamik olarak değiştirilebilir)</em></h3>
-          <p class="cfg-groq-note" id="groqNote" hidden>
+          <h3><span data-i18n="cfg.rolesTitle">AI Model Rolleri</span> <em class="cfg-note" data-i18n="cfg.rolesNote">(Claude ve Gemini rolleri dinamik olarak değiştirilebilir)</em></h3>
+          <p class="cfg-groq-note" id="groqNote" hidden data-i18n="cfg.groqNote">
             ⚡ Groq (Llama 3.3) aktif: tüm AI rollerini şu an Groq yürütüyor.
             Aşağıdaki analist/hakem seçimi yalnızca Groq anahtarı kaldırılırsa devreye girer.
           </p>
           <div class="form-row">
-            <label for="cfgAnalyst">Analist Model</label>
+            <label for="cfgAnalyst" data-i18n="cfg.analyst">Analist Model</label>
             <select id="cfgAnalyst">
               <option value="claude">Claude (Anthropic)</option>
               <option value="gemini">Gemini (Google)</option>
             </select>
           </div>
           <div class="form-row">
-            <label for="cfgReferee">Hakem Model</label>
+            <label for="cfgReferee" data-i18n="cfg.referee">Hakem Model</label>
             <select id="cfgReferee">
               <option value="gemini">Gemini (Google)</option>
               <option value="claude">Claude (Anthropic)</option>
@@ -497,22 +497,22 @@
         </div>
 
         <div class="panel glass">
-          <h3>RAG Parametreleri</h3>
+          <h3 data-i18n="cfg.ragParams">RAG Parametreleri</h3>
           <div class="form-row">
-            <label for="cfgChunk">Chunk Boyutu (karakter, 300-1200) <em class="cfg-note">yeni yüklemelerde geçerli</em></label>
+            <label for="cfgChunk"><span data-i18n="cfg.chunkSize">Chunk Boyutu (karakter, 300-1200)</span> <em class="cfg-note" data-i18n="cfg.chunkNote">yeni yüklemelerde geçerli</em></label>
             <input id="cfgChunk" type="number" min="300" max="1200" step="50" value="800" />
           </div>
           <div class="form-row">
-            <label for="cfgTopK">Getirilecek Chunk Sayısı (top-k)</label>
+            <label for="cfgTopK" data-i18n="cfg.topK">Getirilecek Chunk Sayısı (top-k)</label>
             <input id="cfgTopK" type="number" value="5" />
           </div>
         </div>
         
         <div style="text-align: right; margin-top: 15px;">
            <button class="report-btn" id="saveConfigBtn">
-              <span class="report-btn-label">Ayarları Kaydet</span>
+              <span class="report-btn-label" data-i18n="cfg.save">Ayarları Kaydet</span>
            </button>
-           <span id="configSaveMsg" style="color: var(--green); margin-left: 10px; opacity: 0; transition: opacity 0.3s;">Kaydedildi ✓</span>
+           <span id="configSaveMsg" data-i18n="cfg.saved" style="color: var(--green); margin-left: 10px; opacity: 0; transition: opacity 0.3s;">Kaydedildi ✓</span>
         </div>
       </section>
 
@@ -521,22 +521,22 @@
       =================================================== -->
       <section class="view" id="view-settings">
         <div class="phase-note glass">
-          <span class="phase-badge">CANLI</span>
-          Tema ve dil tercihlerin tarayıcı hafızasına (localStorage) kaydedilir; sayfayı yenilesen de seçimin kalır. Not: dinamik hata mesajları şimdilik Türkçe.
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span data-i18n="set.note">Tema ve dil tercihlerin tarayıcı hafızasına (localStorage) kaydedilir; sayfayı yenilesen de seçimin kalır. Not: dinamik hata mesajları şimdilik Türkçe.</span>
         </div>
 
         <div class="panel glass">
-          <h3>Görünüm</h3>
+          <h3 data-i18n="set.appearance">Görünüm</h3>
           <div class="form-row">
-            <label>Tema</label>
+            <label data-i18n="set.theme">Tema</label>
             <div class="seg" id="themeSeg">
-              <button class="seg-btn" data-theme-opt="dark">Loş</button>
-              <button class="seg-btn" data-theme-opt="black">Siyah</button>
-              <button class="seg-btn" data-theme-opt="light">Beyaz</button>
+              <button class="seg-btn" data-theme-opt="dark" data-i18n="set.themeDim">Loş</button>
+              <button class="seg-btn" data-theme-opt="black" data-i18n="set.themeBlack">Siyah</button>
+              <button class="seg-btn" data-theme-opt="light" data-i18n="set.themeLight">Beyaz</button>
             </div>
           </div>
           <div class="form-row">
-            <label>Dil</label>
+            <label data-i18n="set.lang">Dil</label>
             <div class="seg" id="langSeg">
               <button class="seg-btn" data-lang-opt="tr">Türkçe</button>
               <button class="seg-btn" data-lang-opt="en">English</button>
@@ -547,17 +547,17 @@
         <!-- Veri yedekleme: portföy + izleme listesi + tercihler localStorage'da;
              tarayıcı temizliğinde kaybolmasın diye dışa/içe aktarma. -->
         <div class="panel glass">
-          <h3>Veri Yönetimi (Yedek)</h3>
-          <p class="cfg-note" style="display:block; margin-bottom:12px;">
+          <h3 data-i18n="set.dataTitle">Veri Yönetimi (Yedek)</h3>
+          <p class="cfg-note" style="display:block; margin-bottom:12px;" data-i18n="set.dataNote">
             Portföyün, izleme listen ve tercihlerin yalnızca bu tarayıcıda saklanır.
             Tarayıcı verisini temizlersen kaybolur — düzenli olarak dışa aktar (yedekle).
           </p>
           <div class="query-row" style="gap:10px;">
             <button class="report-btn" id="exportBtn">
-              <span class="report-btn-label">Dışa Aktar (JSON indir)</span>
+              <span class="report-btn-label" data-i18n="set.export">Dışa Aktar (JSON indir)</span>
             </button>
             <button class="report-btn" id="importBtn">
-              <span class="report-btn-label">İçe Aktar (yedek yükle)</span>
+              <span class="report-btn-label" data-i18n="set.import">İçe Aktar (yedek yükle)</span>
             </button>
             <input type="file" id="importFile" accept="application/json,.json" hidden />
           </div>
@@ -609,7 +609,7 @@
   <aside class="prov-drawer" id="provDrawer" hidden aria-label="Kaynak belge önizleme">
     <div class="prov-drawer-head">
       <div class="prov-drawer-title">
-        <strong>Kaynak Belge</strong>
+        <strong data-i18n="prov.title">Kaynak Belge</strong>
         <span id="provDrawerName">—</span>
       </div>
       <button class="file-del" id="provDrawerClose" title="Kapat">✕</button>
@@ -623,8 +623,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.17"></script>
-  <script src="core.js?v=0.9.17"></script>
-  <script src="app.js?v=0.9.17"></script>
+  <script src="config.js?v=0.9.19"></script>
+  <script src="core.js?v=0.9.19"></script>
+  <script src="app.js?v=0.9.19"></script>
 </body>
 </html>

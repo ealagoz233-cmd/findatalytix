@@ -102,7 +102,7 @@ FDX.I18N = {
     sys: { ready: "Hazır", running: "Simülasyon Çalışıyor",
            reporting: "Rapor Üretiliyor", offline: "Sunucuya Ulaşılamıyor",
            dbOffline: "Bağlantı yok", doc: "doküman", chunk: "chunk" },
-    ui: { live: "CANLI", loading: "Veriler yükleniyor…" },
+    ui: { live: "CANLI", loading: "Veriler yükleniyor…", loadingShort: "Yükleniyor…" },
     tbl: { symbol: "Sembol", price: "Fiyat", change: "Değişim", trend7: "7 Günlük Trend", sharpe: "Sharpe" },
     ov: {
       note: "Bu sayfadaki her kart ve tablo gerçek veriden beslenir — sahte rakam yok.",
@@ -115,6 +115,65 @@ FDX.I18N = {
       status: "Durum", histLoading: "Geçmiş yükleniyor…",
       weekLimit: "haftalık limit: ", chunksIndexed: " chunk indeksli"
     },
+    mk: {
+      note: "Kurlar, emtia, endeks ve kripto Yahoo Finance'ten canlı çekilir; sayfa açıkken 60 saniyede bir tazelenir.",
+      title: "Canlı Piyasa Tahtası", instrument: "Enstrüman"
+    },
+    pf: {
+      note: "Kendi varlıklarını gir (adet + alış fiyatı); güncel piyasa fiyatıyla anlık değer ve kâr/zararını hesaplar. Veriler yalnızca senin tarayıcında saklanır.",
+      totalValue: "Toplam Değer", totalValueNote: "güncel piyasa fiyatıyla", totalValuePending: "* bazı fiyatlar bekleniyor",
+      totalCost: "Toplam Maliyet", totalCostNote: "alış tutarların",
+      pnl: "Toplam Kâr / Zarar", count: "Varlık Sayısı", countNote: "portföydeki satır",
+      addTitle: "Varlık Ekle", phSym: "Sembol (örn: THYAO, AAPL)", phQty: "Adet", phCost: "Alış fiyatı",
+      mine: "Varlıklarım", qty: "Adet", buy: "Alış", current: "Güncel", value: "Değer", pnlShort: "K/Z",
+      empty: "Henüz varlık eklenmedi."
+    },
+    sim: {
+      emptyTitle: "Henüz simülasyon çalıştırılmadı",
+      emptyBody: "Prompt'a analiz etmek istediğin varlıkları yaz (örn: \"THYAO ile Apple'ı karşılaştır\") — AI sembolleri çıkarır, her biri için Monte Carlo koşar ve kartlar burada belirir.",
+      ragTitle: "RAG Referans Kaynakları", ragUse: "simülasyonda kullan",
+      aiTitle: "Claude & Gemini Analiz Yorumu",
+      reportTitle: "Risk Raporu Üret", reportHint: "Word (.docx) formatında, RAG kaynaklı teknik risk raporu."
+    },
+    vdb: {
+      note: "RAG boru hattı aktif: yüklediğin PDF/Word dosyaları ChromaDB'de vektörlenir ve aranabilir hale gelir.",
+      docs: "Yüklü Doküman", docsNote: "sunucu bekleniyor",
+      chunks: "Toplam Chunk", chunksNote: "vektörlenmiş parça",
+      embModel: "Embedding Modeli", embNote: "ChromaDB yerleşik (~80MB)",
+      updated: "Son Güncelleme", updatedNote: "indeksin son yazımı",
+      dropStrong: "PDF veya Word dosyasını sürükle", dropRest: "ya da tıklayıp seç",
+      dzHint: "Dosyalar doğrulanır, ChromaDB'de anında vektörlenir ve aramaya açılır.",
+      queue: "Yükleme Kuyruğu", indexed: "İndeksli Belgeler",
+      searchTitle: "RAG Arama Testi", searchPh: "Örn: politika faizi ne kadar? (indeksli dokümanlarda arar)"
+    },
+    as: {
+      note: "Sembol yaz, 1 yıllık gerçek piyasa verisi RSI ve MACD göstergeleriyle çizilsin. BIST için sadece kod yeterli (THYAO), sistem .IS ekini kendisi dener.",
+      ph: "Örn: THYAO, GARAN, XU030, AAPL, QQQ…",
+      last: "Son Fiyat", range: "52 Hafta Aralığı", rangeNote: "düşük — yüksek",
+      vol: "Yıllık Volatilite", volNote: "günlük getirilerden", rsi: "RSI (14)",
+      chartTitle: "Fiyat Grafiği"
+    },
+    rep: {
+      note: "Üretilen her .docx rapor sunucuda arşivlenir; buradan tekrar indirebilir ya da silebilirsin.",
+      title: "Rapor Arşivi", report: "Rapor", size: "Boyut"
+    },
+    cfg: {
+      rolesTitle: "AI Model Rolleri", rolesNote: "(Claude ve Gemini rolleri dinamik olarak değiştirilebilir)",
+      groqNote: "⚡ Groq (Llama 3.3) aktif: tüm AI rollerini şu an Groq yürütüyor. Aşağıdaki analist/hakem seçimi yalnızca Groq anahtarı kaldırılırsa devreye girer.",
+      analyst: "Analist Model", referee: "Hakem Model",
+      ragParams: "RAG Parametreleri",
+      chunkSize: "Chunk Boyutu (karakter, 300-1200)", chunkNote: "yeni yüklemelerde geçerli",
+      topK: "Getirilecek Chunk Sayısı (top-k)", save: "Ayarları Kaydet", saved: "Kaydedildi ✓",
+      aiLoading: "AI durumu sunucudan okunuyor…"
+    },
+    set: {
+      note: "Tema ve dil tercihlerin tarayıcı hafızasına (localStorage) kaydedilir; sayfayı yenilesen de seçimin kalır. Not: dinamik hata mesajları şimdilik Türkçe.",
+      appearance: "Görünüm", theme: "Tema", themeDim: "Loş", themeBlack: "Siyah", themeLight: "Beyaz",
+      lang: "Dil", dataTitle: "Veri Yönetimi (Yedek)",
+      dataNote: "Portföyün, izleme listen ve tercihlerin yalnızca bu tarayıcıda saklanır. Tarayıcı verisini temizlersen kaybolur — düzenli olarak dışa aktar (yedekle).",
+      export: "Dışa Aktar (JSON indir)", import: "İçe Aktar (yedek yükle)"
+    },
+    prov: { title: "Kaynak Belge" },
     app: {
       errSim: "Simülasyon başarısız: ",
       btnReport: "Raporu Oluştur",
@@ -143,7 +202,7 @@ FDX.I18N = {
     sys: { ready: "Ready", running: "Simulation Running",
            reporting: "Generating Report", offline: "Server Unreachable",
            dbOffline: "No connection", doc: "documents", chunk: "chunks" },
-    ui: { live: "LIVE", loading: "Loading data…" },
+    ui: { live: "LIVE", loading: "Loading data…", loadingShort: "Loading…" },
     tbl: { symbol: "Symbol", price: "Price", change: "Change", trend7: "7-Day Trend", sharpe: "Sharpe" },
     ov: {
       note: "Every card and table on this page is backed by real data — no fake numbers.",
@@ -156,6 +215,65 @@ FDX.I18N = {
       status: "Status", histLoading: "Loading history…",
       weekLimit: "weekly limit: ", chunksIndexed: " chunks indexed"
     },
+    mk: {
+      note: "Rates, commodities, indices and crypto are pulled live from Yahoo Finance; refreshes every 60 seconds while the page is open.",
+      title: "Live Market Board", instrument: "Instrument"
+    },
+    pf: {
+      note: "Enter your own holdings (quantity + buy price); it computes live value and profit/loss at current market prices. Data is stored only in your browser.",
+      totalValue: "Total Value", totalValueNote: "at current market price", totalValuePending: "* some prices pending",
+      totalCost: "Total Cost", totalCostNote: "your purchase totals",
+      pnl: "Total Profit / Loss", count: "Holdings", countNote: "rows in portfolio",
+      addTitle: "Add Holding", phSym: "Symbol (e.g. THYAO, AAPL)", phQty: "Quantity", phCost: "Buy price",
+      mine: "My Holdings", qty: "Qty", buy: "Buy", current: "Current", value: "Value", pnlShort: "P/L",
+      empty: "No holdings added yet."
+    },
+    sim: {
+      emptyTitle: "No simulation has been run yet",
+      emptyBody: "Type the assets you want to analyze in the prompt (e.g. \"compare THYAO with Apple\") — the AI extracts the symbols, runs Monte Carlo for each, and the cards appear here.",
+      ragTitle: "RAG Reference Sources", ragUse: "use in simulation",
+      aiTitle: "Claude & Gemini Analysis",
+      reportTitle: "Generate Risk Report", reportHint: "A RAG-sourced technical risk report in Word (.docx) format."
+    },
+    vdb: {
+      note: "RAG pipeline active: the PDF/Word files you upload are vectorized in ChromaDB and become searchable.",
+      docs: "Uploaded Documents", docsNote: "waiting for server",
+      chunks: "Total Chunks", chunksNote: "vectorized pieces",
+      embModel: "Embedding Model", embNote: "ChromaDB built-in (~80MB)",
+      updated: "Last Update", updatedNote: "last index write",
+      dropStrong: "Drag a PDF or Word file", dropRest: "or click to select",
+      dzHint: "Files are validated, instantly vectorized in ChromaDB and opened to search.",
+      queue: "Upload Queue", indexed: "Indexed Documents",
+      searchTitle: "RAG Search Test", searchPh: "e.g. what is the policy rate? (searches indexed documents)"
+    },
+    as: {
+      note: "Type a symbol to plot 1 year of real market data with RSI and MACD indicators. For BIST just the code is enough (THYAO); the system tries the .IS suffix itself.",
+      ph: "e.g. THYAO, GARAN, XU030, AAPL, QQQ…",
+      last: "Last Price", range: "52-Week Range", rangeNote: "low — high",
+      vol: "Annual Volatility", volNote: "from daily returns", rsi: "RSI (14)",
+      chartTitle: "Price Chart"
+    },
+    rep: {
+      note: "Every generated .docx report is archived on the server; you can re-download or delete it here.",
+      title: "Report Archive", report: "Report", size: "Size"
+    },
+    cfg: {
+      rolesTitle: "AI Model Roles", rolesNote: "(Claude and Gemini roles can be switched dynamically)",
+      groqNote: "⚡ Groq (Llama 3.3) active: all AI roles currently run on Groq. The analyst/referee choice below only applies if the Groq key is removed.",
+      analyst: "Analyst Model", referee: "Referee Model",
+      ragParams: "RAG Parameters",
+      chunkSize: "Chunk Size (characters, 300-1200)", chunkNote: "applies to new uploads",
+      topK: "Chunks to Retrieve (top-k)", save: "Save Settings", saved: "Saved ✓",
+      aiLoading: "Reading AI status from server…"
+    },
+    set: {
+      note: "Your theme and language preferences are saved to browser storage (localStorage); they persist across reloads. Note: dynamic error messages are Turkish for now.",
+      appearance: "Appearance", theme: "Theme", themeDim: "Dim", themeBlack: "Black", themeLight: "White",
+      lang: "Language", dataTitle: "Data Management (Backup)",
+      dataNote: "Your portfolio, watchlist and preferences are stored only in this browser. If you clear browser data they are lost — export (back up) regularly.",
+      export: "Export (download JSON)", import: "Import (load backup)"
+    },
+    prov: { title: "Source Document" },
     app: {
       errSim: "Simulation failed: ",
       btnReport: "Generate Report",

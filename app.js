@@ -34,6 +34,7 @@
 
     applyLanguage() {
       const d = this.dict();
+      document.documentElement.lang = this.lang;
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const path = el.dataset.i18n.split(".");
         let val = d;
@@ -923,7 +924,7 @@
     const pnlPct = totCost > 0 ? (totVal / totCost - 1) * 100 : 0;
     const setTxt = (id, t) => { const e = $("#" + id); if (e) e.textContent = t; };
     setTxt("pfValue", pf.holdings.length ? "₺" + trNumber(totVal) + (priced ? "" : " *") : "—");
-    setTxt("pfValueNote", priced ? "güncel piyasa fiyatıyla" : "* bazı fiyatlar bekleniyor");
+    setTxt("pfValueNote", priced ? Prefs.dict().pf.totalValueNote : Prefs.dict().pf.totalValuePending);
     setTxt("pfCost", pf.holdings.length ? "₺" + trNumber(totCost) : "—");
     setTxt("pfCount", pf.holdings.length);
     const pnlEl = $("#pfPnl"), pctEl = $("#pfPnlPct");
@@ -965,7 +966,7 @@
 
     saveBtn.disabled = st.status === "saving";
     saveBtn.querySelector(".report-btn-label").textContent =
-      st.status === "saving" ? Prefs.dict().app.btnSaving : Prefs.dict().app.btnSave;
+      st.status === "saving" ? Prefs.dict().app.btnSaving : Prefs.dict().cfg.save;
 
     if (st.status === "error") {
       fb.textContent = Prefs.dict().app.errGeneric + st.error;
