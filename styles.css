@@ -812,6 +812,14 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
   .view-title { font-size: 1.1rem; }
 }
 
+/* Simülasyon "Hesaplanıyor" dönen çark (Groq beklerken donuk görünmesin) */
+.fdx-spinner {
+  width: 34px; height: 34px; margin: 0 auto 14px; border-radius: 50%;
+  border: 3px solid var(--stroke-strong); border-top-color: var(--gold);
+  animation: fdxspin 0.8s linear infinite;
+}
+@keyframes fdxspin { to { transform: rotate(360deg); } }
+
 /* Dar ekranda geniş tablolar (portföy 7 sütun, piyasalar vb.) taşıp
    son sütunları ULAŞILMAZ bırakıyordu -> tablo kendi içinde yatay kayar. */
 @media (max-width: 720px) {

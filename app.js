@@ -392,6 +392,26 @@
         errBox.hidden = true;
       }
 
+      // Calisirken NET geri bildirim: Groq 5-15sn surer; demo donmus gorunmesin.
+      if (sim.status === "running") {
+        if (aiTimer) { clearInterval(aiTimer); aiTimer = null; }
+        const t = $("#aiText");
+        if (t) t.textContent =
+          "Monte Carlo çalışıyor ve AI analiz ediyor… birkaç saniye sürebilir.";
+        $("#aiCursor").classList.remove("done");
+        $("#aiMeta").hidden = true;
+        const grid = $("#simResultsGrid");
+        if (grid) {
+          grid.innerHTML = "";
+          const box = document.createElement("div");
+          box.className = "empty-state glass";
+          box.innerHTML = '<div class="fdx-spinner"></div>' +
+            '<h3>Hesaplanıyor…</h3>' +
+            '<p>2.000 yollu Monte Carlo koşuyor, AI yorumu hazırlanıyor.</p>';
+          grid.appendChild(box);
+        }
+      }
+
       if (sim.status === "done" && prev.simulation && prev.simulation.status === "running") {
         FDX.api.refreshHistory();
         renderSimCards(sim.metrics, sim.quotes);   // kartlar once DOM'a (+ canli fiyat)
