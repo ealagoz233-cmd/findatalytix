@@ -1058,6 +1058,26 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
 [data-theme="light"] .send-btn,
 [data-theme="light"] .report-btn { color: #ffffff; }
 
+/* ==========================================================
+   SİYAH TEMA ("Lights out") — tam siyah zemin, altın/buz vurgular
+   ========================================================== */
+[data-theme="black"] {
+  --bg-deep: #000000;
+  --bg-panel: rgba(22, 22, 25, 0.72);
+  --bg-panel-solid: #0c0c0e;
+  --stroke: rgba(255, 255, 255, 0.10);
+  --stroke-strong: rgba(255, 255, 255, 0.22);
+  --text: #e9e9ee;
+  --text-dim: #9a9aa4;
+}
+[data-theme="black"] body { background: #000000; }
+[data-theme="black"] .ambient { opacity: 0.10; }
+[data-theme="black"] .glass {
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
 /* Konfigürasyon başlık notu */
 .cfg-note { font-style: normal; font-weight: 400; font-size: 0.74rem; color: var(--text-dim); }
 
