@@ -569,9 +569,10 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
 
 @media (max-width: 980px) {
   .app { grid-template-columns: 1fr; }
-  .sidebar { position: static; height: auto; flex-direction: row; align-items: center; overflow-x: auto; gap: 10px; }
+  .sidebar { position: static; height: auto; flex-direction: row; align-items: center; overflow-x: auto; gap: 10px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
   .brand { border-bottom: none; padding: 0 10px; margin: 0; flex-shrink: 0; }
-  .nav { flex-direction: row; }
+  .nav { flex-direction: row; flex-shrink: 0; }
+  .nav-item { flex-shrink: 0; width: auto; }
   .nav-item span { white-space: nowrap; }
   .sidebar-footer { margin: 0; padding: 0; border: none; }
   .compare-grid, .lower-grid, .status-bar { grid-template-columns: 1fr; }
