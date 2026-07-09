@@ -812,6 +812,17 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
   .view-title { font-size: 1.1rem; }
 }
 
+/* Dar ekranda geniş tablolar (portföy 7 sütun, piyasalar vb.) taşıp
+   son sütunları ULAŞILMAZ bırakıyordu -> tablo kendi içinde yatay kayar. */
+@media (max-width: 720px) {
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+}
+
 /* ==========================================================
    ADIM 2 EKLERİ — scrollbar, hata durumları, dosya listesi,
    dar ekran (≤420px) desteği
