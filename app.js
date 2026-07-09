@@ -1490,6 +1490,63 @@
   }
 
   /* ========================================================
+     VERİ YEDEKLEME — portföy + izleme listesi + tercihler
+     localStorage'da yaşar; tarayıcı temizliğine karşı dışa/içe aktarma.
+  ======================================================== */
+
+  const DATA_KEYS = ["fdx-portfolio", "fdx-watchlist", "fdx-theme",
+                     "fdx-lang", "fdx-userag"];
+
+  function _dataMsg(text, isErr) {
+    const el = $("#dataMsg");
+    if (!el) return;
+    el.hidden = false;
+    el.textContent = text;
+    el.style.color = isErr ? "" : "var(--green, #4ade80)";
+  }
+
+  function exportData() {
+    const payload = { app: "FinDatalytix", kind: "backup", version: 1,
+                      exportedAt: new Date().toISOString(), data: {} };
+    DATA_KEYS.forEach(k => {
+      const v = localStorage.getItem(k);
+      if (v !== null) payload.data[k] = v;
+    });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "findatalytix-yedek-" +
+      new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    _dataMsg("Yedek indirildi ✓ (güvenli bir yerde sakla).", false);
+  }
+
+  function importData(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try { parsed = JSON.parse(reader.result); }
+      catch (e) { _dataMsg("Dosya okunamadı — geçerli bir JSON değil.", true); return; }
+      if (!parsed || parsed.app !== "FinDatalytix" || !parsed.data) {
+        _dataMsg("Bu bir FinDatalytix yedeği değil.", true); return;
+      }
+      const keys = Object.keys(parsed.data).filter(k => DATA_KEYS.includes(k));
+      if (!keys.length) { _dataMsg("Yedekte tanınan veri yok.", true); return; }
+      if (!confirm("Bu yedek, mevcut portföy/izleme listesi/tercihlerinin " +
+                   "ÜZERİNE yazacak. Devam edilsin mi?")) return;
+      try {
+        keys.forEach(k => localStorage.setItem(k, parsed.data[k]));
+      } catch (e) { _dataMsg("Yazılamadı (tarayıcı izni?).", true); return; }
+      _dataMsg("İçe aktarıldı ✓ — sayfa yenileniyor…", false);
+      setTimeout(() => location.reload(), 900);
+    };
+    reader.onerror = () => _dataMsg("Dosya okunamadı.", true);
+    reader.readAsText(file);
+  }
+
+  /* ========================================================
      ETKİLEŞİMLER — sadece api/router'a haber verir
   ======================================================== */
 
@@ -1644,7 +1701,17 @@
     $("#assetBtn").addEventListener("click", runAsset);
     assetInput.addEventListener("keydown", e => { if (e.key === "Enter") runAsset(); });
 
-    /* ---- Belge onizleme kapatma ---- */
+    /* ---- Veri yedekleme (Ayarlar) ---- */
+    const expBtn = $("#exportBtn"), impBtn = $("#importBtn"), impFile = $("#importFile");
+    if (expBtn) expBtn.addEventListener("click", exportData);
+    if (impBtn && impFile) {
+      impBtn.addEventListener("click", () => impFile.click());
+      impFile.addEventListener("change", () => {
+        if (impFile.files.length) importData(impFile.files[0]);
+        impFile.value = "";
+      });
+    }
+
     /* ---- Kaynak atif cekmecesi: kapatma (buton + overlay + Esc) ---- */
     const dvClose = $("#provDrawerClose");
     if (dvClose) dvClose.addEventListener("click", closeDocViewer);

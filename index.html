@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.10" />
+  <link rel="stylesheet" href="styles.css?v=0.9.11" />
 </head>
 <body>
 
@@ -545,6 +545,26 @@
             </div>
           </div>
         </div>
+
+        <!-- Veri yedekleme: portföy + izleme listesi + tercihler localStorage'da;
+             tarayıcı temizliğinde kaybolmasın diye dışa/içe aktarma. -->
+        <div class="panel glass">
+          <h3>Veri Yönetimi (Yedek)</h3>
+          <p class="cfg-note" style="display:block; margin-bottom:12px;">
+            Portföyün, izleme listen ve tercihlerin yalnızca bu tarayıcıda saklanır.
+            Tarayıcı verisini temizlersen kaybolur — düzenli olarak dışa aktar (yedekle).
+          </p>
+          <div class="query-row" style="gap:10px;">
+            <button class="report-btn" id="exportBtn">
+              <span class="report-btn-label">Dışa Aktar (JSON indir)</span>
+            </button>
+            <button class="report-btn" id="importBtn">
+              <span class="report-btn-label">İçe Aktar (yedek yükle)</span>
+            </button>
+            <input type="file" id="importFile" accept="application/json,.json" hidden />
+          </div>
+          <p class="ai-error" id="dataMsg" role="status" hidden></p>
+        </div>
       </section>
 
       <!-- Durum çubuğu — tüm sayfalarda görünür -->
@@ -605,8 +625,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.10"></script>
-  <script src="core.js?v=0.9.10"></script>
-  <script src="app.js?v=0.9.10"></script>
+  <script src="config.js?v=0.9.11"></script>
+  <script src="core.js?v=0.9.11"></script>
+  <script src="app.js?v=0.9.11"></script>
 </body>
 </html>
