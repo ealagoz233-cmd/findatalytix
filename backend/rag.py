@@ -162,14 +162,21 @@ class RagStore:
             "lastUpdated": last or None,
         }
 
-    def query(self, question: str, top_k: int = 5) -> list[dict]:
+    def query(self, question: str, top_k: int = 5,
+              min_score: float | None = None) -> list[dict]:
+        """En benzer chunk'lar. min_score eşiği kullanıma göre değişir:
+        - AI bağlamı (None): MIN_SCORE (seçici — LLM'e zayıf parça beslenmesin).
+        - Arama testi (0.0): şeffaf — en iyi eşleşmeleri skoruyla göster;
+          kısa sorgular/kısaltmalar sessizce elenmesin.
+        None çağrı anında okunur (monkeypatch/ayar değişikliğine saygılı)."""
+        thr = MIN_SCORE if min_score is None else min_score
         if self.col.count() == 0:
             return []
         res = self.col.query(query_texts=[question], n_results=min(top_k, self.col.count()))
         out = []
         for text, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]):
             score = round(1.0 / (1.0 + dist), 4)   # mesafe → 0-1 benzerlik
-            if score < MIN_SCORE:
+            if score < thr:
                 continue
             out.append({
                 "text": text,

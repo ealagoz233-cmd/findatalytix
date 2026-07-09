@@ -24,6 +24,10 @@ def test_index_and_threshold(tmp_path, monkeypatch):
     monkeypatch.setattr(rag, "MIN_SCORE", 1.01)
     assert store.query("sivil toplum demokrasi", top_k=3) == []
 
+    # AMA arama testi min_score=0.0 -> AI eşiği yüksekken bile sonuç gösterir
+    # (kısa sorgu/kısaltma sessizce elenmesin — çekirdek RAG UX düzeltmesi)
+    assert len(store.query("sivil toplum demokrasi", top_k=3, min_score=0.0)) > 0
+
 def test_duplicate_rejected(tmp_path):
     store = rag.RagStore(path=str(tmp_path / "cdb2"), embedder=FakeEmbedder())
     store.add_document("a.pdf", _pdf("bir metin buraya yaziliyor test icin uzun."))

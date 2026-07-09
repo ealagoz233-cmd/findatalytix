@@ -1396,6 +1396,15 @@
       head.className = "query-hit-head";
       const info = document.createElement("span");
       info.textContent = r.source + " · sayfa " + r.page + " · benzerlik " + r.score;
+      // Dusuk benzerlik (< 0.5) durustce isaretlensin: sonuclar gosteriliyor
+      // ama "kesin eslesme" izlenimi verilmiyor.
+      if (typeof r.score === "number" && r.score < 0.5) {
+        const lo = document.createElement("span");
+        lo.className = "tag wait";
+        lo.textContent = "düşük benzerlik";
+        lo.style.marginLeft = "8px";
+        info.appendChild(lo);
+      }
       const open = document.createElement("button");
       open.className = "hit-open";
       open.textContent = "belgede aç →";

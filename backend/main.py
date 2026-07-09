@@ -475,5 +475,10 @@ def get_document_file(filename: str):
 
 @app.post("/api/query")
 def query_documents(req: QueryRequest) -> dict:
-    results = get_store().query(req.question, req.top_k or app_settings.get("topK"))
+    # Arama testi = seffaflik araci: en iyi eslesmeleri SKORUYLA goster,
+    # AI-icin ayarlanmis esikle gizleme (kisa sorgu/kisaltma elenmesin).
+    # Kullanici skoru gorup guveni kendi olcer.
+    results = get_store().query(req.question,
+                                req.top_k or app_settings.get("topK"),
+                                min_score=0.0)
     return {"question": req.question, "results": results, "count": len(results)}
