@@ -56,6 +56,75 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ----------------------------------------------------------
+# GÜVENLİK (deploy sertleştirmesi — A)
+#  - Rate limiting: halka açıldığında birinin /simulate'i döverek Groq
+#    kotasını yakmasını / Yahoo'yu ban ettirmesini engeller.
+#  - Güvenlik başlıkları: nosniff + referrer (X-Frame-Options KOYULMAZ;
+#    /documents/*/file iframe'de gösteriliyor, DENY onu kırardı).
+#  - Bellek-içi limiter tek süreç MVP için yeterli; çok sürece geçince Redis.
+# ----------------------------------------------------------
+
+import time as _time
+import logging as _logging
+from collections import deque as _deque
+from fastapi.responses import JSONResponse as _JSONResponse
+
+_seclog = _logging.getLogger("findatalytix.security")
+
+_RL_WINDOW = 60.0                # saniye (kayan pencere)
+_RL_LIMIT_DEFAULT = 200          # normal istek / dk / IP (tek kullanıcı bunu aşmaz)
+_RL_LIMIT_EXPENSIVE = 20         # AI + rapor / dk / IP (maliyet/ban freni)
+_RL_EXPENSIVE = {"/api/simulate", "/api/report"}
+_rl_hits: dict[str, _deque] = {}
+
+
+def _client_ip(request) -> str:
+    # Deploy'da ters proxy arkasında gerçek IP X-Forwarded-For'da olur.
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+@app.middleware("http")
+async def _security(request, call_next):
+    path = request.url.path
+    if path.startswith("/api/"):
+        ip = _client_ip(request)
+        expensive = path in _RL_EXPENSIVE
+        limit = _RL_LIMIT_EXPENSIVE if expensive else _RL_LIMIT_DEFAULT
+        key = ip + ("|x" if expensive else "")
+        now = _time.time()
+        dq = _rl_hits.setdefault(key, _deque())
+        while dq and now - dq[0] > _RL_WINDOW:
+            dq.popleft()
+        if not dq:
+            _rl_hits.pop(key, None)             # bos kova birak (bellek hijyeni)
+            dq = _rl_hits.setdefault(key, _deque())
+        if len(dq) >= limit:
+            retry = int(_RL_WINDOW - (now - dq[0])) + 1
+            _seclog.warning("Rate limit: %s %s (ip=%s)", request.method, path, ip)
+            return _JSONResponse(
+                status_code=429,
+                content={"detail": "Çok fazla istek — lütfen biraz bekleyin."},
+                headers={"Retry-After": str(retry)},
+            )
+        dq.append(now)
+
+    resp = await call_next(request)
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    return resp
+
+
+@app.exception_handler(Exception)
+async def _unhandled(request, exc):
+    """Beklenmeyen hata: gerçek sebep sunucu logunda; istemciye sızıntısız
+    genel mesaj (stack trace / şema DIŞARIYA çıkmaz)."""
+    _seclog.exception("Beklenmeyen hata: %s %s", request.method, request.url.path)
+    return _JSONResponse(status_code=500, content={"detail": "Sunucu hatası"})
+
 
 # AI sembol çıkaramazsa devreye giren emniyet kemeri
 DEFAULT_SYMBOLS = ["XU030.IS", "QQQ"]
