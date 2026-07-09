@@ -444,6 +444,14 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
 /* Piyasalar tahtasi: etiket altindaki ham Yahoo sembolu */
 .mk-sym { display: block; font-size: 0.66rem; color: var(--text-dim); letter-spacing: 0.03em; }
 
+/* Portfoy: varlik ekleme formu (sembol + adet + alis + buton) */
+.pf-add { display: flex; gap: 8px; flex-wrap: wrap; }
+.pf-add input[type="text"] { flex: 2 1 180px; }
+.pf-add input[type="number"] { flex: 1 1 110px; }
+.pf-add .report-btn { flex: 0 0 auto; padding: 0 1.4rem; }
+.ov-value.up { color: #4ade80; }
+.ov-value.down { color: #f87171; }
+
 /* 3D grafik yuklenemezse kart icinde durust not */
 .chart-na {
   display: flex; align-items: center; justify-content: center; height: 100%;

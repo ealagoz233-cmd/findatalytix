@@ -11,7 +11,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.8" />
+  <link rel="stylesheet" href="styles.css?v=0.9.9" />
 </head>
 <body>
 
@@ -45,6 +45,10 @@
         <button class="nav-item" data-view="markets">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 4 5.7 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.7-4-9s1.5-6.4 4-9Z"/></svg>
           <span data-i18n="views.markets">Piyasalar</span>
+        </button>
+        <button class="nav-item" data-view="portfolio">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="4" width="3" height="14"/></svg>
+          <span data-i18n="views.portfolio">Portföy</span>
         </button>
         <button class="nav-item" data-view="simulation">
           <svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/></svg>
@@ -190,6 +194,70 @@
             </thead>
             <tbody id="marketsBody">
               <tr><td colspan="4" class="table-empty">Veriler yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: PORTFÖY — gerçek varlıklar, canlı değer/K-Z
+      =================================================== -->
+      <section class="view" id="view-portfolio">
+        <div class="phase-note glass">
+          <span class="phase-badge">CANLI</span>
+          Kendi varlıklarını gir (adet + alış fiyatı); güncel piyasa fiyatıyla anlık değer ve kâr/zararını hesaplar. Veriler yalnızca senin tarayıcında saklanır.
+        </div>
+
+        <div class="ov-grid">
+          <div class="ov-card glass">
+            <span class="ov-label">Toplam Değer</span>
+            <span class="ov-value mono" id="pfValue">—</span>
+            <span class="ov-delta" id="pfValueNote">güncel piyasa fiyatıyla</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Toplam Maliyet</span>
+            <span class="ov-value mono" id="pfCost">—</span>
+            <span class="ov-delta">alış tutarların</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Toplam Kâr / Zarar</span>
+            <span class="ov-value mono" id="pfPnl">—</span>
+            <span class="ov-delta" id="pfPnlPct">—</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label">Varlık Sayısı</span>
+            <span class="ov-value mono" id="pfCount">—</span>
+            <span class="ov-delta">portföydeki satır</span>
+          </div>
+        </div>
+
+        <div class="panel glass">
+          <h3>Varlık Ekle</h3>
+          <div class="query-row pf-add">
+            <input type="text" id="pfSym" maxlength="12" placeholder="Sembol (örn: THYAO, AAPL)" />
+            <input type="number" id="pfQty" min="0" step="any" placeholder="Adet" />
+            <input type="number" id="pfCostIn" min="0" step="any" placeholder="Alış fiyatı" />
+            <button class="report-btn" id="pfAddBtn"><span class="report-btn-label">Ekle</span></button>
+          </div>
+          <p class="ai-error" id="pfError" role="alert" hidden></p>
+        </div>
+
+        <div class="panel glass">
+          <h3>Varlıklarım</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Sembol</th>
+                <th style="text-align: right;">Adet</th>
+                <th style="text-align: right;">Alış</th>
+                <th style="text-align: right;">Güncel</th>
+                <th style="text-align: right;">Değer</th>
+                <th style="text-align: right;">K/Z</th>
+                <th style="width: 40px;"></th>
+              </tr>
+            </thead>
+            <tbody id="portfolioBody">
+              <tr><td colspan="7" class="table-empty">Henüz varlık eklenmedi.</td></tr>
             </tbody>
           </table>
         </div>
@@ -537,8 +605,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.8"></script>
-  <script src="core.js?v=0.9.8"></script>
-  <script src="app.js?v=0.9.8"></script>
+  <script src="config.js?v=0.9.9"></script>
+  <script src="core.js?v=0.9.9"></script>
+  <script src="app.js?v=0.9.9"></script>
 </body>
 </html>

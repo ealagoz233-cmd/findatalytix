@@ -30,6 +30,19 @@
     catch (e) { return true; }
   }
 
+  /* Portföy: kullanıcının gerçek varlıkları {sym, qty, cost} — localStorage.
+     qty=adet, cost=hisse başı alış fiyatı. Canlı değer/K-Z app.js'te hesaplanır. */
+  const PORTFOLIO_KEY = "fdx-portfolio";
+  const PORTFOLIO_MAX = 50;
+  function _loadHoldings() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(PORTFOLIO_KEY));
+      if (Array.isArray(raw)) return raw.slice(0, PORTFOLIO_MAX);
+    } catch (e) { /* bozuk kayıt → boş */ }
+    return [];
+  }
+  // _saveHoldings API IIFE içinde tanımlı (localStorage yazımı orada yapılır).
+
   const initialState = {
     view: "simulation",
     params: {},                       // örn: { symbol: "THYAO" }
@@ -63,6 +76,9 @@
 
     /* Piyasalar sayfası: sabit enstrüman tahtası (FDX.MARKETS listesi) */
     markets: { quotes: {}, status: "idle", error: null },
+
+    /* Portföy: gerçek varlıklar + canlı kotasyon */
+    portfolio: { holdings: _loadHoldings(), quotes: {}, status: "idle", error: null },
 
     /* Risk Raporu sayfası: üretilen .docx arşivi */
     reports: { items: [], status: "idle", error: null },
@@ -104,7 +120,7 @@
 
   // "watchlist" ayri bir sayfa DEGIL (izleme listesi overview icinde yasar);
   // KNOWN'da tutmak #watchlist'te bos sayfa + "undefined" baslik uretiyordu.
-  const KNOWN = ["overview", "markets", "simulation", "vectordb", "assets", "report", "config", "settings"];
+  const KNOWN = ["overview", "markets", "portfolio", "simulation", "vectordb", "assets", "report", "config", "settings"];
   const DEFAULT = "simulation";
 
   function parse(hash) {
@@ -474,6 +490,63 @@
     }
   }
 
+  /* ---- Portföy: gerçek varlık takibi (adet + alış → canlı değer/K-Z) ---- */
+  function _saveHoldings(list) {
+    try { localStorage.setItem("fdx-portfolio", JSON.stringify(list)); }
+    catch (e) { /* private mod — bellekte yaşar */ }
+  }
+
+  function addHolding(symbol, qty, cost) {
+    const s = FDX.store;
+    const p = s.get().portfolio;
+    const sym = String(symbol).trim().toUpperCase();
+    qty = Number(qty); cost = Number(cost);
+    if (sym.length < 2 || sym.length > 12) return "Sembol 2-12 karakter olmalı";
+    if (!isFinite(qty) || qty <= 0) return "Adet pozitif bir sayı olmalı";
+    if (!isFinite(cost) || cost <= 0) return "Alış fiyatı pozitif bir sayı olmalı";
+    if (p.holdings.length >= 50) return "Portföy dolu (en fazla 50 satır)";
+    const holdings = p.holdings.concat([{ sym, qty, cost }]);
+    _saveHoldings(holdings);
+    s.set({ portfolio: { ...p, holdings } });
+    fetchPortfolio();
+    return null;
+  }
+
+  function removeHolding(index) {
+    const s = FDX.store;
+    const p = s.get().portfolio;
+    const holdings = p.holdings.filter((_, i) => i !== index);
+    _saveHoldings(holdings);
+    s.set({ portfolio: { ...p, holdings } });
+  }
+
+  async function fetchPortfolio() {
+    const s = FDX.store;
+    const p = s.get().portfolio;
+    const syms = [...new Set(p.holdings.map(h => h.sym))];
+    if (!syms.length) {
+      s.set({ portfolio: { ...p, quotes: {}, status: "done", error: null } });
+      return;
+    }
+    s.set({ portfolio: { ...s.get().portfolio, status: "loading" } });
+    try {
+      const data = await request("/watchlist?symbols=" + encodeURIComponent(syms.join(",")));
+      const quotes = {};
+      (data.quotes || []).forEach(raw => {
+        const num = v => (typeof v === "number" && isFinite(v)) ? v : null;
+        quotes[raw.symbol] = {
+          symbol: raw.symbol,
+          error: raw.error || null,
+          last: num(raw.last) !== null ? num(raw.last) : num(raw.price),
+          changePct: num(raw.changePct) !== null ? num(raw.changePct) : num(raw.change)
+        };
+      });
+      s.set({ portfolio: { ...s.get().portfolio, quotes, status: "done", error: null } });
+    } catch (err) {
+      s.set({ portfolio: { ...s.get().portfolio, status: "error", error: err.message } });
+    }
+  }
+
   /* ---- Rapor arşivi (Risk Raporu sayfası) ---- */
   async function fetchReports() {
     const s = FDX.store;
@@ -576,5 +649,6 @@
               refreshVectorStats, queryDocs, refreshHistory, fetchAsset,
               refreshAiStatus, fetchWatchlist, addWatchSymbol, removeWatchSymbol,
               fetchSettings, saveSettings, setUseRag, fetchMarkets,
-              deleteDocument, fetchReports, deleteReport };
+              deleteDocument, fetchReports, deleteReport,
+              addHolding, removeHolding, fetchPortfolio };
 })();

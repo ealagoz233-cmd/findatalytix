@@ -347,6 +347,12 @@
         } else {
           MarketsPoller.stop();
         }
+        if (state.view === "portfolio") {
+          FDX.api.fetchPortfolio();
+          PortfolioPoller.start();
+        } else {
+          PortfolioPoller.stop();
+        }
         if (state.view === "config") {
           FDX.api.refreshAiStatus();
           FDX.api.fetchSettings();
@@ -457,6 +463,11 @@
       renderReports(state.reports);
     }
 
+    /* ---- Portfoy ---- */
+    if (state.portfolio !== prev.portfolio) {
+      renderPortfolio(state.portfolio);
+    }
+
     renderStatusBar(state);      // ucuz islem, her degisimde tazelenir
     renderOverviewCards(state);  // genel bakis kartlari da gercek veriyle
 
@@ -546,6 +557,20 @@
     let timer = null;
     function tick() {
       if (document.visibilityState === "visible") FDX.api.fetchMarkets();
+    }
+    function start() { if (!timer) timer = setInterval(tick, 60000); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && timer) tick();
+    });
+    return { start, stop };
+  })();
+
+  /* Portfoy polling — Markets ile ayni desen (60 sn, gizli sekmede atlar). */
+  const PortfolioPoller = (function () {
+    let timer = null;
+    function tick() {
+      if (document.visibilityState === "visible") FDX.api.fetchPortfolio();
     }
     function start() { if (!timer) timer = setInterval(tick, 60000); }
     function stop() { if (timer) { clearInterval(timer); timer = null; } }
@@ -804,6 +829,93 @@
       tr.append(tdName, tdSize, tdDate, tdAct);
       body.appendChild(tr);
     });
+  }
+
+  /* Portföy: gerçek varlıklar + canlı değer/K-Z. Fiyat watchlist'ten gelir. */
+  function renderPortfolio(pf) {
+    const body = $("#portfolioBody");
+    if (!body) return;
+    const err = $("#pfError");
+
+    let totVal = 0, totCost = 0, priced = true;
+    body.innerHTML = "";
+
+    if (!pf.holdings.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td colspan="7" class="table-empty">Henüz varlık eklenmedi — ' +
+        'yukarıdan sembol, adet ve alış fiyatı ekle.</td>';
+      body.appendChild(tr);
+    }
+
+    pf.holdings.forEach((h, i) => {
+      const q = pf.quotes[h.sym];
+      const costTot = h.cost * h.qty;
+      totCost += costTot;
+      const last = (q && !q.error && typeof q.last === "number") ? q.last : null;
+      const valTot = last !== null ? last * h.qty : null;
+      if (last !== null) totVal += valTot; else priced = false;
+
+      const tr = document.createElement("tr");
+      const td = (txt, cls) => { const c = document.createElement("td");
+        if (cls) c.className = cls; c.style.textAlign = "right"; c.textContent = txt; return c; };
+
+      const tdSym = document.createElement("td");
+      tdSym.className = "mono"; tdSym.textContent = h.sym;
+
+      const tdVal = document.createElement("td");
+      tdVal.className = "mono"; tdVal.style.textAlign = "right";
+      const tdPnl = document.createElement("td");
+      tdPnl.style.textAlign = "right";
+
+      if (last === null) {
+        tdVal.textContent = "—";
+        const tag = document.createElement("span");
+        tag.className = "tag wait";
+        tag.textContent = q && q.error ? q.error : "fiyat yok";
+        tdPnl.appendChild(tag);
+      } else {
+        tdVal.textContent = trNumber(valTot);
+        const pnl = valTot - costTot;
+        const pnlPct = costTot > 0 ? (valTot / costTot - 1) * 100 : 0;
+        const up = pnl >= 0;
+        const chip = document.createElement("span");
+        chip.className = "watch-change " + (up ? "up" : "down");
+        chip.textContent = (up ? "+" : "") + trNumber(pnl) + " (" +
+                           (up ? "+" : "") + trNumber(pnlPct) + "%)";
+        tdPnl.appendChild(chip);
+      }
+
+      const tdDel = document.createElement("td");
+      const del = document.createElement("button");
+      del.className = "file-del";
+      del.setAttribute("aria-label", h.sym + " varlığını çıkar");
+      del.textContent = "✕";
+      del.addEventListener("click", () => FDX.api.removeHolding(i));
+      tdDel.appendChild(del);
+
+      tr.append(tdSym, td(trNumber(h.qty), "mono"), td(trNumber(h.cost), "mono"),
+                td(last !== null ? trNumber(last) : "…", "mono"), tdVal, tdPnl, tdDel);
+      body.appendChild(tr);
+    });
+
+    // Özet kartları
+    const pnl = totVal - totCost;
+    const pnlPct = totCost > 0 ? (totVal / totCost - 1) * 100 : 0;
+    const setTxt = (id, t) => { const e = $("#" + id); if (e) e.textContent = t; };
+    setTxt("pfValue", pf.holdings.length ? "₺" + trNumber(totVal) + (priced ? "" : " *") : "—");
+    setTxt("pfValueNote", priced ? "güncel piyasa fiyatıyla" : "* bazı fiyatlar bekleniyor");
+    setTxt("pfCost", pf.holdings.length ? "₺" + trNumber(totCost) : "—");
+    setTxt("pfCount", pf.holdings.length);
+    const pnlEl = $("#pfPnl"), pctEl = $("#pfPnlPct");
+    if (pnlEl) {
+      pnlEl.textContent = pf.holdings.length ? (pnl >= 0 ? "+" : "") + "₺" + trNumber(pnl) : "—";
+      pnlEl.className = "ov-value mono " + (pf.holdings.length ? (pnl >= 0 ? "up" : "down") : "");
+    }
+    if (pctEl) {
+      pctEl.textContent = pf.holdings.length ? (pnl >= 0 ? "+" : "") + trNumber(pnlPct) + "%" : "—";
+      pctEl.className = "ov-delta " + (pf.holdings.length ? (pnl >= 0 ? "up" : "down") : "");
+    }
+    if (err) { err.hidden = !pf.error; if (pf.error) err.textContent = pf.error; }
   }
 
   /* Konfigurasyon sayfasi: .env'den algilanan gercek AI durumu */
@@ -1490,6 +1602,27 @@
     };
     $("#watchAddBtn").addEventListener("click", addWatch);
     watchInput.addEventListener("keydown", e => { if (e.key === "Enter") addWatch(); });
+
+    /* ---- Portfoy: varlik ekle ---- */
+    const pfAddBtn = $("#pfAddBtn");
+    if (pfAddBtn) {
+      const addPf = () => {
+        const errBox = $("#pfError");
+        const msg = FDX.api.addHolding($("#pfSym").value, $("#pfQty").value, $("#pfCostIn").value);
+        if (msg) {
+          if (errBox) { errBox.hidden = false; errBox.textContent = msg; }
+        } else {
+          if (errBox) errBox.hidden = true;
+          $("#pfSym").value = ""; $("#pfQty").value = ""; $("#pfCostIn").value = "";
+          $("#pfSym").focus();
+        }
+      };
+      pfAddBtn.addEventListener("click", addPf);
+      ["pfSym", "pfQty", "pfCostIn"].forEach(id => {
+        const el = $("#" + id);
+        if (el) el.addEventListener("keydown", e => { if (e.key === "Enter") addPf(); });
+      });
+    }
 
     /* ---- Varlik Analizi arama ---- */
     const assetInput = $("#assetInput");

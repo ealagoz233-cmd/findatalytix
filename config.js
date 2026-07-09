@@ -95,7 +95,7 @@ FDX.SEED = {
 ---------------------------------------------------------- */
 FDX.I18N = {
   tr: {
-    views: { overview: "Genel Bakış", markets: "Piyasalar",
+    views: { overview: "Genel Bakış", markets: "Piyasalar", portfolio: "Portföy",
              simulation: "Simülasyon Oluştur",
              vectordb: "Vektör Veri Tabanı", assets: "Varlık Analizi",
              report: "Risk Raporu", config: "Konfigürasyon", settings: "Ayarlar" },
@@ -123,7 +123,7 @@ FDX.I18N = {
     }
   },
   en: {
-    views: { overview: "Overview", markets: "Markets",
+    views: { overview: "Overview", markets: "Markets", portfolio: "Portfolio",
              simulation: "Create Simulation",
              vectordb: "Vector Database", assets: "Asset Analysis",
              report: "Risk Report", config: "Configuration", settings: "Settings" },
