@@ -33,6 +33,7 @@
     },
 
     applyLanguage() {
+      document.documentElement.lang = this.lang;  // ekran okuyucu/tarayici dogru dili bilsin
       const d = this.dict();
       document.documentElement.lang = this.lang;
       document.querySelectorAll("[data-i18n]").forEach(el => {
