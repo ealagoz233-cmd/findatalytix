@@ -16,8 +16,10 @@
   <meta name="twitter:image" content="https://raw.githubusercontent.com/ealagoz233-cmd/findatalytix/master/docs/screenshots/genel-bakis.png" />
   <meta name="theme-color" content="#0a1120" />
 
-  <!-- Favicon: marka ikonu (lacivert zemin, altin trend cizgisi) — dosyasiz, SVG gomulu -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230a1120'/%3E%3Cpolyline points='4 16 9 11 13 14 20 7' fill='none' stroke='%23d9b36a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='14.5 7 20 7 20 12.5' fill='none' stroke='%23d9b36a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <!-- Marka simgesi: gercek logo (altin F + yukselen ok, kullanici tasarimi).
+       64px sekme ikonu + 180px telefon ana-ekran ikonu. -->
+  <link rel="icon" type="image/png" href="favicon-64.png?v=0.9.29" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=0.9.29" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -25,7 +27,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.28" />
+  <link rel="stylesheet" href="styles.css?v=0.9.29" />
 </head>
 <body>
 
@@ -40,10 +42,7 @@
       <div class="brand" id="brandHome" role="button" tabindex="0"
            title="Ana sayfaya don (Genel Bakis)" data-i18n-title="tip.home" aria-label="Ana sayfaya don">
         <div class="brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="3 17 9 11 13 15 21 7"/>
-            <polyline points="15 7 21 7 21 13"/>
-          </svg>
+          <img src="favicon-64.png?v=0.9.29" alt="" width="38" height="38" />
         </div>
         <div class="brand-text">
           <span class="brand-name">FinDatalytix</span>
@@ -729,8 +728,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.28"></script>
-  <script src="core.js?v=0.9.28"></script>
-  <script src="app.js?v=0.9.28"></script>
+  <script src="config.js?v=0.9.29"></script>
+  <script src="core.js?v=0.9.29"></script>
+  <script src="app.js?v=0.9.29"></script>
 </body>
 </html>

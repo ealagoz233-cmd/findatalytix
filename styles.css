@@ -122,6 +122,10 @@ body {
   color: var(--gold);
 }
 .brand-icon svg { width: 20px; height: 20px; }
+/* Gercek logo: kutuyu tamamen doldurur (logonun kendi lacivert zemini +
+   altin cercevesi var — kutunun eski altin fonuna ihtiyac kalmadi) */
+.brand-icon img { width: 100%; height: 100%; border-radius: inherit; display: block; }
+.brand-icon:has(img) { background: none; border: none; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
 .brand-name {
   font-family: var(--font-display);

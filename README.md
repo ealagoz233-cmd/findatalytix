@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.png" width="130" alt="FinDatalytix logo" /></p>
+
 # FinDatalytix
 
 **AI-assisted financial risk analysis platform** — Monte Carlo simulation, RAG-grounded document search, and a dual-AI (analyst + referee) commentary pipeline, wrapped in a real-time market dashboard.

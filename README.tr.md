@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.png" width="130" alt="FinDatalytix logo" /></p>
+
 # FinDatalytix
 
 **Yapay zekâ destekli finansal risk analizi platformu** — Monte Carlo simülasyonu, RAG tabanlı belge arama ve çift-AI (analist + hakem) yorum hattı; hepsi gerçek zamanlı bir piyasa panosunun içinde.

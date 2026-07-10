@@ -552,7 +552,8 @@ def query_documents(req: QueryRequest) -> dict:
 from fastapi.responses import FileResponse as _FileResponse
 
 _FRONTEND_DIR = _Path(__file__).resolve().parent.parent
-_FRONTEND_FILES = {"index.html", "app.js", "core.js", "config.js", "styles.css"}
+_FRONTEND_FILES = {"index.html", "app.js", "core.js", "config.js", "styles.css",
+                   "logo.png", "favicon-64.png", "apple-touch-icon.png"}
 
 
 @app.get("/", include_in_schema=False)
