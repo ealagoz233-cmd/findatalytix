@@ -103,6 +103,12 @@ body {
   position: sticky;
   top: 22px;
   height: calc(100vh - 44px);
+  /* Emniyet kemeri: menü kutudan ASLA taşmaz — sığmazsa içeride kayar.
+     (Kısa laptop ekranı + Windows ölçekleme: "Risk Raporu/Konfigürasyon"
+     cam panelin dışına fışkırıyordu, Ayarlar kayboluyordu.) */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
 }
 
 .brand {
@@ -566,6 +572,19 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
 @keyframes pulse { 50% { opacity: 0.55; } }
 
 /* ---------- responsive ---------- */
+/* KISA EKRAN KOMPAKT MODU: laptop + Windows %125-150 ölçekleme
+   görüntü alanını ~600-800px yüksekliğe düşürür; menünün tamamı
+   kaydırmasız sığsın diye dolgular incelir. */
+@media (min-width: 981px) and (max-height: 820px) {
+  .app { padding: 12px; gap: 14px; }
+  .sidebar { top: 12px; height: calc(100vh - 24px); padding: 10px; }
+  .brand { padding: 2px 8px 10px; margin-bottom: 8px; }
+  .brand-icon { width: 30px; height: 30px; }
+  .nav { gap: 2px; }
+  .nav-item { padding: 7px 12px; font-size: 0.86rem; }
+  .sidebar-footer { padding-top: 6px; margin-top: 6px; }
+}
+
 @media (max-width: 1200px) {
   .asset-body { grid-template-columns: 1fr; }
   .chart { height: 220px; }
