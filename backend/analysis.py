@@ -101,9 +101,23 @@ def _download(ticker: str) -> pd.DataFrame | None:
         return None
 
 
+# Bilinen kripto kodları: Yahoo'da spot fiyat "KOD-USD" biçimindedir.
+# TUZAK: "BTC" tek başına Yahoo'da bir ETF'e (Grayscale Bitcoin Mini Trust)
+# denk gelir — kullanıcı Bitcoin'i kasteder. Bu yüzden ÖNCE "-USD" denenir.
+CRYPTO_USD = frozenset({
+    "BTC", "ETH", "BNB", "SOL", "XRP", "DOGE", "ADA", "AVAX",
+    "LINK", "TRX", "DOT", "MATIC", "LTC", "SHIB", "XLM",
+})
+
+
 def _resolve(symbol: str) -> tuple[str, pd.DataFrame] | None:
     s = symbol.strip().upper()
-    candidates = [s] if "." in s else [f"{s}.IS", s]
+    if "." in s or "-" in s:
+        candidates = [s]                  # tam yazılmış: THYAO.IS, BTC-USD
+    elif s in CRYPTO_USD:
+        candidates = [f"{s}-USD", s]      # kripto: önce spot parite
+    else:
+        candidates = [f"{s}.IS", s]       # önce Borsa İstanbul
     for cand in candidates:
         df = _download(cand)
         if df is not None:

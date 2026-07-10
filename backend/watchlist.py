@@ -22,6 +22,10 @@ import logging
 
 import pandas as pd
 
+# Kripto kodları analysis.py'da tek yerden yönetilir ("BTC" ETF tuzağı
+# ve "-USD" parite kuralı orada belgeli). Buradan da aynı küme kullanılır.
+from analysis import CRYPTO_USD
+
 logger = logging.getLogger("findatalytix.watchlist")
 
 try:
@@ -83,15 +87,18 @@ def get_quotes(symbols: list[str]) -> list[dict]:
 
     # 2) İlk batch: semboller olduğu gibi
     if missing:
-        df = _batch(missing)
+        # Kripto kodları spot pariteye yönlendirilir (BTC -> BTC-USD);
+        # diğerleri olduğu gibi sorgulanır.
+        qmap = {s: (f"{s}-USD" if s in CRYPTO_USD else s) for s in missing}
+        df = _batch(list(qmap.values()))
         retry: list[str] = []
         for s in missing:
-            q = _extract(df, s)
+            q = _extract(df, qmap[s])
             if q is not None:
-                item = {"symbol": s, "resolved": s, **q}
+                item = {"symbol": s, "resolved": qmap[s], **q}
                 _cache[s] = (now, item)
                 results[s] = item
-            elif "." not in s:
+            elif "." not in s and s not in CRYPTO_USD:
                 retry.append(s)          # .IS ile tekrar denenecek
             else:
                 # Hata da önbelleğe yazılır: bozuk sembol her 60 sn'lik

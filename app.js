@@ -864,6 +864,11 @@
         // gelis sirasina kurmak BTC'yi listenin ortasina atiyordu.
         if (body.querySelector(".table-empty")) body.innerHTML = "";
         const tr = document.createElement("tr");
+        // satir tiklaninca teknik analiz (izleme listesiyle ayni davranis)
+        tr.style.cursor = "pointer";
+        tr.title = d.tipRow;
+        tr.addEventListener("click", () =>
+          FDX.router.navigate("assets", { symbol: c.code + "-USD" }));
         const tdName = document.createElement("td");
         const label = document.createElement("span");
         label.textContent = c.label;

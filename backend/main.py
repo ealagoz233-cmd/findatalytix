@@ -241,7 +241,7 @@ def get_asset(symbol: str) -> dict:
     if data is None:
         raise HTTPException(
             404, f"'{symbol.upper()}' için veri bulunamadı. Sembolü kontrol et "
-                 f"(BIST için THYAO, GARAN; ABD için AAPL, QQQ gibi) "
+                 f"(BIST için THYAO, GARAN; ABD için AAPL, QQQ; kripto için BTC, ETH gibi) "
                  f"ya da internet bağlantısını doğrula.")
     return data
 

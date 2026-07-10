@@ -170,7 +170,7 @@ FDX.I18N = {
     },
     as: {
       note: "Sembol yaz, 1 yıllık gerçek piyasa verisi RSI ve MACD göstergeleriyle çizilsin. BIST için sadece kod yeterli (THYAO), sistem .IS ekini kendisi dener.",
-      ph: "Örn: THYAO, GARAN, XU030, AAPL, QQQ…",
+      ph: "Örn: THYAO, XU030, AAPL, BTC, ETH…",
       last: "Son Fiyat", range: "52 Hafta Aralığı", rangeNote: "düşük — yüksek",
       vol: "Yıllık Volatilite", volNote: "günlük getirilerden", rsi: "RSI (14)",
       chartTitle: "Fiyat Grafiği"
@@ -206,6 +206,7 @@ FDX.I18N = {
       connNote: "Binance WebSocket",
       coin: "Coin", price: "Fiyat (USDT)", chg: "24s Değişim", vol: "24s Hacim",
       empty: "Bağlantı bekleniyor…",
+      tipRow: "Teknik analize git — RSI + MACD grafiği",
       fngClass: { "Extreme Fear": "Aşırı Korku", "Fear": "Korku", "Neutral": "Nötr",
                   "Greed": "Açgözlülük", "Extreme Greed": "Aşırı Açgözlülük" }
     },
@@ -299,7 +300,7 @@ FDX.I18N = {
     },
     as: {
       note: "Type a symbol to plot 1 year of real market data with RSI and MACD indicators. For BIST just the code is enough (THYAO); the system tries the .IS suffix itself.",
-      ph: "e.g. THYAO, GARAN, XU030, AAPL, QQQ…",
+      ph: "e.g. THYAO, XU030, AAPL, BTC, ETH…",
       last: "Last Price", range: "52-Week Range", rangeNote: "low — high",
       vol: "Annual Volatility", volNote: "from daily returns", rsi: "RSI (14)",
       chartTitle: "Price Chart"
@@ -335,6 +336,7 @@ FDX.I18N = {
       connNote: "Binance WebSocket",
       coin: "Coin", price: "Price (USDT)", chg: "24h Change", vol: "24h Volume",
       empty: "Waiting for connection…",
+      tipRow: "Open technical analysis — RSI + MACD chart",
       fngClass: { "Extreme Fear": "Extreme Fear", "Fear": "Fear", "Neutral": "Neutral",
                   "Greed": "Greed", "Extreme Greed": "Extreme Greed" }
     },
