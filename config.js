@@ -98,9 +98,24 @@ FDX.SEED = {
    mesajlar (hata detayları vb.) bilinçli olarak TR kaldı;
    tam i18n, çeviri dosyası büyüyünce ayrı modüle taşınır.
 ---------------------------------------------------------- */
+/* Kripto tahtasi: fiyatlar Binance WebSocket'ten (sembol = Binance pariteleri).
+   Liste buradan yonetilir; yeni coin eklemek = yeni satir. */
+FDX.CRYPTO = [
+  { sym: "BTCUSDT",  label: "Bitcoin",   code: "BTC" },
+  { sym: "ETHUSDT",  label: "Ethereum",  code: "ETH" },
+  { sym: "BNBUSDT",  label: "BNB",       code: "BNB" },
+  { sym: "SOLUSDT",  label: "Solana",    code: "SOL" },
+  { sym: "XRPUSDT",  label: "XRP",       code: "XRP" },
+  { sym: "DOGEUSDT", label: "Dogecoin",  code: "DOGE" },
+  { sym: "ADAUSDT",  label: "Cardano",   code: "ADA" },
+  { sym: "AVAXUSDT", label: "Avalanche", code: "AVAX" },
+  { sym: "LINKUSDT", label: "Chainlink", code: "LINK" },
+  { sym: "TRXUSDT",  label: "Tron",      code: "TRX" }
+];
+
 FDX.I18N = {
   tr: {
-    views: { overview: "Genel Bakış", markets: "Piyasalar", portfolio: "Portföy",
+    views: { overview: "Genel Bakış", markets: "Piyasalar", crypto: "Kripto", portfolio: "Portföy",
              simulation: "Simülasyon Oluştur",
              vectordb: "Vektör Veri Tabanı", assets: "Varlık Analizi",
              report: "Risk Raporu", config: "Konfigürasyon", settings: "Ayarlar" },
@@ -181,6 +196,19 @@ FDX.I18N = {
       export: "Dışa Aktar (JSON indir)", import: "İçe Aktar (yedek yükle)"
     },
     prov: { title: "Kaynak Belge" },
+    cr: {
+      note: "Fiyatlar Binance'ten WebSocket ile saniyelik akar — veri sunucuya uğramadan doğrudan tarayıcına gelir. Endeks kartları dakikalık tazelenir.",
+      board: "Canlı Kripto Tahtası",
+      fng: "Korku & Açgözlülük", fngNote: "alternative.me endeksi",
+      dom: "BTC Hakimiyeti", domNote: "toplam piyasadaki payı",
+      mcap: "Toplam Piyasa", mcapNote: "tüm kripto (CoinGecko)",
+      conn: "Veri Akışı", connLive: "Canlı", connOff: "Koptu", connWait: "Bağlanıyor…",
+      connNote: "Binance WebSocket",
+      coin: "Coin", price: "Fiyat (USDT)", chg: "24s Değişim", vol: "24s Hacim",
+      empty: "Bağlantı bekleniyor…",
+      fngClass: { "Extreme Fear": "Aşırı Korku", "Fear": "Korku", "Neutral": "Nötr",
+                  "Greed": "Açgözlülük", "Extreme Greed": "Aşırı Açgözlülük" }
+    },
     tip: {
       home: "Ana sayfaya dön (Genel Bakış)",
       share: "Bu sayfanın bağlantısını kopyala",
@@ -216,7 +244,7 @@ FDX.I18N = {
     }
   },
   en: {
-    views: { overview: "Overview", markets: "Markets", portfolio: "Portfolio",
+    views: { overview: "Overview", markets: "Markets", crypto: "Crypto", portfolio: "Portfolio",
              simulation: "Create Simulation",
              vectordb: "Vector Database", assets: "Asset Analysis",
              report: "Risk Report", config: "Configuration", settings: "Settings" },
@@ -297,6 +325,19 @@ FDX.I18N = {
       export: "Export (download JSON)", import: "Import (load backup)"
     },
     prov: { title: "Source Document" },
+    cr: {
+      note: "Prices stream from Binance via WebSocket every second — data flows straight to your browser, no server hop. Index cards refresh every minute.",
+      board: "Live Crypto Board",
+      fng: "Fear & Greed", fngNote: "alternative.me index",
+      dom: "BTC Dominance", domNote: "share of total market",
+      mcap: "Total Market Cap", mcapNote: "all crypto (CoinGecko)",
+      conn: "Data Feed", connLive: "Live", connOff: "Disconnected", connWait: "Connecting…",
+      connNote: "Binance WebSocket",
+      coin: "Coin", price: "Price (USDT)", chg: "24h Change", vol: "24h Volume",
+      empty: "Waiting for connection…",
+      fngClass: { "Extreme Fear": "Extreme Fear", "Fear": "Fear", "Neutral": "Neutral",
+                  "Greed": "Greed", "Extreme Greed": "Extreme Greed" }
+    },
     tip: {
       home: "Go to home (Overview)",
       share: "Copy this page's link",

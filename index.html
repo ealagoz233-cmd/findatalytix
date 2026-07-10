@@ -23,7 +23,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.22" />
+  <link rel="stylesheet" href="styles.css?v=0.9.23" />
 </head>
 <body>
 
@@ -57,6 +57,10 @@
         <button class="nav-item" data-view="markets">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 4 5.7 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.7-4-9s1.5-6.4 4-9Z"/></svg>
           <span data-i18n="views.markets">Piyasalar</span>
+        </button>
+        <button class="nav-item" data-view="crypto">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 8.5h4a2 2 0 0 1 0 4h-4v-4Zm0 4h4.5a2 2 0 0 1 0 4h-4.5v-4Z"/><path d="M11 6.5v2M13.5 6.5v2M11 16.5v2M13.5 16.5v2"/></svg>
+          <span data-i18n="views.crypto">Kripto</span>
         </button>
         <button class="nav-item" data-view="portfolio">
           <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="4" width="3" height="14"/></svg>
@@ -203,6 +207,60 @@
             </thead>
             <tbody id="marketsBody">
               <tr><td colspan="4" class="table-empty" data-i18n="ui.loading">Veriler yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==================================================
+           VIEW: KRİPTO — Binance WebSocket canlı akış
+           (veri tarayıcıya direkt gelir; sunucuya yük binmez,
+           uyuyan ücretsiz Render'ı bile ilgilendirmez)
+      =================================================== -->
+      <section class="view" id="view-crypto">
+        <div class="phase-note glass">
+          <span class="phase-badge" data-i18n="ui.live">CANLI</span>
+          <span data-i18n="cr.note">Fiyatlar Binance'ten WebSocket ile saniyelik akar — veri sunucuya uğramadan doğrudan tarayıcına gelir. Endeks kartları dakikalık tazelenir.</span>
+        </div>
+
+        <div class="ov-grid">
+          <div class="ov-card glass">
+            <span class="ov-label" data-i18n="cr.fng">Korku &amp; Açgözlülük</span>
+            <span class="ov-value mono" id="crFngVal">—</span>
+            <span class="ov-delta" id="crFngClass">—</span>
+            <div class="fng-bar"><div class="fng-marker" id="crFngBar"></div></div>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label" data-i18n="cr.dom">BTC Hakimiyeti</span>
+            <span class="ov-value mono" id="crDom">—</span>
+            <span class="ov-delta" data-i18n="cr.domNote">toplam piyasadaki payı</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label" data-i18n="cr.mcap">Toplam Piyasa</span>
+            <span class="ov-value mono" id="crMcap">—</span>
+            <span class="ov-delta" data-i18n="cr.mcapNote">tüm kripto (CoinGecko)</span>
+          </div>
+          <div class="ov-card glass">
+            <span class="ov-label" data-i18n="cr.conn">Veri Akışı</span>
+            <span class="ov-value" id="crConn"><span class="cr-dot off"></span>—</span>
+            <span class="ov-delta" data-i18n="cr.connNote">Binance WebSocket</span>
+          </div>
+        </div>
+
+        <div class="panel glass">
+          <h3 data-i18n="cr.board">Canlı Kripto Tahtası</h3>
+          <p class="ai-error" id="cryptoError" role="alert" hidden></p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th data-i18n="cr.coin">Coin</th>
+                <th style="text-align: right;" data-i18n="cr.price">Fiyat (USDT)</th>
+                <th style="text-align: right;" data-i18n="cr.chg">24s Değişim</th>
+                <th style="text-align: right;" data-i18n="cr.vol">24s Hacim</th>
+              </tr>
+            </thead>
+            <tbody id="cryptoBody">
+              <tr><td colspan="4" class="table-empty" data-i18n="cr.empty">Bağlantı bekleniyor…</td></tr>
             </tbody>
           </table>
         </div>
@@ -635,8 +693,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.22"></script>
-  <script src="core.js?v=0.9.22"></script>
-  <script src="app.js?v=0.9.22"></script>
+  <script src="config.js?v=0.9.23"></script>
+  <script src="core.js?v=0.9.23"></script>
+  <script src="app.js?v=0.9.23"></script>
 </body>
 </html>

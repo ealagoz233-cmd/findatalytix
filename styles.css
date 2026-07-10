@@ -1163,3 +1163,43 @@ tr.flash-down { animation: flashDown 1.3s ease; }
 .status-icon.db::after    { background: rgba(143, 184, 232, 0.65); }
 .status-icon.cycle::after { background: rgba(217, 179, 106, 0.65); }
 .status-card:hover .status-icon::after { opacity: 0.85; filter: blur(18px); }
+
+/* ==========================================================
+   KRİPTO SEKMESİ — Korku&Açgözlülük çubuğu, akış durumu, tik renkleri
+   ========================================================== */
+/* kırmızı(korku) -> altın(nötr) -> yeşil(açgözlülük); imleç endeks değerinde */
+.fng-bar {
+  position: relative;
+  height: 6px;
+  margin-top: 10px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--red), var(--gold), var(--green));
+  opacity: 0.85;
+}
+.fng-marker {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 4px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--text);
+  box-shadow: 0 0 6px rgba(3, 8, 18, 0.5);
+  transform: translateX(-50%);
+  transition: left 0.6s ease;
+}
+
+.cr-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: var(--text-dim);
+}
+.cr-dot.live { background: var(--green); animation: pulse 2.4s ease-in-out infinite; }
+.cr-dot.off  { background: var(--red); }
+.cr-dot.wait { background: var(--gold); animation: pulse 1.2s ease-in-out infinite; }
+
+/* terminal geleneği: fiyat hücresi son tik yönünün rengini taşır */
+.tick-up   { color: var(--green); }
+.tick-down { color: var(--red); }

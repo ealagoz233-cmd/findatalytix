@@ -349,6 +349,11 @@
         } else {
           MarketsPoller.stop();
         }
+        if (state.view === "crypto") {
+          CryptoLive.start();
+        } else {
+          CryptoLive.stop();
+        }
         if (state.view === "portfolio") {
           FDX.api.fetchPortfolio();
           PortfolioPoller.start();
@@ -478,6 +483,11 @@
     /* ---- Piyasalar tahtasi ---- */
     if (state.markets !== prev.markets) {
       renderMarkets(state.markets);
+    }
+
+    /* ---- Kripto tahtasi ---- */
+    if (state.crypto !== prev.crypto) {
+      renderCrypto(state.crypto);
     }
 
     /* ---- Rapor arsivi ---- */
@@ -726,6 +736,179 @@
       spark = as.map((v, i) => v * bs[i] * item.factor);
     }
     return { last: last, changePct: changePct, spark: spark };
+  }
+
+  /* ========================================================
+     KRIPTO — Binance WebSocket canli akis (tamamen istemci tarafi)
+     Mimari karar: canli akis SUNUCUDAN gecirilmez — ucretsiz Render
+     uyur ve RAM'i dar. Binance/CoinGecko/alternative.me CORS acik,
+     veri dogrudan tarayiciya gelir; sunucu maliyeti sifir.
+  ======================================================== */
+  const CryptoLive = (() => {
+    let ws = null, buf = {}, flushT = null, retryT = null, metaAt = 0;
+
+    function setWs(v) {
+      const s = FDX.store;
+      if (s.get().crypto.ws !== v) s.set({ crypto: { ...s.get().crypto, ws: v } });
+    }
+
+    function start() {
+      fetchMeta();
+      open();
+      if (!flushT) flushT = setInterval(flush, 1000);  // saniyede 1 toplu boyama
+    }
+
+    function stop() {
+      if (retryT) { clearTimeout(retryT); retryT = null; }
+      if (flushT) { clearInterval(flushT); flushT = null; }
+      if (ws) { ws.onclose = null; try { ws.close(); } catch (_) {} ws = null; }
+      setWs("off");
+    }
+
+    function open() {
+      if (ws) return;
+      const streams = (FDX.CRYPTO || [])
+        .map(c => c.sym.toLowerCase() + "@miniTicker").join("/");
+      setWs("wait");
+      try {
+        ws = new WebSocket("wss://data-stream.binance.vision/stream?streams=" + streams);
+      } catch (_) { setWs("off"); return; }
+      ws.onopen = () => setWs("live");
+      ws.onmessage = (ev) => {
+        try {
+          const m = JSON.parse(ev.data).data;
+          if (m && m.s) buf[m.s] = {
+            last: +m.c,
+            changePct: +m.o ? (+m.c - +m.o) / +m.o * 100 : 0,
+            vol: +m.q
+          };
+        } catch (_) { /* bozuk tek mesaj akisi durdurmasin */ }
+      };
+      ws.onclose = () => {
+        ws = null;
+        setWs("off");
+        // sekme hala aciksa 3 sn sonra sessizce yeniden dene
+        if (FDX.store.get().view === "crypto") retryT = setTimeout(open, 3000);
+      };
+    }
+
+    /* WS mesajlari buf'ta birikir; DOM'a saniyede 1 kez yansir
+       (her tick'te render = telefonda pil/performans katili) */
+    function flush() {
+      fetchMeta();  // icinde 60 sn'lik fren var
+      if (!Object.keys(buf).length) return;
+      const s = FDX.store, cr = s.get().crypto;
+      s.set({ crypto: { ...cr, quotes: { ...cr.quotes, ...buf } } });
+      buf = {};
+    }
+
+    async function fetchMeta() {
+      if (Date.now() - metaAt < 60 * 1000) return;
+      metaAt = Date.now();
+      const s = FDX.store;
+      try {
+        const [fngR, glR] = await Promise.all([
+          fetch("https://api.alternative.me/fng/?limit=1"),
+          fetch("https://api.coingecko.com/api/v3/global")
+        ]);
+        const fng = (await fngR.json()).data[0];
+        const gl = (await glR.json()).data;
+        s.set({ crypto: { ...s.get().crypto,
+          fng: { value: +fng.value, label: fng.value_classification },
+          global: { dom: gl.market_cap_percentage.btc,
+                    mcap: gl.total_market_cap.usd },
+          error: null } });
+      } catch (err) {
+        s.set({ crypto: { ...s.get().crypto,
+          error: "Endeks verileri alınamadı: " + err.message } });
+      }
+    }
+
+    return { start, stop };
+  })();
+
+  /* Kripto tahtasi: satirlar ILK veride kurulur, sonrasi yerinde
+     guncelleme — innerHTML'i her saniye yeniden kurmak yok. */
+  const crRows = {};
+  function renderCrypto(cr) {
+    const err = $("#cryptoError");
+    if (err) { err.hidden = !cr.error; if (cr.error) err.textContent = cr.error; }
+
+    const d = Prefs.dict().cr;
+
+    if (cr.fng) {
+      $("#crFngVal").textContent = cr.fng.value;
+      $("#crFngClass").textContent = d.fngClass[cr.fng.label] || cr.fng.label;
+      const bar = $("#crFngBar");
+      if (bar) bar.style.left = Math.max(0, Math.min(100, cr.fng.value)) + "%";
+    }
+    if (cr.global) {
+      $("#crDom").textContent = cr.global.dom.toFixed(1) + "%";
+      $("#crMcap").textContent = "$" + (cr.global.mcap / 1e12).toFixed(2) + "T";
+    }
+    const conn = $("#crConn");
+    if (conn) {
+      const txt = cr.ws === "live" ? d.connLive
+                : cr.ws === "wait" ? d.connWait : d.connOff;
+      conn.innerHTML = '<span class="cr-dot ' + cr.ws + '"></span>' + txt;
+    }
+
+    const body = $("#cryptoBody");
+    if (!body || !Object.keys(cr.quotes).length) return;
+
+    (FDX.CRYPTO || []).forEach(c => {
+      const q = cr.quotes[c.sym];
+      let r = crRows[c.sym];
+      if (!r) {
+        // Satirlar ILK veride FDX.CRYPTO sirasiyla topluca kurulur —
+        // gelis sirasina kurmak BTC'yi listenin ortasina atiyordu.
+        if (body.querySelector(".table-empty")) body.innerHTML = "";
+        const tr = document.createElement("tr");
+        const tdName = document.createElement("td");
+        const label = document.createElement("span");
+        label.textContent = c.label;
+        const sym = document.createElement("span");
+        sym.className = "mk-sym mono";
+        sym.textContent = c.code;
+        tdName.append(label, sym);
+        const tdPrice = document.createElement("td");
+        tdPrice.className = "mono";
+        tdPrice.style.textAlign = "right";
+        const tdChg = document.createElement("td");
+        tdChg.style.textAlign = "right";
+        const tdVol = document.createElement("td");
+        tdVol.className = "mono";
+        tdVol.style.textAlign = "right";
+        tr.append(tdName, tdPrice, tdChg, tdVol);
+        body.appendChild(tr);
+        r = crRows[c.sym] = { tdPrice, tdChg, tdVol, lastVal: null };
+        r.tdPrice.textContent = "…";
+      }
+      if (!q) return;   // verisi henuz gelmeyen coin "…" ile bekler
+      r.tdPrice.textContent = fmtUsd(q.last);
+      // terminal gelenegi: son tik yonu fiyatin rengi
+      if (r.lastVal !== null && q.last !== r.lastVal) {
+        r.tdPrice.classList.toggle("tick-up", q.last > r.lastVal);
+        r.tdPrice.classList.toggle("tick-down", q.last < r.lastVal);
+      }
+      r.lastVal = q.last;
+      const up = q.changePct >= 0;
+      r.tdChg.innerHTML = '<span class="watch-change ' + (up ? "up" : "down") + '">' +
+        (up ? "▲ " : "▼ ") + Math.abs(q.changePct).toFixed(2) + "%</span>";
+      r.tdVol.textContent = fmtVol(q.vol);
+    });
+  }
+
+  /* Kripto ABD dolari sergisi: buyuk fiyat tam sayi, kucuk coin 4 hane */
+  function fmtUsd(v) {
+    if (v >= 1000) return v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    if (v >= 1)    return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    return v.toLocaleString("en-US", { maximumFractionDigits: 4 });
+  }
+  function fmtVol(v) {
+    if (v >= 1e9) return "$" + (v / 1e9).toFixed(2) + "B";
+    if (v >= 1e6) return "$" + (v / 1e6).toFixed(1) + "M";
+    return "$" + Math.round(v).toLocaleString("en-US");
   }
 
   /* Piyasalar tahtasi: FDX.MARKETS sirasiyla sabit satirlar,
