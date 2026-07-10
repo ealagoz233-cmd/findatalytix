@@ -23,6 +23,21 @@ def test_kripto_kodu_once_usd_paritesi(monkeypatch):
     assert calls[0] == "BTC-USD"          # ETF tuzağından önce parite
 
 
+def test_kripto_asla_etf_e_dusmez(monkeypatch):
+    """BTC-USD indirilemezse sonuç None olmalı — çıplak 'BTC' (Grayscale
+    ETF) ASLA denenmemeli. Canlıda yaşandı: deploy ısınırken tek seferlik
+    Yahoo hatası ETF verisini 15 dk önbelleğe sokmuştu."""
+    calls = []
+
+    def fake(t):
+        calls.append(t)
+        return None                        # Yahoo geçici olarak düşük
+
+    monkeypatch.setattr(analysis, "_download", fake)
+    assert analysis._resolve("BTC") is None
+    assert calls == ["BTC-USD"]           # tek aday; ETF denenmedi
+
+
 def test_bist_onceligi_bozulmadi(monkeypatch):
     calls = []
 

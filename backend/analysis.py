@@ -115,7 +115,11 @@ def _resolve(symbol: str) -> tuple[str, pd.DataFrame] | None:
     if "." in s or "-" in s:
         candidates = [s]                  # tam yazılmış: THYAO.IS, BTC-USD
     elif s in CRYPTO_USD:
-        candidates = [f"{s}-USD", s]      # kripto: önce spot parite
+        # SADECE spot parite — çıplak koda düşüş YOK. Yahoo bir kez
+        # tökezlerse 404 döner (önbelleğe yazılmaz, yenilemede düzelir);
+        # asla sessizce ETF verisi sunulmaz. (Render'da canlıda yaşandı:
+        # deploy ısınırken BTC-USD tek sefer düştü -> ETF 15 dk önbeleğe girdi.)
+        candidates = [f"{s}-USD"]
     else:
         candidates = [f"{s}.IS", s]       # önce Borsa İstanbul
     for cand in candidates:

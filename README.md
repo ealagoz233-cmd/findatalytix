@@ -2,21 +2,25 @@
 
 **AI-assisted financial risk analysis platform** — Monte Carlo simulation, RAG-grounded document search, and a dual-AI (analyst + referee) commentary pipeline, wrapped in a real-time market dashboard.
 
-🇹🇷 [Türkçe README](README.tr.md)
+🇹🇷 [Türkçe README](README.tr.md) · 🌐 **[Live demo → findatalytix.onrender.com](https://findatalytix.onrender.com)** *(free tier — first load may take ~1 min if the server was asleep)*
 
+[![Live](https://img.shields.io/badge/live-findatalytix.onrender.com-d9b36a)](https://findatalytix.onrender.com)
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)
 ![Vanilla JS](https://img.shields.io/badge/Frontend-Vanilla_JS-F7DF1E?logo=javascript&logoColor=black)
 ![ChromaDB](https://img.shields.io/badge/RAG-ChromaDB-FF6B6B)
-![Tests](https://img.shields.io/badge/tests-20%20passing-4ade80)
+![Tests](https://img.shields.io/badge/tests-31%20passing-4ade80)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-<!--
-  Ekran görüntüleri: docs/screenshots/ klasörüne PNG at, sonra bu bloğu aç:
-  ![Overview](docs/screenshots/overview.png)
-  ![Simulation](docs/screenshots/simulation.png)
-  ![Markets](docs/screenshots/markets.png)
--->
+## Screenshots
+
+| Overview | Live crypto board (Binance WebSocket) |
+|---|---|
+| ![Overview](docs/screenshots/genel-bakis.png) | ![Crypto](docs/screenshots/kripto.png) |
+
+| Simulation + dual-AI commentary | Technical analysis (BTC-USD) |
+|---|---|
+| ![Simulation](docs/screenshots/simulasyon.png) | ![Asset analysis](docs/screenshots/varlik-analizi.png) |
 
 ## What it does
 
@@ -29,7 +33,7 @@ Type a natural-language prompt like *"compare THYAO with Apple"* — the system:
 5. Has one LLM write the analysis and a **second LLM referee it**, returning a confidence score,
 6. Exports everything as a formatted **.docx risk report**.
 
-Around that core: a live **markets board** (FX / gold / commodities / indices / crypto with sparklines and price-flash animations), per-asset **technical analysis** (candlestick + RSI + MACD), a persistent watchlist, simulation history, TR/EN i18n, and dark/light themes.
+Around that core: a live **markets board** (FX / gold / commodities / indices with sparklines and price-flash animations), a **crypto board streaming straight from Binance WebSocket to the browser** (zero server load — Fear & Greed index, BTC dominance, tick-direction coloring), per-asset **technical analysis** (candlestick + RSI + MACD, crypto included), a persistent watchlist and portfolio tracker, simulation history, TR/EN i18n, and three themes (dim / lights-out black / light).
 
 ## Architecture
 

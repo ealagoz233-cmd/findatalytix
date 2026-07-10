@@ -754,8 +754,28 @@
 
     function start() {
       fetchMeta();
+      bootstrap();   // REST ile aninda ilk boyama (WS isinana kadar bos ekran olmasin)
       open();
       if (!flushT) flushT = setInterval(flush, 1000);  // saniyede 1 toplu boyama
+    }
+
+    /* Tahtanin ilk dolumu: tek REST cagrisi. WS 1-2 sn icinde
+       devralir ve uzerine yazar; REST verisi sadece acilis konforu. */
+    async function bootstrap() {
+      try {
+        const syms = JSON.stringify((FDX.CRYPTO || []).map(c => c.sym));
+        const r = await fetch("https://data-api.binance.vision/api/v3/ticker/24hr?symbols="
+                              + encodeURIComponent(syms));
+        const arr = await r.json();
+        arr.forEach(t => {
+          if (!buf[t.symbol]) buf[t.symbol] = {
+            last: +t.lastPrice,
+            changePct: +t.priceChangePercent,
+            vol: +t.quoteVolume
+          };
+        });
+        flush();
+      } catch (_) { /* REST dusmusse WS zaten deneyecek */ }
     }
 
     function stop() {

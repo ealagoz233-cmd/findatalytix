@@ -2,7 +2,17 @@
 
 **Yapay zekâ destekli finansal risk analizi platformu** — Monte Carlo simülasyonu, RAG tabanlı belge arama ve çift-AI (analist + hakem) yorum hattı; hepsi gerçek zamanlı bir piyasa panosunun içinde.
 
-🇬🇧 [English README](README.md)
+🇬🇧 [English README](README.md) · 🌐 **[Canlı site → findatalytix.onrender.com](https://findatalytix.onrender.com)** *(ücretsiz plan — sunucu uyuduysa ilk açılış ~1 dk sürebilir)*
+
+## Ekran Görüntüleri
+
+| Genel Bakış | Canlı Kripto Tahtası (Binance WebSocket) |
+|---|---|
+| ![Genel Bakış](docs/screenshots/genel-bakis.png) | ![Kripto](docs/screenshots/kripto.png) |
+
+| Simülasyon + çift-AI yorumu | Teknik Analiz (BTC-USD) |
+|---|---|
+| ![Simülasyon](docs/screenshots/simulasyon.png) | ![Varlık Analizi](docs/screenshots/varlik-analizi.png) |
 
 ## Ne yapar?
 
@@ -15,7 +25,7 @@
 5. Bir LLM analizi yazar, **ikinci bir LLM hakemlik edip** güven puanı verir,
 6. Hepsini biçimli bir **.docx risk raporu** olarak indirir.
 
-Çekirdeğin etrafında: canlı **Piyasalar tahtası** (döviz / altın / emtia / endeks / kripto — sparkline ve fiyat flaş animasyonlarıyla), varlık başına **teknik analiz** (mum grafiği + RSI + MACD), kalıcı izleme listesi, simülasyon geçmişi, TR/EN dil desteği ve koyu/açık tema.
+Çekirdeğin etrafında: canlı **Piyasalar tahtası** (döviz / altın / emtia / endeks — sparkline ve fiyat flaş animasyonlarıyla), **Binance WebSocket'ten doğrudan tarayıcıya akan Kripto tahtası** (sunucuya sıfır yük — Korku & Açgözlülük endeksi, BTC hakimiyeti, tik yönü renkleri), varlık başına **teknik analiz** (mum grafiği + RSI + MACD, kripto dahil), kalıcı izleme listesi ve portföy takibi, simülasyon geçmişi, TR/EN dil desteği ve üç tema (loş / siyah / beyaz).
 
 ## Mimari
 
