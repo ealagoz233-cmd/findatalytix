@@ -62,6 +62,21 @@ def test_tam_yazilmis_sembole_dokunulmaz(monkeypatch):
     assert calls == ["BTC-USD"]           # tek deneme, ek aday yok
 
 
+def test_bayat_ama_saglam_yedegi(monkeypatch):
+    """Taze indirme düşerse süresi geçmiş önbellek sunulur; önbellek
+    de boşsa dürüst None (=404). Yahoo'nun Render IP'sine aralıklı
+    nazlanması canlıda yaşandı — kullanıcı veri varken 404 görmesin."""
+    monkeypatch.setattr(analysis, "_resolve", lambda s: None)
+
+    bayat = {"symbol": "BTC", "resolved": "BTC-USD", "dates": ["01.01.25"]}
+    eski_zaman = 0.0                       # TTL çoktan dolmuş
+    monkeypatch.setitem(analysis._cache, "BTC", (eski_zaman, bayat))
+    assert analysis.get_asset("BTC") == bayat
+
+    analysis._cache.pop("YOKSEMBOL", None)
+    assert analysis.get_asset("YOKSEMBOL") is None
+
+
 def test_kripto_kumesi_watchlistte_ayni():
     # watchlist aynı kümeyi analysis'ten alır — kopya küme türemesin
     import watchlist

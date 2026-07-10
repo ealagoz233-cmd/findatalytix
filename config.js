@@ -72,9 +72,10 @@ FDX.MARKETS = [
   { sym: "SI=F",     label: "Gümüş (ons, $)" },
   { sym: "BZ=F",     label: "Brent Petrol ($)" },
   { sym: "XU100.IS", label: "BIST 100" },
-  { sym: "^GSPC",    label: "S&P 500" },
-  { sym: "BTC-USD",  label: "Bitcoin ($)" },
-  { sym: "ETH-USD",  label: "Ethereum ($)" }
+  { sym: "^GSPC",    label: "S&P 500" }
+  /* Kripto satirlari kaldirildi: artik ozel "Kripto" sekmesi var
+     (Binance WS, 10 coin, canli) — burada tutmak mukerrerdi ve her
+     60 sn'lik poll'da Yahoo'ya 2 gereksiz sembol soruyordu. */
 ];
 
 /* İlk açılış görünümü — ilk /simulate cevabıyla ezilir */
@@ -138,7 +139,7 @@ FDX.I18N = {
       weekLimit: "haftalık limit: ", chunksIndexed: " chunk indeksli"
     },
     mk: {
-      note: "Kurlar, emtia, endeks ve kripto Yahoo Finance'ten canlı çekilir; sayfa açıkken 60 saniyede bir tazelenir.",
+      note: "Kurlar, emtia ve endeksler Yahoo Finance'ten canlı çekilir; sayfa açıkken 60 saniyede bir tazelenir.",
       title: "Canlı Piyasa Tahtası", instrument: "Enstrüman"
     },
     pf: {
@@ -268,7 +269,7 @@ FDX.I18N = {
       weekLimit: "weekly limit: ", chunksIndexed: " chunks indexed"
     },
     mk: {
-      note: "Rates, commodities, indices and crypto are pulled live from Yahoo Finance; refreshes every 60 seconds while the page is open.",
+      note: "Rates, commodities and indices are pulled live from Yahoo Finance; refreshes every 60 seconds while the page is open.",
       title: "Live Market Board", instrument: "Instrument"
     },
     pf: {

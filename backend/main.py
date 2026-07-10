@@ -41,7 +41,10 @@ from findatalytix_engine.simulation import (
 # (credentials kapalıyken) hem file:// hem localhost sunucularını kapsar.
 # ----------------------------------------------------------
 
-app = FastAPI(title="FinDatalytix API", version="0.9.0")
+# Surum tek yerden: index.html'deki ?v= damgasiyla birlikte elle artirilir
+# (health endpoint'i app.version'i okur — ikinci bir kopya tutma).
+VERSION = "0.9.26"
+app = FastAPI(title="FinDatalytix API", version=VERSION)
 
 # CORS: gelistirmede "*" (file:// Origin=null dahil calissin diye),
 # deploy gununde .env'e CORS_ORIGINS=https://alanadi.com yazilarak daraltilir.

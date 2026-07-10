@@ -148,6 +148,11 @@ def get_asset(symbol: str) -> dict | None:
 
     resolved = _resolve(key)
     if resolved is None:
+        # Bayat-ama-sağlam: Yahoo geçici nazlanırsa (Render IP'sinde
+        # aralıklı yaşanıyor) süresi geçmiş de olsa SON SAĞLAM veri sunulur.
+        # Dürüst 404 yalnızca elimizde hiç veri yokken döner.
+        if key in _cache:
+            return _cache[key][1]
         return None
     ticker, df = resolved
 
