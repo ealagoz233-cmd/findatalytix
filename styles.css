@@ -1203,3 +1203,106 @@ tr.flash-down { animation: flashDown 1.3s ease; }
 /* terminal geleneği: fiyat hücresi son tik yönünün rengini taşır */
 .tick-up   { color: var(--green); }
 .tick-down { color: var(--red); }
+
+/* ==========================================================
+   HABERLER SEKMESİ — kayan şerit, manşet, kart ızgarası
+   ========================================================== */
+.nw-ticker { overflow: hidden; padding: 10px 0; margin-bottom: 14px; }
+.nw-ticker-track {
+  display: inline-flex;
+  gap: 36px;
+  white-space: nowrap;
+  width: max-content;
+  padding-left: 22px;
+  animation: nw-marquee 45s linear infinite;
+  will-change: transform;
+}
+@keyframes nw-marquee { to { transform: translateX(-50%); } }
+.nw-ticker:hover .nw-ticker-track { animation-play-state: paused; }
+.nw-tick { font-size: 0.85rem; color: var(--text-dim); font-family: var(--font-mono); }
+.nw-tick b { color: var(--text); font-family: var(--font-body); font-weight: 600; }
+.nw-up   { color: var(--green); }
+.nw-down { color: var(--red); }
+
+.nw-cats { margin-bottom: 16px; flex-wrap: wrap; }
+
+.nw-hero-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.nw-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 26px;
+  min-height: 230px;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.nw-hero:hover { transform: translateY(-3px); border-color: var(--stroke-strong); }
+.nw-hero:hover h2 { color: var(--gold); }
+.nw-hero h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.35;
+  font-family: var(--font-display);
+  transition: color 0.2s ease;
+}
+.nw-tag {
+  align-self: flex-start;
+  font-size: 0.68rem;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  font-weight: 600;
+}
+.nw-meta { font-size: 0.74rem; color: var(--text-dim); }
+
+.nw-featured { display: flex; flex-direction: column; gap: 12px; }
+.nw-mini {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.nw-mini h4 { margin: 0; font-size: 0.92rem; line-height: 1.4; font-weight: 500; transition: color 0.2s ease; }
+.nw-mini:hover { transform: translateY(-2px); border-color: var(--stroke-strong); }
+.nw-mini:hover h4 { color: var(--gold); }
+
+.nw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.nw-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.nw-card h4 { margin: 0; font-size: 0.92rem; line-height: 1.45; font-weight: 500; transition: color 0.2s ease; }
+.nw-card:hover { transform: translateY(-3px); border-color: var(--stroke-strong); }
+.nw-card:hover h4 { color: var(--gold); }
+.nw-card .nw-meta { margin-top: auto; }
+
+@media (max-width: 1200px) { .nw-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 980px)  {
+  .nw-hero-row { grid-template-columns: 1fr; }
+  .nw-grid { grid-template-columns: 1fr; }
+}
+/* hareket azaltma: şerit kaymaz, elle kaydırılır */
+@media (prefers-reduced-motion: reduce) {
+  .nw-ticker-track { animation: none; }
+  .nw-ticker { overflow-x: auto; }
+}

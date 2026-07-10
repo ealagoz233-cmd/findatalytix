@@ -14,6 +14,10 @@
 |---|---|
 | ![Simülasyon](docs/screenshots/simulasyon.png) | ![Varlık Analizi](docs/screenshots/varlik-analizi.png) |
 
+| Haberler — canlı şerit + Google News RSS (TR/EN) |
+|---|
+| ![Haberler](docs/screenshots/haberler.png) |
+
 ## Ne yapar?
 
 *"THYAO ile Apple'ı karşılaştır"* gibi doğal dilde bir prompt yaz — sistem:

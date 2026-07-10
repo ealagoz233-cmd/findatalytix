@@ -22,6 +22,10 @@
 |---|---|
 | ![Simulation](docs/screenshots/simulasyon.png) | ![Asset analysis](docs/screenshots/varlik-analizi.png) |
 
+| News — live ticker + Google News RSS (TR/EN) |
+|---|
+| ![News](docs/screenshots/haberler.png) |
+
 ## What it does
 
 Type a natural-language prompt like *"compare THYAO with Apple"* — the system:

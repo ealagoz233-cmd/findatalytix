@@ -354,6 +354,11 @@
         } else {
           CryptoLive.stop();
         }
+        if (state.view === "news") {
+          NewsLive.start();
+        } else {
+          NewsLive.stop();
+        }
         if (state.view === "portfolio") {
           FDX.api.fetchPortfolio();
           PortfolioPoller.start();
@@ -488,6 +493,11 @@
     /* ---- Kripto tahtasi ---- */
     if (state.crypto !== prev.crypto) {
       renderCrypto(state.crypto);
+    }
+
+    /* ---- Haberler ---- */
+    if (state.news !== prev.news) {
+      renderNews(state.news);
     }
 
     /* ---- Rapor arsivi ---- */
@@ -934,6 +944,185 @@
     if (v >= 1e9) return "$" + (v / 1e9).toFixed(2) + "B";
     if (v >= 1e6) return "$" + (v / 1e6).toFixed(1) + "M";
     return "$" + Math.round(v).toLocaleString("en-US");
+  }
+
+  /* ========================================================
+     HABERLER — Google News RSS (backend proxy, 10 dk onbellek)
+     + kayan piyasa seridi (watchlist endpointi; BTC -> BTC-USD
+     cozumu backend'de). Baslik/kaynak metinleri DIS VERI oldugu
+     icin hep textContent ile yazilir (XSS standardimiz).
+  ======================================================== */
+  const NewsLive = (() => {
+    let newsT = null, tickT = null;
+
+    function start() {
+      fetchNews();
+      fetchTicker();
+      if (!newsT) newsT = setInterval(fetchNews, 5 * 60 * 1000);
+      if (!tickT) tickT = setInterval(fetchTicker, 60 * 1000);
+    }
+
+    function stop() {
+      if (newsT) { clearInterval(newsT); newsT = null; }
+      if (tickT) { clearInterval(tickT); tickT = null; }
+    }
+
+    function setCat(cat) {
+      const s = FDX.store;
+      if (s.get().news.cat === cat) return;
+      s.set({ news: { ...s.get().news, cat: cat, status: "loading" } });
+      fetchNews();
+    }
+
+    async function fetchNews() {
+      const s = FDX.store;
+      try {
+        const r = await fetch(FDX.CONFIG.api.baseUrl + "/news?cat=" +
+          encodeURIComponent(s.get().news.cat) + "&lang=" + Prefs.lang);
+        if (!r.ok) {
+          let msg = "HTTP " + r.status;
+          try { msg = (await r.json()).detail || msg; } catch (_) {}
+          throw new Error(msg);
+        }
+        const data = await r.json();
+        s.set({ news: { ...s.get().news,
+                        items: data.items, status: "done", error: null } });
+      } catch (err) {
+        s.set({ news: { ...s.get().news, status: "error", error: err.message } });
+      }
+    }
+
+    async function fetchTicker() {
+      const syms = (FDX.NEWS_TICKER || []).map(t => t.sym).join(",");
+      try {
+        const r = await fetch(FDX.CONFIG.api.baseUrl + "/watchlist?symbols=" +
+                              encodeURIComponent(syms));
+        if (!r.ok) return;                  // serit kozmetik: susar, haber yasar
+        const data = await r.json();
+        FDX.store.set({ news: { ...FDX.store.get().news,
+                                ticker: data.quotes || [] } });
+      } catch (_) { /* sessiz */ }
+    }
+
+    return { start: start, stop: stop, setCat: setCat, fetchNews: fetchNews };
+  })();
+
+  // Dil degisince haber AKISI da dil degistirmeli (RSS feed dili farkli)
+  $$("#langSeg .seg-btn").forEach(b => b.addEventListener("click", () => {
+    if (FDX.store.get().view === "news") NewsLive.fetchNews();
+  }));
+
+  function nwTimeAgo(ts, d) {
+    if (!ts) return "";
+    const dk = Math.round((Date.now() / 1000 - ts) / 60);
+    if (dk < 2) return d.now;
+    if (dk < 60) return dk + d.minAgo;
+    const sa = Math.round(dk / 60);
+    if (sa < 24) return sa + d.hrAgo;
+    if (sa < 48) return d.yesterday;
+    return new Date(ts * 1000).toLocaleDateString();
+  }
+
+  function nwCard(it, d, cls) {
+    const a = document.createElement("a");
+    a.className = cls;
+    a.href = it.link;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.title = d.srcTip;
+    const t = document.createElement("h4");
+    t.textContent = it.title;
+    const m = document.createElement("span");
+    m.className = "nw-meta mono";
+    m.textContent = it.source + " · " + nwTimeAgo(it.ts, d);
+    a.append(t, m);
+    return a;
+  }
+
+  function renderNews(nw) {
+    const d = Prefs.dict().nw;
+
+    // Kategori cipleri: az dugme — her cizimde tazelemek ucuz, dili de takip eder
+    const cats = $("#nwCats");
+    if (cats) {
+      cats.innerHTML = "";
+      Object.keys(d.cats).forEach(c => {
+        const b = document.createElement("button");
+        b.className = "seg-btn" + (c === nw.cat ? " active" : "");
+        b.textContent = d.cats[c];
+        b.addEventListener("click", () => NewsLive.setCat(c));
+        cats.appendChild(b);
+      });
+    }
+
+    const err = $("#nwError");
+    if (err) {
+      err.hidden = nw.status !== "error";
+      if (nw.error) err.textContent = d.empty + " (" + nw.error + ")";
+    }
+
+    // Kayan serit: icerik 2 kez yazilir -> %50 kaydirma kesintisiz dongu olur
+    const tick = $("#nwTicker"), track = $("#nwTickerTrack");
+    if (tick && track) {
+      const qs = nw.ticker || [];
+      tick.hidden = !qs.length;
+      if (qs.length) {
+        track.innerHTML = "";
+        for (let tur = 0; tur < 2; tur++) {
+          qs.forEach(q => {
+            const cfg = (FDX.NEWS_TICKER || []).find(t => t.sym === q.symbol) || {};
+            const span = document.createElement("span");
+            span.className = "nw-tick";
+            const b = document.createElement("b");
+            b.textContent = cfg[Prefs.lang] || q.symbol;
+            const fiyat = document.createTextNode(" " +
+              ((typeof q.last === "number") ? trNumber(q.last) : "—") + " ");
+            const ch = document.createElement("span");
+            const up = (q.changePct || 0) >= 0;
+            ch.className = up ? "nw-up" : "nw-down";
+            ch.textContent = (up ? "▲" : "▼") + Math.abs(q.changePct || 0).toFixed(2) + "%";
+            span.append(b, fiyat, ch);
+            track.appendChild(span);
+          });
+        }
+      }
+    }
+
+    // Manset + one cikanlar + izgara
+    const heroRow = $("#nwHeroRow"), hero = $("#nwHero"),
+          feat = $("#nwFeatured"), grid = $("#nwGrid");
+    if (!grid) return;
+    const items = nw.items || [];
+
+    if (!items.length) {
+      if (heroRow) heroRow.hidden = true;
+      grid.innerHTML = "";
+      const p = document.createElement("div");
+      p.className = "table-empty";
+      p.textContent = nw.status === "error" ? d.empty : d.loading;
+      grid.appendChild(p);
+      return;
+    }
+
+    heroRow.hidden = false;
+    hero.href = items[0].link;
+    hero.title = d.srcTip;
+    hero.innerHTML = "";
+    const hTag = document.createElement("span");
+    hTag.className = "nw-tag";
+    hTag.textContent = d.cats[nw.cat] || nw.cat;
+    const hTitle = document.createElement("h2");
+    hTitle.textContent = items[0].title;
+    const hMeta = document.createElement("span");
+    hMeta.className = "nw-meta mono";
+    hMeta.textContent = items[0].source + " · " + nwTimeAgo(items[0].ts, d);
+    hero.append(hTag, hTitle, hMeta);
+
+    feat.innerHTML = "";
+    items.slice(1, 4).forEach(it => feat.appendChild(nwCard(it, d, "nw-mini glass")));
+
+    grid.innerHTML = "";
+    items.slice(4).forEach(it => grid.appendChild(nwCard(it, d, "nw-card glass")));
   }
 
   /* Piyasalar tahtasi: FDX.MARKETS sirasiyla sabit satirlar,

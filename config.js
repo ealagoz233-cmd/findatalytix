@@ -114,9 +114,19 @@ FDX.CRYPTO = [
   { sym: "TRXUSDT",  label: "Tron",      code: "TRX" }
 ];
 
+/* Haberler ust seridi (ticker): watchlist endpointi uzerinden cekilir.
+   BTC kodu backend'de BTC-USD paritesine cozulur. */
+FDX.NEWS_TICKER = [
+  { sym: "XU100.IS", tr: "BIST 100", en: "BIST 100" },
+  { sym: "USDTRY=X", tr: "Dolar",    en: "USD/TRY" },
+  { sym: "EURTRY=X", tr: "Euro",     en: "EUR/TRY" },
+  { sym: "GC=F",     tr: "Altın",    en: "Gold" },
+  { sym: "BTC",      tr: "Bitcoin",  en: "Bitcoin" }
+];
+
 FDX.I18N = {
   tr: {
-    views: { overview: "Genel Bakış", markets: "Piyasalar", crypto: "Kripto", portfolio: "Portföy",
+    views: { overview: "Genel Bakış", markets: "Piyasalar", crypto: "Kripto", news: "Haberler", portfolio: "Portföy",
              simulation: "Simülasyon Oluştur",
              vectordb: "Vektör Veri Tabanı", assets: "Varlık Analizi",
              report: "Risk Raporu", config: "Konfigürasyon", settings: "Ayarlar" },
@@ -196,6 +206,15 @@ FDX.I18N = {
       dataNote: "Portföyün, izleme listen ve tercihlerin yalnızca bu tarayıcıda saklanır. Tarayıcı verisini temizlersen kaybolur — düzenli olarak dışa aktar (yedekle).",
       export: "Dışa Aktar (JSON indir)", import: "İçe Aktar (yedek yükle)"
     },
+    nw: {
+      note: "Başlıklar Google News RSS'ten gelir (10 dk önbellek); üst şerit canlı piyasa verisidir. Habere tıklayınca kaynağında açılır.",
+      cats: { piyasalar: "Piyasalar", kripto: "Kripto", sirketler: "Şirketler",
+              makro: "Makro", dunya: "Dünya" },
+      empty: "Haber yüklenemedi — birazdan tekrar dene.",
+      loading: "Haberler yükleniyor…",
+      now: "az önce", minAgo: " dk önce", hrAgo: " sa önce", yesterday: "dün",
+      srcTip: "Haberi kaynağında aç"
+    },
     prov: { title: "Kaynak Belge" },
     cr: {
       note: "Fiyatlar Binance'ten WebSocket ile saniyelik akar — veri sunucuya uğramadan doğrudan tarayıcına gelir. Endeks kartları dakikalık tazelenir.",
@@ -246,7 +265,7 @@ FDX.I18N = {
     }
   },
   en: {
-    views: { overview: "Overview", markets: "Markets", crypto: "Crypto", portfolio: "Portfolio",
+    views: { overview: "Overview", markets: "Markets", crypto: "Crypto", news: "News", portfolio: "Portfolio",
              simulation: "Create Simulation",
              vectordb: "Vector Database", assets: "Asset Analysis",
              report: "Risk Report", config: "Configuration", settings: "Settings" },
@@ -325,6 +344,15 @@ FDX.I18N = {
       lang: "Language", dataTitle: "Data Management (Backup)",
       dataNote: "Your portfolio, watchlist and preferences are stored only in this browser. If you clear browser data they are lost — export (back up) regularly.",
       export: "Export (download JSON)", import: "Import (load backup)"
+    },
+    nw: {
+      note: "Headlines come from Google News RSS (10-min cache); the top strip is live market data. Clicking a story opens the source site.",
+      cats: { piyasalar: "Markets", kripto: "Crypto", sirketler: "Companies",
+              makro: "Macro", dunya: "World" },
+      empty: "Couldn't load news — try again shortly.",
+      loading: "Loading news…",
+      now: "just now", minAgo: "m ago", hrAgo: "h ago", yesterday: "yesterday",
+      srcTip: "Open at the source"
     },
     prov: { title: "Source Document" },
     cr: {

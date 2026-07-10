@@ -512,6 +512,25 @@ def get_document_file(filename: str):
                         content_disposition_type="inline")
 
 
+# ----------------------------------------------------------
+# Haberler (Google News RSS — anahtarsız; 10 dk önbellek news.py'da)
+# ----------------------------------------------------------
+
+import news as news_mod
+
+
+@app.get("/api/news")
+def get_news(cat: str = "piyasalar", lang: str = "tr") -> dict:
+    try:
+        items = news_mod.get_news(cat, lang)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    except ConnectionError as exc:
+        raise HTTPException(503, str(exc))
+    return {"category": cat, "lang": "en" if lang == "en" else "tr",
+            "items": items, "count": len(items)}
+
+
 @app.post("/api/query")
 def query_documents(req: QueryRequest) -> dict:
     # Arama testi = seffaflik araci: en iyi eslesmeleri SKORUYLA goster,

@@ -79,6 +79,9 @@
     // Kripto: fiyatlar Binance WebSocket'ten TARAYICIYA akar (sunucuya yuk yok);
     // fng = Fear & Greed endeksi, global = CoinGecko piyasa ozeti, ws = baglanti durumu
     crypto: { quotes: {}, fng: null, global: null, ws: "off", error: null },
+    // Haberler: Google News RSS (backend proxy + 10 dk onbellek);
+    // ticker = ust serit kotasyonlari (watchlist endpointinden)
+    news: { items: [], cat: "piyasalar", status: "idle", error: null, ticker: [] },
 
     /* Portföy: gerçek varlıklar + canlı kotasyon */
     portfolio: { holdings: _loadHoldings(), quotes: {}, status: "idle", error: null },
@@ -123,7 +126,7 @@
 
   // "watchlist" ayri bir sayfa DEGIL (izleme listesi overview icinde yasar);
   // KNOWN'da tutmak #watchlist'te bos sayfa + "undefined" baslik uretiyordu.
-  const KNOWN = ["overview", "markets", "crypto", "portfolio", "simulation", "vectordb", "assets", "report", "config", "settings"];
+  const KNOWN = ["overview", "markets", "crypto", "news", "portfolio", "simulation", "vectordb", "assets", "report", "config", "settings"];
   const DEFAULT = "simulation";
 
   function parse(hash) {
