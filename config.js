@@ -135,7 +135,10 @@ FDX.I18N = {
     sys: { ready: "Hazır", running: "Simülasyon Çalışıyor",
            reporting: "Rapor Üretiliyor", offline: "Sunucuya Ulaşılamıyor",
            dbOffline: "Bağlantı yok", doc: "doküman", chunk: "chunk" },
-    ui: { live: "CANLI", loading: "Veriler yükleniyor…", loadingShort: "Yükleniyor…" },
+    ui: { live: "CANLI", loading: "Veriler yükleniyor…", loadingShort: "Yükleniyor…",
+          serverDown: "Veri alınamadı — backend çalışıyor mu?",
+          wlEmpty: "Liste boş — yukarıdan sembol ekle (örn: THYAO, NVDA, BTC-USD).",
+          rpEmpty: "Henüz rapor üretilmedi — Simülasyon sayfasında bir simülasyon çalıştırıp \"Raporu Oluştur\"a bas." },
     tbl: { symbol: "Sembol", price: "Fiyat", change: "Değişim", trend7: "7 Günlük Trend", sharpe: "Sharpe" },
     ov: {
       note: "Bu sayfadaki her kart ve tablo gerçek veriden beslenir — sahte rakam yok.",
@@ -159,7 +162,7 @@ FDX.I18N = {
       pnl: "Toplam Kâr / Zarar", count: "Varlık Sayısı", countNote: "portföydeki satır",
       addTitle: "Varlık Ekle", phSym: "Sembol (örn: THYAO, AAPL)", phQty: "Adet", phCost: "Alış fiyatı",
       mine: "Varlıklarım", qty: "Adet", buy: "Alış", current: "Güncel", value: "Değer", pnlShort: "K/Z",
-      empty: "Henüz varlık eklenmedi."
+      empty: "Henüz varlık eklenmedi — yukarıdan sembol, adet ve alış fiyatı ekle."
     },
     sim: {
       emptyTitle: "Henüz simülasyon çalıştırılmadı",
@@ -274,7 +277,10 @@ FDX.I18N = {
     sys: { ready: "Ready", running: "Simulation Running",
            reporting: "Generating Report", offline: "Server Unreachable",
            dbOffline: "No connection", doc: "documents", chunk: "chunks" },
-    ui: { live: "LIVE", loading: "Loading data…", loadingShort: "Loading…" },
+    ui: { live: "LIVE", loading: "Loading data…", loadingShort: "Loading…",
+          serverDown: "Couldn't load data — is the backend running?",
+          wlEmpty: "List is empty — add a symbol above (e.g. THYAO, NVDA, BTC-USD).",
+          rpEmpty: "No reports yet — run a simulation, then hit \"Generate Report\"." },
     tbl: { symbol: "Symbol", price: "Price", change: "Change", trend7: "7-Day Trend", sharpe: "Sharpe" },
     ov: {
       note: "Every card and table on this page is backed by real data — no fake numbers.",
@@ -298,7 +304,7 @@ FDX.I18N = {
       pnl: "Total Profit / Loss", count: "Holdings", countNote: "rows in portfolio",
       addTitle: "Add Holding", phSym: "Symbol (e.g. THYAO, AAPL)", phQty: "Quantity", phCost: "Buy price",
       mine: "My Holdings", qty: "Qty", buy: "Buy", current: "Current", value: "Value", pnlShort: "P/L",
-      empty: "No holdings added yet."
+      empty: "No holdings yet — add a symbol, quantity and buy price above."
     },
     sim: {
       emptyTitle: "No simulation has been run yet",

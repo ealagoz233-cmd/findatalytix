@@ -657,7 +657,7 @@
 
     if (!w.symbols.length) {
       const tr = document.createElement("tr");
-      tr.innerHTML = '<td colspan="5" class="table-empty">Liste bos - yukaridan sembol ekle (orn: THYAO, NVDA, BTC-USD).</td>';
+      tr.innerHTML = '<td colspan="5" class="table-empty">' + Prefs.dict().ui.wlEmpty + '</td>';
       body.appendChild(tr);
       return;
     }
@@ -1139,7 +1139,7 @@
     // Ilk yukleme: henuz hic veri yoksa placeholder'i birak
     if (!Object.keys(mk.quotes).length) {
       if (mk.status === "error") body.innerHTML =
-        '<tr><td colspan="4" class="table-empty">Veri alınamadı — backend çalışıyor mu?</td></tr>';
+        '<tr><td colspan="4" class="table-empty">' + Prefs.dict().ui.serverDown + '</td></tr>';
       return;
     }
 
@@ -1203,8 +1203,7 @@
     body.innerHTML = "";
     if (!rp.items.length) {
       const tr = document.createElement("tr");
-      tr.innerHTML = '<td colspan="4" class="table-empty">Henüz rapor üretilmedi — ' +
-        'Simülasyon sayfasında bir simülasyon çalıştırıp "Raporu Oluştur"a bas.</td>';
+      tr.innerHTML = '<td colspan="4" class="table-empty">' + Prefs.dict().ui.rpEmpty + '</td>';
       body.appendChild(tr);
       return;
     }
@@ -1261,8 +1260,7 @@
 
     if (!pf.holdings.length) {
       const tr = document.createElement("tr");
-      tr.innerHTML = '<td colspan="7" class="table-empty">Henüz varlık eklenmedi — ' +
-        'yukarıdan sembol, adet ve alış fiyatı ekle.</td>';
+      tr.innerHTML = '<td colspan="7" class="table-empty">' + Prefs.dict().pf.empty + '</td>';
       body.appendChild(tr);
     }
 

@@ -72,6 +72,13 @@ def _extract(df: pd.DataFrame | None, ticker: str) -> dict | None:
         return None
 
 
+# Bayat-ama-sağlam: sembol başına SON SAĞLAM kotasyon. Yahoo aralıklı
+# nazlanınca (canlıda AAPL fiyat<->"veri bulunamadı" arasında zıplıyordu,
+# satır boyu da değişip düzeni oynatıyordu) hata rozeti yerine son fiyat
+# sunulur; rozet yalnızca elimizde HİÇ veri yokken görünür.
+_last_good: dict[str, dict] = {}
+
+
 def get_quotes(symbols: list[str]) -> list[dict]:
     now = time.time()
     results: dict[str, dict] = {}
@@ -97,13 +104,16 @@ def get_quotes(symbols: list[str]) -> list[dict]:
             if q is not None:
                 item = {"symbol": s, "resolved": qmap[s], **q}
                 _cache[s] = (now, item)
+                _last_good[s] = item
                 results[s] = item
             elif "." not in s and s not in CRYPTO_USD:
                 retry.append(s)          # .IS ile tekrar denenecek
             else:
                 # Hata da önbelleğe yazılır: bozuk sembol her 60 sn'lik
-                # poll'da Yahoo'yu yeniden dövmesin (ban riski + boşa istek)
-                item = {"symbol": s, "resolved": s, "error": "veri bulunamadı"}
+                # poll'da Yahoo'yu yeniden dövmesin (ban riski + boşa istek).
+                # Elde eski sağlam fiyat varsa rozet yerine O sunulur.
+                item = _last_good.get(s) or {"symbol": s, "resolved": s,
+                                             "error": "veri bulunamadı"}
                 _cache[s] = (now, item)
                 results[s] = item
 
@@ -115,8 +125,10 @@ def get_quotes(symbols: list[str]) -> list[dict]:
                 q = _extract(df2, cand)
                 if q is not None:
                     item = {"symbol": s, "resolved": cand, **q}
+                    _last_good[s] = item
                 else:
-                    item = {"symbol": s, "resolved": s, "error": "veri bulunamadı"}
+                    item = _last_good.get(s) or {"symbol": s, "resolved": s,
+                                                 "error": "veri bulunamadı"}
                 _cache[s] = (now, item)
                 results[s] = item
 
