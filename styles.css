@@ -1310,3 +1310,53 @@ tr.flash-down { animation: flashDown 1.3s ease; }
   .nw-ticker-track { animation: none; }
   .nw-ticker { overflow-x: auto; }
 }
+
+/* ==========================================================
+   DURUM ÇUBUĞU — İNCE ŞERİT (kullanıcı geri bildirimi, 10 Tem:
+   3 iri kart "aşırı kötü" geldi). Tek satır, sessiz, terminal
+   usulü. Eski premium kart kuralları yukarıda duruyor; bu blok
+   kaskadın SONUNDA olduğu için kazanır — geri almak = bloğu sil.
+   ========================================================== */
+footer.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 30px;
+  align-items: center;
+  padding: 9px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+}
+footer.status-bar .status-card {
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: visible;
+}
+footer.status-bar .status-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+footer.status-bar .status-icon {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+footer.status-bar .status-icon svg { width: 12px; height: 12px; }
+footer.status-bar .status-icon::after { display: none; }  /* neon hâle iptal */
+footer.status-bar .status-text {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 7px;
+}
+footer.status-bar .status-label { font-size: 0.72rem; }
+footer.status-bar .status-value { font-size: 0.8rem; }

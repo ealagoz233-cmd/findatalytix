@@ -141,7 +141,7 @@ FDX.I18N = {
           rpEmpty: "Henüz rapor üretilmedi — Simülasyon sayfasında bir simülasyon çalıştırıp \"Raporu Oluştur\"a bas." },
     tbl: { symbol: "Sembol", price: "Fiyat", change: "Değişim", trend7: "7 Günlük Trend", sharpe: "Sharpe" },
     ov: {
-      note: "Bu sayfadaki her kart ve tablo gerçek veriden beslenir — sahte rakam yok.",
+      note: "Bu sayfadaki her kart ve tablo gerçek veriden beslenir.",
       totalSim: "Toplam Simülasyon", totalSimNote: "tümü gerçek geçmişten",
       week: "Bu Hafta", weekNote: "haftalık döngü",
       docs: "İndeksli Belge", docsNote: "vektör veri tabanında",
@@ -283,7 +283,7 @@ FDX.I18N = {
           rpEmpty: "No reports yet — run a simulation, then hit \"Generate Report\"." },
     tbl: { symbol: "Symbol", price: "Price", change: "Change", trend7: "7-Day Trend", sharpe: "Sharpe" },
     ov: {
-      note: "Every card and table on this page is backed by real data — no fake numbers.",
+      note: "Every card and table on this page is backed by real data.",
       totalSim: "Total Simulations", totalSimNote: "all from real history",
       week: "This Week", weekNote: "weekly cycle",
       docs: "Indexed Documents", docsNote: "in the vector database",
