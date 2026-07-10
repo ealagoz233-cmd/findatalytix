@@ -77,16 +77,29 @@ _seclog = _logging.getLogger("findatalytix.security")
 
 _RL_WINDOW = 60.0                # saniye (kayan pencere)
 _RL_LIMIT_DEFAULT = 200          # normal istek / dk / IP (tek kullanıcı bunu aşmaz)
-_RL_LIMIT_EXPENSIVE = 20         # AI + rapor / dk / IP (maliyet/ban freni)
+_RL_LIMIT_EXPENSIVE = 20         # AI + rapor + upload / dk / IP (maliyet/ban freni)
 _RL_EXPENSIVE = {"/api/simulate", "/api/report"}
 _rl_hits: dict[str, _deque] = {}
+_RL_SWEEP_AT = 5000              # bu kadar IP kovası birikince eskiler süpürülür
+_MAX_BODY = 25 * 1024 * 1024     # gövde freni: upload 20MB + JSON payı
+
+
+def _is_expensive(path: str, method: str) -> bool:
+    if path in _RL_EXPENSIVE:
+        return True
+    # Upload = ChromaDB indeksleme (CPU + disk) — en pahalı uçlardan;
+    # ama ayni path'in GET'i (liste) ucuzdur, o yuzden metod bakilir.
+    return path == "/api/documents" and method == "POST"
 
 
 def _client_ip(request) -> str:
     # Deploy'da ters proxy arkasında gerçek IP X-Forwarded-For'da olur.
+    # SON durak güvenilir proxy'nin eklediğidir; İLK durağı almak
+    # SAHTELENEBILIR (istemci kendi XFF başlığını gönderip her istekte
+    # farklı "IP" göstererek rate limiti atlatırdı).
     fwd = request.headers.get("x-forwarded-for")
     if fwd:
-        return fwd.split(",")[0].strip()
+        return fwd.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 
@@ -94,8 +107,15 @@ def _client_ip(request) -> str:
 async def _security(request, call_next):
     path = request.url.path
     if path.startswith("/api/"):
+        # Gövde freni: dev Content-Length iddiasını erken reddet (RAM koruması;
+        # upload'ın kendi 20MB kontrolü var ama o TÜM gövdeyi okuduktan sonra).
+        cl = request.headers.get("content-length")
+        if cl and cl.isdigit() and int(cl) > _MAX_BODY:
+            return _JSONResponse(status_code=413,
+                                 content={"detail": "İstek gövdesi çok büyük"})
+
         ip = _client_ip(request)
-        expensive = path in _RL_EXPENSIVE
+        expensive = _is_expensive(path, request.method)
         limit = _RL_LIMIT_EXPENSIVE if expensive else _RL_LIMIT_DEFAULT
         key = ip + ("|x" if expensive else "")
         now = _time.time()
@@ -115,9 +135,23 @@ async def _security(request, call_next):
             )
         dq.append(now)
 
+        # Kova hijyeni: hiç dönmeyen IP'lerin kovaları sonsuza dek kalmasın
+        # (yavaş bellek sızıntısı). Eşik aşılınca penceresi geçmişler süpürülür.
+        if len(_rl_hits) > _RL_SWEEP_AT:
+            cutoff = now - _RL_WINDOW
+            for k in [k for k, q in _rl_hits.items() if not q or q[-1] < cutoff]:
+                _rl_hits.pop(k, None)
+
     resp = await call_next(request)
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    # Clickjacking freni yalnız deploy kipinde (CORS_ORIGINS ayarlıyken):
+    # canlıda site + PDF iframe'i AYNI origin'de, SAMEORIGIN hiçbir şeyi
+    # kırmaz; geliştirmede (file:// veya :8091 -> :8000) origin'ler farklı
+    # olduğundan koşulsuz eklemek provenance önizlemesini kırardı.
+    if _os.getenv("CORS_ORIGINS"):
+        resp.headers["X-Frame-Options"] = "SAMEORIGIN"
     return resp
 
 
@@ -156,10 +190,12 @@ class SimulateResponse(BaseModel):
 
 
 class ReportRequest(BaseModel):
-    prompt: str = ""
+    # Sinirlar: docx ureticisine sinirsiz metin pompalanamasin
+    # (gövde freni kaba koruma, bunlar ince ayar).
+    prompt: str = Field(default="", max_length=2000)
     metrics: dict
     dataSources: dict = {}
-    aiText: str = ""
+    aiText: str = Field(default="", max_length=40000)
     aiMeta: dict = {}
 
 

@@ -39,15 +39,23 @@ tehditler ve karşılıkları:
 
 ## 3. Uygulanan Kontroller
 
-- ✅ **Rate limiting** — bellek-içi, IP başına kayan pencere; pahalı AI/rapor
-  uçları için daha sıkı. `429 + Retry-After`.
+- ✅ **Rate limiting** — bellek-içi, IP başına kayan pencere; pahalı uçlar
+  (`/simulate`, `/report`, belge yükleme) için daha sıkı. `429 + Retry-After`.
+  IP tespiti `X-Forwarded-For`'un **son** durağından (ilk durak istemci
+  tarafından sahtelenebilir — limit atlatma vektörü, 10 Tem denetiminde
+  kapatıldı). Kova sözlüğü eşik aşımında süpürülür (bellek hijyeni).
+- ✅ **Gövde freni** — `Content-Length > 25 MB` iddiası gövde okunmadan `413`
+  ile reddedilir (RAM koruması).
 - ✅ **Zero-trust girdi doğrulama** — tüm gövdeler Pydantic ile; `topK` 1–20,
-  `chunkTarget` 300–1200 gibi katı sınırlar.
+  `chunkTarget` 300–1200, `prompt` ≤ 2000, rapor `aiText` ≤ 40000 gibi katı sınırlar.
 - ✅ **Güvenli hata yönetimi** — beklenmeyen hatada gerçek sebep yalnızca sunucu
   logunda; istemciye genel, bilgi vermeyen JSON.
 - ✅ **Güvenlik başlıkları** — `X-Content-Type-Options: nosniff`,
-  `Referrer-Policy`. (`X-Frame-Options` bilinçli olarak API'ye konmadı: kaynak
-  belge önizlemesi çapraz-origin iframe'de gösteriliyor.)
+  `Referrer-Policy`, `Permissions-Policy` (kamera/mikrofon/konum kapalı).
+  `X-Frame-Options: SAMEORIGIN` yalnız deploy kipinde (`CORS_ORIGINS`
+  ayarlıyken) eklenir: canlıda site + PDF iframe'i aynı origin'de olduğundan
+  clickjacking freni hiçbir şeyi kırmaz; geliştirmede origin'ler farklı
+  olduğundan koşulsuz eklemek kaynak önizlemesini kırardı.
 - ✅ **Dosya güvenliği** — yükleme tür/boyut beyaz listesi, servis eden uçlarda
   path-traversal koruması.
 - ✅ **Zarif düşüş (zero-crash)** — dış servis (piyasa verisi, AI) kesilse bile
