@@ -194,6 +194,7 @@ MAX_SYMBOLS = 4
 class SimulateRequest(BaseModel):
     prompt: str = Field(min_length=3, max_length=2000)
     useRag: bool = True   # kapalıysa doküman bağlamı hiç aranmaz (hız/maliyet)
+    lang: str = "tr"      # AI yorumunun dili (arayüz diliyle senkron: tr | en)
 
 
 class SimulateResponse(BaseModel):
@@ -264,7 +265,8 @@ def simulate(req: SimulateRequest) -> SimulateResponse:
         chunks, fetch_more = [], None
 
     result = ai.analyze(req.prompt, metrics, sources_note, chunks,
-                        fetch_more=fetch_more)
+                        fetch_more=fetch_more,
+                        lang="en" if req.lang == "en" else "tr")
     result["meta"]["ragMode"] = "on" if req.useRag else "off"
 
     history.record(req.prompt, metrics,

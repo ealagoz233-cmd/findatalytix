@@ -244,9 +244,12 @@
     const s = FDX.store;
     s.set({ simulation: { ...s.get().simulation, status: "running", error: null } });
     try {
+      // AI yorumu arayüz diliyle aynı dilde olsun (backend'e lang gecer).
+      let _lang = "tr";
+      try { if (localStorage.getItem("fdx-lang") === "en") _lang = "en"; } catch (e) {}
       const data = await request("/simulate", {
         method: "POST",
-        body: { prompt, useRag: s.get().useRag }
+        body: { prompt, useRag: s.get().useRag, lang: _lang }
       });
       s.set({
         simulation: {

@@ -60,6 +60,15 @@ GROQ_KEY = _key("GROQ_API_KEY")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")        # guclu analist
 GROQ_MODEL_CHEAP = os.getenv("GROQ_MODEL_CHEAP", "llama-3.1-8b-instant")  # sembol/sorgu
 
+# Biçim doğrulama: YANLIŞ slot'a yapıştırılan anahtar sessiz 401 yerine
+# NAZİK düşüşe gitsin. Groq anahtarı "gsk_" ile başlar; Gemini anahtarı
+# ("AQ." / "AIza") oraya konursa (11 Tem canlıda yaşandı) Groq yok sayılır
+# ve sistem Gemini/şablona düşer — kullanıcı ham 401 yerine anlamlı durum görür.
+if GROQ_KEY and not GROQ_KEY.startswith("gsk_"):
+    logger.warning("GROQ_API_KEY 'gsk_' ile başlamıyor (yanlış anahtar yapıştırılmış "
+                   "olabilir) — Groq devre dışı, Gemini/şablona düşülüyor.")
+    GROQ_KEY = ""
+
 import settings as app_settings
 
 def _current_analyst() -> str:
@@ -252,8 +261,18 @@ def route_query(prompt: str) -> list[str]:
         return [prompt]
 
 
+# Çıktı dili arayüzden gelir (Ayarlar > Dil). Talimat Türkçe kalır (model
+# okur), ama üretilen METİN bu direktifin dilinde olur.
+_LANG_DIRECTIVE = {
+    "tr": "ÇIKTI DİLİ: Yanıtının TAMAMI Türkçe olsun.",
+    "en": "OUTPUT LANGUAGE: Write your ENTIRE response in English.",
+}
+def _lang(lang: str) -> str:
+    return _LANG_DIRECTIVE.get(lang, _LANG_DIRECTIVE["tr"])
+
+
 ANALYST_SYSTEM = (
-    "Sen FinDatalytix'in finansal analiz asistanısın. Türkçe, net ve ölçülü yaz. "
+    "Sen FinDatalytix'in finansal analiz asistanısın. Net ve ölçülü yaz. "
     "Sana verilen Monte Carlo metriklerini yorumla. "
     "KAYNAK GÖSTERİMİ: Yalnızca aşağıda gerçek bir RAG bağlamı verildiyse iddialarını "
     "o kaynaklara dayandır ve kaynağı bağlamdaki GERÇEK dosya adı ve sayfa numarasıyla "
@@ -269,7 +288,7 @@ REFEREE_SYSTEM = (
     "yorumu verilecek. Yorumu şu ölçütlerle değerlendir: verilerle tutarlılık, "
     "kaynak kullanımı, abartı/uydurma olup olmaması. SADECE şu JSON'u döndür, "
     "başka hiçbir şey yazma: "
-    '{"score": 0-100 tamsayı, "note": "tek cümlelik Türkçe not", '
+    '{"score": 0-100 tamsayı, "note": "tek cümlelik kısa not — analiz metniyle AYNI dilde", '
     '"gapQuery": "puan 60 altındaysa eksik bilgiyi bulacak kısa arama sorgusu, yoksa null"}'
 )
 
@@ -291,10 +310,10 @@ def _build_context(chunks: list[dict]) -> str:
 # Ana giriş noktası
 # ----------------------------------------------------------
 
-def _referee_review(prompt: str, metrics: dict, text: str):
+def _referee_review(prompt: str, metrics: dict, text: str, lang: str = "tr"):
     """(referee_adi, score, note, gap_query, tin, tout) - hata olursa score None."""
     referee_name, raw, tin, tout = _referee_call(
-        REFEREE_SYSTEM,
+        _lang(lang) + "\n" + REFEREE_SYSTEM,
         f"Soru: {prompt}\nVeri: {json.dumps(metrics, ensure_ascii=False)}\nAnaliz:\n{text}"
     )
     if not referee_name:
@@ -309,24 +328,34 @@ def _referee_review(prompt: str, metrics: dict, text: str):
 
 
 def analyze(prompt: str, metrics: dict, sources_note: str,
-            chunks: list[dict], fetch_more=None) -> dict:
+            chunks: list[dict], fetch_more=None, lang: str = "tr") -> dict:
     """Ajan dongusu: taslak -> hakem -> (puan dusukse) eksik veri aramasi ->
     yeniden yazim. fetch_more(query) -> list[chunk]: RAG'e donus kapisi
     (main.py enjekte eder; test edilebilirlik icin bagimlilik disaridan gelir)."""
 
     rag_sources = sorted({f"{c['source']} (s.{c['page']})" for c in chunks})
 
-    # ---- Hiç model yoksa: dürüst şablon (dinamik N varlık) ----
+    # ---- Hiç model yoksa: dürüst şablon (dinamik N varlık, dile duyarlı) ----
     if _claude is None and _gemini is None and _groq is None:
-        parts = [f"{k}: %{m['cagr']} getiri / {m['sharpe']} Sharpe / %{m['mdd']} MDD"
-                 for k, m in metrics.items()]
         winner = max(metrics.items(), key=lambda kv: kv[1]["sharpe"])[0]
-        text = (
-            f"Monte Carlo Analizi — {'; '.join(parts)}. "
-            f"Risk-ayarlı bazda öne çıkan: {winner}. Veri kaynağı — {sources_note}. "
-            f"(Şablon yorum: .env dosyasına GROQ_API_KEY (ücretsiz), ANTHROPIC_API_KEY "
-            f"veya GEMINI_API_KEY eklendiğinde gerçek AI analizi devreye girer.)"
-        )
+        if lang == "en":
+            parts = [f"{k}: {m['cagr']}% return / {m['sharpe']} Sharpe / {m['mdd']}% MDD"
+                     for k, m in metrics.items()]
+            text = (
+                f"Monte Carlo analysis — {'; '.join(parts)}. "
+                f"Risk-adjusted standout: {winner}. Data source — {sources_note}. "
+                f"(Template note: real AI analysis activates once GROQ_API_KEY (free), "
+                f"ANTHROPIC_API_KEY or GEMINI_API_KEY is added to .env.)"
+            )
+        else:
+            parts = [f"{k}: %{m['cagr']} getiri / {m['sharpe']} Sharpe / %{m['mdd']} MDD"
+                     for k, m in metrics.items()]
+            text = (
+                f"Monte Carlo Analizi — {'; '.join(parts)}. "
+                f"Risk-ayarlı bazda öne çıkan: {winner}. Veri kaynağı — {sources_note}. "
+                f"(Şablon yorum: .env dosyasına GROQ_API_KEY (ücretsiz), ANTHROPIC_API_KEY "
+                f"veya GEMINI_API_KEY eklendiğinde gerçek AI analizi devreye girer.)"
+            )
         return {"aiText": text, "meta": {
             "mode": "template", "analyst": None, "referee": None,
             "confidence": None, "refereeNote": None, "rounds": 0, "roundLog": [],
@@ -353,22 +382,24 @@ def analyze(prompt: str, metrics: dict, sources_note: str,
                          f"Bu eleştiriyi gidererek analizi yeniden yaz.")
 
         try:
-            analyst_name, text, tin, tout = _analyst_call(ANALYST_SYSTEM, user_msg, cheap)
+            analyst_name, text, tin, tout = _analyst_call(
+                _lang(lang) + "\n" + ANALYST_SYSTEM, user_msg, cheap)
             tin_total += tin; tout_total += tout
         except Exception as exc:
             logger.warning("Analist çağrısı başarısız (tur %d): %s", round_no, exc)
             if round_no == 1:
                 return analyze_fallback_after_error(prompt, metrics, sources_note,
-                                                    rag_sources, str(exc))
+                                                    rag_sources, str(exc), lang)
             break   # elde önceki tur taslağı var, onunla devam
 
         try:
             referee_name, confidence, note, gap, rtin, rtout = \
-                _referee_review(prompt, metrics, text)
+                _referee_review(prompt, metrics, text, lang)
             tin_total += rtin; tout_total += rtout
         except Exception as exc:
             logger.warning("Hakem değerlendirmesi alınamadı: %s", exc)
-            note = "Hakem değerlendirmesi bu turda alınamadı."
+            note = ("Referee review unavailable this round." if lang == "en"
+                    else "Hakem değerlendirmesi bu turda alınamadı.")
             round_log.append({"round": round_no, "score": None, "note": note})
             break
 
@@ -404,19 +435,26 @@ def analyze(prompt: str, metrics: dict, sources_note: str,
         "ragSources": rag_sources}}
 
 
-def analyze_fallback_after_error(prompt, metrics, sources_note, rag_sources, error) -> dict:
+def analyze_fallback_after_error(prompt, metrics, sources_note, rag_sources,
+                                 error, lang: str = "tr") -> dict:
+    en = lang == "en"
     parts = [f"{k} %{m['cagr']} / {m['sharpe']} Sharpe" for k, m in metrics.items()]
-    
+
     err_str = str(error).lower()
-    if "429" in err_str or "quota" in err_str or "rate limit" in err_str or "exhausted" in err_str:
-        user_error = "Ücretsiz API Katmanı / Hız Limiti Doldu. Lütfen 1-2 dakika bekleyip tekrar deneyin."
+    rate_limited = any(s in err_str for s in ("429", "quota", "rate limit", "exhausted"))
+    if rate_limited:
+        user_error = ("Free API tier / rate limit reached. Please wait 1-2 minutes and try again."
+                      if en else
+                      "Ücretsiz API Katmanı / Hız Limiti Doldu. Lütfen 1-2 dakika bekleyip tekrar deneyin.")
     else:
-        user_error = error[:120]
-        
-    text = (
-        f"AI servisine ulaşılamadı ({user_error}). Ham sonuçlar: "
-        f"{'; '.join(parts)}. Kaynak: {sources_note}."
-    )
+        user_error = str(error)[:120]
+
+    if en:
+        text = (f"Couldn't reach the AI service ({user_error}). Raw results: "
+                f"{'; '.join(parts)}. Source: {sources_note}.")
+    else:
+        text = (f"AI servisine ulaşılamadı ({user_error}). Ham sonuçlar: "
+                f"{'; '.join(parts)}. Kaynak: {sources_note}.")
     return {"aiText": text, "meta": {
         "mode": "error-fallback", "analyst": None, "referee": None,
         "confidence": None, "refereeNote": None, "rounds": 0, "roundLog": [],
