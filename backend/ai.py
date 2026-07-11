@@ -312,10 +312,12 @@ def _build_context(chunks: list[dict]) -> str:
 
 def _referee_review(prompt: str, metrics: dict, text: str, lang: str = "tr"):
     """(referee_adi, score, note, gap_query, tin, tout) - hata olursa score None."""
-    referee_name, raw, tin, tout = _referee_call(
-        _lang(lang) + "\n" + REFEREE_SYSTEM,
-        f"Soru: {prompt}\nVeri: {json.dumps(metrics, ensure_ascii=False)}\nAnaliz:\n{text}"
-    )
+    mj = json.dumps(metrics, ensure_ascii=False)
+    if lang == "en":
+        u = f"Question: {prompt}\nData: {mj}\nAnalysis:\n{text}\n\nWrite the note in English."
+    else:
+        u = f"Soru: {prompt}\nVeri: {mj}\nAnaliz:\n{text}\n\nNotu Türkçe yaz."
+    referee_name, raw, tin, tout = _referee_call(_lang(lang) + "\n" + REFEREE_SYSTEM, u)
     if not referee_name:
         return None, None, None, None, 0, 0
     clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
@@ -371,15 +373,33 @@ def analyze(prompt: str, metrics: dict, sources_note: str,
     confidence = note = None
 
     for round_no in range(1, MAX_REVISIONS + 2):   # taslak + düzeltmeler
-        user_msg = (
-            f"Kullanıcı sorusu: {prompt}\n\n"
-            f"Monte Carlo metrikleri (JSON): {json.dumps(metrics, ensure_ascii=False)}\n"
-            f"Piyasa verisi kaynağı: {sources_note}\n\n"
-            f"RAG bağlamı:\n{_build_context(work_chunks)}"
-        )
-        if feedback:
-            user_msg += (f"\n\nHAKEM GERİ BİLDİRİMİ (önceki taslağın): {feedback}\n"
-                         f"Bu eleştiriyi gidererek analizi yeniden yaz.")
+        # Kullanıcı mesajı da dile göre kurulur: model, bağlamın BASKIN diline
+        # uyar — sadece sistem direktifi yetmiyordu (11 Tem: EN'de TR yanıt geldi).
+        # Etiketler + sondaki güçlü direktif hedef dilde.
+        ctx = _build_context(work_chunks)
+        metrics_json = json.dumps(metrics, ensure_ascii=False)
+        if lang == "en":
+            user_msg = (
+                f"User question: {prompt}\n\n"
+                f"Monte Carlo metrics (JSON): {metrics_json}\n"
+                f"Market data source: {sources_note}\n\n"
+                f"RAG context:\n{ctx}\n\n"
+                f"IMPORTANT: Write your ENTIRE answer in English only."
+            )
+            if feedback:
+                user_msg += (f"\n\nREFEREE FEEDBACK (on your previous draft): {feedback}\n"
+                             f"Rewrite the analysis addressing this critique — in English.")
+        else:
+            user_msg = (
+                f"Kullanıcı sorusu: {prompt}\n\n"
+                f"Monte Carlo metrikleri (JSON): {metrics_json}\n"
+                f"Piyasa verisi kaynağı: {sources_note}\n\n"
+                f"RAG bağlamı:\n{ctx}\n\n"
+                f"ÖNEMLİ: Yanıtının TAMAMI Türkçe olsun."
+            )
+            if feedback:
+                user_msg += (f"\n\nHAKEM GERİ BİLDİRİMİ (önceki taslağın): {feedback}\n"
+                             f"Bu eleştiriyi gidererek analizi yeniden yaz.")
 
         try:
             analyst_name, text, tin, tout = _analyst_call(
