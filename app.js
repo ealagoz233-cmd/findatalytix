@@ -1567,12 +1567,12 @@
         change.textContent = (up ? "▲ +" : "▼ ") + trNumber(ch) + "%";
         const tag = document.createElement("span");
         tag.className = "live-tag";
-        tag.textContent = "canlı";
+        tag.textContent = Prefs.dict().as.liveTag;
         live.append(price, change, tag);
       } else {
         const na = document.createElement("span");
         na.className = "live-na";
-        na.textContent = "anlık fiyat yok";
+        na.textContent = Prefs.dict().as.noLive;
         live.appendChild(na);
       }
       card.appendChild(live);
@@ -1671,7 +1671,7 @@
     if (meta.ragSources && meta.ragSources.length) {
       box.appendChild(document.createTextNode("  ·  "));
       const lbl = document.createElement("span");
-      lbl.textContent = "RAG kaynakları: ";
+      lbl.textContent = Prefs.dict().sim.ragSrcLabel;
       box.appendChild(lbl);
       meta.ragSources.forEach((src, i) => {
         if (i) box.appendChild(document.createTextNode(", "));
@@ -1759,12 +1759,12 @@
       wrap.appendChild(span);
     };
 
-    if (v.statsError) { note("Belge listesi alınamadı (sunucu çalışıyor mu?)"); return; }
-    if (!v.stats) { note("Belgeler yükleniyor…"); return; }
+    if (v.statsError) { note(Prefs.dict().sim.ragErr); return; }
+    if (!v.stats) { note(Prefs.dict().sim.ragLoading); return; }
 
     const docs = v.stats.documents || [];
     if (!docs.length) {
-      note("Henüz belge yüklenmedi — Vektör Veri Tabanı sayfasından PDF/Word ekle.");
+      note(Prefs.dict().sim.ragEmpty);
       return;
     }
 
@@ -1822,7 +1822,7 @@
       if (typeof r.score === "number" && r.score < 0.5) {
         const lo = document.createElement("span");
         lo.className = "tag wait";
-        lo.textContent = "düşük benzerlik";
+        lo.textContent = Prefs.dict().vdb.lowSim;
         lo.style.marginLeft = "8px";
         info.appendChild(lo);
       }
@@ -1885,9 +1885,7 @@
       frame.src = url + "#page=" + (page || 1);
     } catch (err) {
       note.hidden = false;
-      note.textContent = "Belge dosyası sunucuda yok — bu belge önizleme " +
-        "özelliğinden ÖNCE yüklenmiş. Vektör Veri Tabanı'ndan silip yeniden " +
-        "yüklersen kaynak önizlemesi çalışır.";
+      note.textContent = Prefs.dict().prov.missing;
     }
   }
 
@@ -2187,7 +2185,7 @@
     }, FDX.CONFIG.typing.promptMs);
 
     $("#aiCursor").classList.remove("done");
-    typeInto($("#aiText"), FDX.SEED.aiIntro, FDX.CONFIG.typing.aiMs,
+    typeInto($("#aiText"), Prefs.dict().sim.aiIntro, FDX.CONFIG.typing.aiMs,
       () => $("#aiCursor").classList.add("done"));
   }
 

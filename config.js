@@ -156,10 +156,16 @@ FDX.I18N = {
       fanNa: "Grafik için simülasyonu yeniden çalıştır.",
       ragTitle: "RAG Referans Kaynakları", ragUse: "simülasyonda kullan",
       aiTitle: "AI Analiz Yorumu — analist + hakem",
+      aiIntro: "Motor hazır. Bir karşılaştırma isteği gönder — sonuç kartları, yelpaze grafikleri ve analist + hakem yorumu bu panele düşer.",
+      ragEmpty: "Henüz belge yüklenmedi — Vektör Veri Tabanı sayfasından PDF/Word ekle.",
+      ragErr: "Belge listesi alınamadı (sunucu çalışıyor mu?)",
+      ragLoading: "Belgeler yükleniyor…",
+      ragSrcLabel: "RAG kaynakları: ",
       reportTitle: "Risk Raporu Üret", reportHint: "Word (.docx) formatında, RAG kaynaklı teknik risk raporu."
     },
     vdb: {
       note: "RAG boru hattı aktif: yüklediğin PDF/Word dosyaları ChromaDB'de vektörlenir ve aranabilir hale gelir.",
+      lowSim: "düşük benzerlik",
       docs: "Yüklü Doküman", docsNote: "sunucu bekleniyor",
       chunks: "Toplam Chunk", chunksNote: "vektörlenmiş parça",
       embModel: "Embedding Modeli", embNote: "ChromaDB yerleşik (~80MB)",
@@ -174,7 +180,7 @@ FDX.I18N = {
       ph: "Örn: THYAO, XU030, AAPL, BTC, ETH…",
       last: "Son Fiyat", range: "52 Hafta Aralığı", rangeNote: "düşük — yüksek",
       vol: "Yıllık Volatilite", volNote: "günlük getirilerden", rsi: "RSI (14)",
-      chartTitle: "Fiyat Grafiği"
+      chartTitle: "Fiyat Grafiği", liveTag: "canlı", noLive: "anlık fiyat yok"
     },
     rep: {
       note: "Üretilen her .docx rapor sunucuda arşivlenir; buradan tekrar indirebilir ya da silebilirsin.",
@@ -205,7 +211,8 @@ FDX.I18N = {
       now: "az önce", minAgo: " dk önce", hrAgo: " sa önce", yesterday: "dün",
       srcTip: "Haberi kaynağında aç"
     },
-    prov: { title: "Kaynak Belge" },
+    prov: { title: "Kaynak Belge",
+      missing: "Belge dosyası sunucuda yok — bu belge önizleme özelliğinden ÖNCE yüklenmiş. Vektör Veri Tabanı'ndan silip yeniden yüklersen kaynak önizlemesi çalışır." },
     cr: {
       note: "Fiyatlar Binance'ten WebSocket ile saniyelik akar — veri sunucuya uğramadan doğrudan tarayıcına gelir. Endeks kartları dakikalık tazelenir.",
       board: "Canlı Kripto Tahtası",
@@ -301,10 +308,16 @@ FDX.I18N = {
       fanNa: "Re-run the simulation to draw the chart.",
       ragTitle: "RAG Reference Sources", ragUse: "use in simulation",
       aiTitle: "AI Commentary — analyst + referee",
+      aiIntro: "Engine ready. Send a comparison request — result cards, fan charts and the analyst + referee commentary appear in this panel.",
+      ragEmpty: "No documents yet — add a PDF/Word from the Vector Database page.",
+      ragErr: "Couldn't load the document list (is the server running?)",
+      ragLoading: "Loading documents…",
+      ragSrcLabel: "RAG sources: ",
       reportTitle: "Generate Risk Report", reportHint: "A RAG-sourced technical risk report in Word (.docx) format."
     },
     vdb: {
       note: "RAG pipeline active: the PDF/Word files you upload are vectorized in ChromaDB and become searchable.",
+      lowSim: "low similarity",
       docs: "Uploaded Documents", docsNote: "waiting for server",
       chunks: "Total Chunks", chunksNote: "vectorized pieces",
       embModel: "Embedding Model", embNote: "ChromaDB built-in (~80MB)",
@@ -319,7 +332,7 @@ FDX.I18N = {
       ph: "e.g. THYAO, XU030, AAPL, BTC, ETH…",
       last: "Last Price", range: "52-Week Range", rangeNote: "low — high",
       vol: "Annual Volatility", volNote: "from daily returns", rsi: "RSI (14)",
-      chartTitle: "Price Chart"
+      chartTitle: "Price Chart", liveTag: "live", noLive: "no live price"
     },
     rep: {
       note: "Every generated .docx report is archived on the server; you can re-download or delete it here.",
@@ -350,7 +363,8 @@ FDX.I18N = {
       now: "just now", minAgo: "m ago", hrAgo: "h ago", yesterday: "yesterday",
       srcTip: "Open at the source"
     },
-    prov: { title: "Source Document" },
+    prov: { title: "Source Document",
+      missing: "The document file isn't on the server — it was uploaded BEFORE the preview feature. Delete it from the Vector Database and re-upload to enable source preview." },
     cr: {
       note: "Prices stream from Binance via WebSocket every second — data flows straight to your browser, no server hop. Index cards refresh every minute.",
       board: "Live Crypto Board",

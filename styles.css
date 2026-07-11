@@ -479,6 +479,9 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
 @keyframes blink { 50% { opacity: 0; } }
 
 /* ---------- rapor kartı ---------- */
+/* Rapor kartı: markanın altın/cam dili (eski sabit mavi degrade sırıtıyordu
+   ve Beyaz temada bozuluyordu — 11 Tem geri bildirimi). Tüm renkler CSS
+   değişkeninden, üç temada da tutarlı. */
 .report-card {
   padding: 22px;
   display: flex;
@@ -486,8 +489,10 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
   align-items: center;
   text-align: center;
   gap: 18px;
-  border-color: rgba(143, 184, 232, 0.3);
-  background: linear-gradient(160deg, rgba(31, 51, 88, 0.85), rgba(17, 28, 49, 0.75));
+  border-color: rgba(217, 179, 106, 0.28);
+  background:
+    linear-gradient(160deg, rgba(217, 179, 106, 0.08), rgba(217, 179, 106, 0) 55%),
+    var(--bg-panel);
 }
 
 .report-icons { display: flex; flex-direction: column; align-items: center; gap: 16px; }
@@ -496,11 +501,12 @@ select:disabled { opacity: 0.45; cursor: not-allowed; }
   width: 74px; height: 74px;
   border-radius: 16px;
   display: grid; place-items: center;
-  background: linear-gradient(135deg, #2b579a, #1b3a6b);
-  box-shadow: 0 12px 28px rgba(27, 58, 107, 0.5);
+  background: var(--gold-soft);
+  border: 1px solid rgba(217, 179, 106, 0.35);
+  box-shadow: 0 12px 28px rgba(3, 8, 18, 0.4);
   animation: float 4s ease-in-out infinite;
 }
-.doc-badge svg { width: 36px; height: 36px; fill: none; stroke: #dce8fb; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.doc-badge svg { width: 36px; height: 36px; fill: none; stroke: var(--gold); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
