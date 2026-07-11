@@ -43,6 +43,32 @@
   }
   // _saveHoldings API IIFE içinde tanımlı (localStorage yazımı orada yapılır).
 
+  /* ANINDA BOYA (snapshot): son görülen piyasa verisi localStorage'a
+     yazılır; açılışta hemen boyanır, arka planda tazelenir. Yahoo'nun
+     ilk (soğuk) çağrısını beklerken "Veriler yükleniyor" ekranı kalkar.
+     SADECE görünür veri saklanır; durum (status) alanları varsayılanda
+     kalır ki tazeleme yine tetiklensin ve bayat veri "canlı" sanılmasın. */
+  const SNAP_KEY = "fdx-snapshot-v1";
+  function _loadSnap() {
+    try { return JSON.parse(localStorage.getItem(SNAP_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function _saveSnap(s) {
+    try {
+      localStorage.setItem(SNAP_KEY, JSON.stringify({
+        watchlist: { quotes: s.watchlist.quotes },
+        markets:   { quotes: s.markets.quotes },
+        portfolio: { quotes: s.portfolio.quotes },
+        history:   s.history,
+        vectordb:  { stats: s.vectordb.stats },
+        crypto:    { quotes: s.crypto.quotes, fng: s.crypto.fng, global: s.crypto.global }
+      }));
+    } catch (e) { /* kota dolu / gizli sekme → sessizce vazgeç */ }
+  }
+  const _snap = _loadSnap();
+  const _snapGet = (slice, field, fallback) =>
+    (_snap[slice] && _snap[slice][field] !== undefined) ? _snap[slice][field] : fallback;
+
   const initialState = {
     view: "simulation",
     params: {},                       // örn: { symbol: "THYAO" }
@@ -60,7 +86,7 @@
       error: null
     },
 
-    history: { items: [], totalRuns: null, weeklyRuns: null, weeklyLimit: 600, error: null },
+    history: _snap.history || { items: [], totalRuns: null, weeklyRuns: null, weeklyLimit: 600, error: null },
 
     asset: { status: "idle", symbol: null, data: null, error: null },
 
@@ -69,29 +95,34 @@
 
     watchlist: {
       symbols: _loadWatchSymbols(),
-      quotes: {},          // sembol -> kotasyon
+      quotes: _snapGet("watchlist", "quotes", {}),   // anında boya
       status: "idle",
       error: null
     },
 
     /* Piyasalar sayfası: sabit enstrüman tahtası (FDX.MARKETS listesi) */
-    markets: { quotes: {}, status: "idle", error: null },
+    markets: { quotes: _snapGet("markets", "quotes", {}), status: "idle", error: null },
     // Kripto: fiyatlar Binance WebSocket'ten TARAYICIYA akar (sunucuya yuk yok);
     // fng = Fear & Greed endeksi, global = CoinGecko piyasa ozeti, ws = baglanti durumu
-    crypto: { quotes: {}, fng: null, global: null, ws: "off", error: null },
+    crypto: {
+      quotes: _snapGet("crypto", "quotes", {}),
+      fng: _snapGet("crypto", "fng", null),
+      global: _snapGet("crypto", "global", null),
+      ws: "off", error: null
+    },
     // Haberler: Google News RSS (backend proxy + 10 dk onbellek);
     // ticker = ust serit kotasyonlari (watchlist endpointinden)
     news: { items: [], cat: "piyasalar", status: "idle", error: null, ticker: [] },
 
     /* Portföy: gerçek varlıklar + canlı kotasyon */
-    portfolio: { holdings: _loadHoldings(), quotes: {}, status: "idle", error: null },
+    portfolio: { holdings: _loadHoldings(), quotes: _snapGet("portfolio", "quotes", {}), status: "idle", error: null },
 
     /* Risk Raporu sayfası: üretilen .docx arşivi */
     reports: { items: [], status: "idle", error: null },
 
     vectordb: {
       files: [],        // { name, sizeKB, ext, status, reason, chunks }
-      stats: null,      // GET /api/documents cevabı
+      stats: _snapGet("vectordb", "stats", null),   // anında boya (status bar + kartlar)
       statsError: null,
       queryStatus: "idle",
       queryResults: null,
@@ -106,9 +137,15 @@
 
   /* Sığ birleştirme; iç objeler çağıran tarafından yeni obje
      olarak verilir: set({ report: { ...get().report, status:"ready" } }) */
+  let _snapTimer = null;
   function set(patch) {
     state = Object.assign({}, state, patch);
     subscribers.forEach(fn => fn(state));
+    // Snapshot yazımı debounce'lu: kripto saniyede güncellese de
+    // localStorage en fazla ~2 sn'de bir yazılır (yıpratma önlenir).
+    if (!_snapTimer) _snapTimer = setTimeout(() => {
+      _snapTimer = null; _saveSnap(state);
+    }, 2000);
   }
 
   function subscribe(fn) {
