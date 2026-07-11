@@ -1385,3 +1385,47 @@ footer.status-bar .status-text {
 }
 footer.status-bar .status-label { font-size: 0.72rem; }
 footer.status-bar .status-value { font-size: 0.8rem; }
+
+/* ==========================================================
+   ÜYELİK (auth) — üst köşe düğmesi + giriş/kayıt penceresi
+   ========================================================== */
+.auth-login-btn { padding: 8px 16px; }
+.user { cursor: pointer; }
+.user:hover .avatar { border-color: var(--gold); }
+
+.auth-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(3, 8, 18, 0.62);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: grid; place-items: center;
+  padding: 20px;
+}
+.auth-modal {
+  position: relative;
+  width: 100%; max-width: 380px;
+  padding: 30px 26px 26px;
+  display: flex; flex-direction: column; gap: 13px;
+}
+.auth-modal h3 {
+  margin: 0 0 6px; font-size: 1.3rem;
+  font-family: var(--font-display); font-weight: 600;
+}
+.auth-modal input {
+  width: 100%; box-sizing: border-box;
+  padding: 11px 14px; border-radius: 10px;
+  border: 1px solid var(--stroke);
+  background: var(--bg-panel-solid); color: var(--text);
+  font-family: var(--font-body); font-size: 0.92rem;
+}
+.auth-modal input:focus { outline: none; border-color: var(--gold); }
+.auth-submit { justify-content: center; margin-top: 4px; }
+.auth-close {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; color: var(--text-dim);
+  font-size: 1rem; cursor: pointer; line-height: 1;
+}
+.auth-close:hover { color: var(--text); }
+.auth-switch { font-size: 0.82rem; color: var(--text-dim); text-align: center; margin: 4px 0 0; }
+.auth-switch a { color: var(--gold); text-decoration: none; cursor: pointer; margin-left: 5px; }
+.auth-switch a:hover { text-decoration: underline; }

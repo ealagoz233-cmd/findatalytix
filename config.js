@@ -33,6 +33,15 @@ FDX.CONFIG = {
     maxSizeMB: 20
   },
 
+  // Supabase: üyelik + kalıcı veri (Render diski silindiği için hesaplar
+  // burada saklanır). publishable key PUBLIC olacak şekilde tasarlanmıştır
+  // (RLS korur); config.js zaten herkese açık. service_role/DB şifresi ASLA
+  // burada olmaz. Boş bırakılırsa auth kapanır, uygulama localStorage moduna düşer.
+  supabase: {
+    url: "https://heodtnwiermclnjhqdpm.supabase.co",
+    key: "sb_publishable_cz6LHt69P8VXu8LzPV2WNg_aA0ZuCem"
+  },
+
   typing: { promptMs: 22, aiMs: 14 }
 };
 
@@ -145,6 +154,15 @@ FDX.I18N = {
       bkWriteFail: "Yazılamadı (tarayıcı izni?).",
       bkImported: "İçe aktarıldı ✓ — sayfa yenileniyor…",
       bkReadFail: "Dosya okunamadı."
+    },
+    auth: {
+      login: "Giriş yap", signup: "Kayıt ol", logout: "Çıkış",
+      email: "E-posta", password: "Şifre (en az 6 karakter)",
+      loginTitle: "Giriş yap", signupTitle: "Hesap oluştur",
+      noAccount: "Hesabın yok mu?", haveAccount: "Zaten üye misin?",
+      wait: "Bekle…", confirmLogout: "Çıkış yapılsın mı?",
+      err: "Olmadı: ", signupOk: "Hesap oluşturuldu, giriş yapıldı ✓",
+      checkEmail: "E-postana doğrulama linki gönderildi — onayla, sonra giriş yap."
     },
     tbl: { symbol: "Sembol", price: "Fiyat", change: "Değişim", trend7: "7 Günlük Trend", sharpe: "Sharpe" },
     ov: {
@@ -321,6 +339,15 @@ FDX.I18N = {
       bkWriteFail: "Couldn't write (browser permission?).",
       bkImported: "Imported ✓ — reloading…",
       bkReadFail: "Couldn't read the file."
+    },
+    auth: {
+      login: "Sign in", signup: "Sign up", logout: "Sign out",
+      email: "Email", password: "Password (min 6 chars)",
+      loginTitle: "Sign in", signupTitle: "Create account",
+      noAccount: "No account yet?", haveAccount: "Already a member?",
+      wait: "Please wait…", confirmLogout: "Sign out?",
+      err: "Failed: ", signupOk: "Account created, signed in ✓",
+      checkEmail: "A confirmation link was sent to your email — confirm, then sign in."
     },
     tbl: { symbol: "Symbol", price: "Price", change: "Change", trend7: "7-Day Trend", sharpe: "Sharpe" },
     ov: {

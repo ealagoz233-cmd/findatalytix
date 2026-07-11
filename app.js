@@ -2157,9 +2157,126 @@
      BAŞLAT
   ======================================================== */
 
+  /* ========================================================
+     ÜYELİK (Auth) — Supabase, tamamen istemci tarafı.
+     Girişsizken localStorage modu AYNEN çalışır (regresyon yok).
+     Şifre bize hiç uğramaz: supabase-js doğrudan Supabase'e yollar.
+     Aşama 2'de FDX.auth üzerinden veri senkronu bağlanacak.
+  ======================================================== */
+  const Auth = (() => {
+    let client = null, user = null, mode = "login";
+
+    function init() {
+      const cfg = FDX.CONFIG.supabase;
+      const loginBtn = $("#authLoginBtn"), userChip = $("#authUser");
+      if (!cfg || !cfg.url || !cfg.key || !window.supabase) {
+        if (loginBtn) loginBtn.hidden = true;      // auth kapalı → localStorage modu
+        if (userChip) userChip.hidden = true;
+        return;
+      }
+      client = window.supabase.createClient(cfg.url, cfg.key);
+      FDX.auth = { client: client, user: () => user };
+
+      client.auth.getSession().then(({ data }) =>
+        setUser(data.session ? data.session.user : null));
+      client.auth.onAuthStateChange((_e, session) =>
+        setUser(session ? session.user : null));
+
+      wireUI();
+    }
+
+    function setUser(u) {
+      user = u;
+      const loginBtn = $("#authLoginBtn"), userChip = $("#authUser");
+      if (!loginBtn || !userChip) return;
+      if (u) {
+        loginBtn.hidden = true; userChip.hidden = false;
+        const email = u.email || "";
+        $("#authUserName").textContent = email;
+        $("#authAvatar").textContent = (email[0] || "?").toUpperCase();
+        userChip.title = Prefs.dict().auth.logout;
+      } else {
+        loginBtn.hidden = false; userChip.hidden = true;
+      }
+    }
+
+    function open(m) {
+      mode = m || "login";
+      syncModal();
+      $("#authError").hidden = true;
+      $("#authOverlay").hidden = false;
+      $("#authEmail").focus();
+    }
+    function close() { $("#authOverlay").hidden = true; }
+
+    function syncModal() {
+      const d = Prefs.dict().auth;
+      $("#authTitle").textContent = mode === "signup" ? d.signupTitle : d.loginTitle;
+      $("#authSubmit").querySelector(".report-btn-label").textContent =
+        mode === "signup" ? d.signup : d.login;
+      $("#authSwitchText").textContent = mode === "signup" ? d.haveAccount : d.noAccount;
+      $("#authSwitchLink").textContent = mode === "signup" ? d.login : d.signup;
+    }
+
+    async function submit() {
+      const d = Prefs.dict().auth;
+      const email = $("#authEmail").value.trim();
+      const password = $("#authPassword").value;
+      const err = $("#authError");
+      err.hidden = true;
+      const lbl = $("#authSubmit").querySelector(".report-btn-label");
+      const prev = lbl.textContent;
+      lbl.textContent = d.wait;
+      try {
+        if (mode === "signup") {
+          const { data, error } = await client.auth.signUp({ email, password });
+          if (error) throw error;
+          if (!data.session) {      // e-posta doğrulama açıksa oturum gelmez
+            err.hidden = false; err.textContent = d.checkEmail; return;
+          }
+        } else {
+          const { error } = await client.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+        }
+        close();
+      } catch (e) {
+        err.hidden = false; err.textContent = d.err + (e.message || e);
+      } finally {
+        lbl.textContent = prev;
+      }
+    }
+
+    async function logout() {
+      if (!client) return;
+      if (!confirm(Prefs.dict().auth.confirmLogout)) return;
+      await client.auth.signOut();
+    }
+
+    function wireUI() {
+      $("#authLoginBtn").addEventListener("click", () => open("login"));
+      $("#authUser").addEventListener("click", logout);
+      $("#authClose").addEventListener("click", close);
+      $("#authOverlay").addEventListener("click", e => {
+        if (e.target.id === "authOverlay") close();
+      });
+      $("#authSubmit").addEventListener("click", submit);
+      $("#authSwitchLink").addEventListener("click", e => {
+        e.preventDefault();
+        mode = mode === "signup" ? "login" : "signup";
+        syncModal(); $("#authError").hidden = true;
+      });
+      $("#authPassword").addEventListener("keydown", e => {
+        if (e.key === "Enter") submit();
+      });
+    }
+
+    return { init: init };
+  })();
+
   document.addEventListener("DOMContentLoaded", () => {
     Prefs.init();     // tema + dil, ilk boyamadan once
     bindEvents();
+    Auth.init();      // üyelik (Supabase) — girişsizken sessizce localStorage modu
 
     // Acilista: dongu sayaci + vektor DB durumu (status bar icin)
     FDX.api.refreshHistory();
