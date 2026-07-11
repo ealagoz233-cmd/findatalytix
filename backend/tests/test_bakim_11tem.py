@@ -43,3 +43,22 @@ def test_manset_en_taze_haber():
     items = news.parse_rss(SIRASIZ_RSS)
     assert [i["title"] for i in items] == [
         "Taze haber", "Eski haber", "Tarihsiz haber"]   # yeni -> eski -> tarihsiz
+
+
+def test_yelpaze_gercek_dagilimdan():
+    """Grafik artık dekor değil: run_gbm gerçek yüzdelik bantları döner.
+    Kullanıcı şikayeti (11 Tem): 'grafik doğru şeyi göstermeli'."""
+    from findatalytix_engine.simulation import run_gbm, HORIZON_DAYS
+
+    r = run_gbm("TEST", mu=0.10, sigma=0.20, seed=42)
+    fan = r["fan"]
+
+    assert fan["days"][0] == 0 and fan["days"][-1] == HORIZON_DAYS
+    n = len(fan["days"])
+    assert all(len(fan[k]) == n for k in ("p10", "p25", "p50", "p75", "p90"))
+    # S0 = 100'den başlar
+    assert fan["p10"][0] == fan["p90"][0] == 100.0
+    # bantlar her noktada sıralı: p10 <= p25 <= p50 <= p75 <= p90
+    for i in range(n):
+        assert (fan["p10"][i] <= fan["p25"][i] <= fan["p50"][i]
+                <= fan["p75"][i] <= fan["p90"][i])

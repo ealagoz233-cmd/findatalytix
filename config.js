@@ -25,23 +25,8 @@ FDX.CONFIG = {
     timeoutMs: 60000
   },
 
-  surfaces: {
-    A: { baseVol: 16, smile: 0.55, termSlope: 0.8, noise: 0.9 },
-    B: { baseVol: 22, smile: 0.85, termSlope: 0.5, noise: 1.4 }
-  },
-
-  chart: {
-    autoRotateSpeed: 6,
-    distance: 190,
-    alpha: 22,
-    beta: 40,
-    volMin: 5,
-    volMax: 45,
-    palette: [
-      "#313695", "#4575b4", "#74add1", "#abd9e9",
-      "#fee090", "#fdae61", "#f46d43", "#d73027", "#a50026"
-    ]
-  },
+  /* surfaces + chart ayarlari emekli edildi (11 Tem): 3D yuzey sentetik
+     dekordu; grafik artik simulasyonun GERCEK yuzdelik yelpazesi. */
 
   upload: {
     allowedExt: [".pdf", ".docx"],
@@ -85,9 +70,8 @@ FDX.SEED = {
     "dinamik Monte Carlo simülasyonu çalıştır ve karşılaştırmalı risk raporu oluştur.",
 
   aiIntro:
-    "Simülasyon motoru hazır. Prompt'u düzenleyip gönder butonuna bastığında " +
-    "FastAPI üzerinde 2.000 yollu Monte Carlo (GBM) çalışacak ve sonuçlar " +
-    "bu panele düşecek.",
+    "Motor hazır. Bir karşılaştırma isteği gönder — sonuç kartları, " +
+    "yelpaze grafikleri ve analist + hakem yorumu bu panele düşer.",
 
   metrics: {}   // v0.9: kartlar ilk simülasyonla dinamik doğar
 };
@@ -166,9 +150,12 @@ FDX.I18N = {
     },
     sim: {
       emptyTitle: "Henüz simülasyon çalıştırılmadı",
-      emptyBody: "Prompt'a analiz etmek istediğin varlıkları yaz (örn: \"THYAO ile Apple'ı karşılaştır\") — AI sembolleri çıkarır, her biri için Monte Carlo koşar ve kartlar burada belirir.",
+      emptyBody: "Örn: \"THYAO ile AAPL'ı karşılaştır\" yaz ve gönder — her varlık için 2.000 yollu Monte Carlo koşulur, sonuçlar burada belirir.",
+      fanAy: "Ay", fanMedian: "Medyan",
+      fanInner: "%50 bant", fanOuter: "%80 bant",
+      fanNa: "Grafik için simülasyonu yeniden çalıştır.",
       ragTitle: "RAG Referans Kaynakları", ragUse: "simülasyonda kullan",
-      aiTitle: "Claude & Gemini Analiz Yorumu",
+      aiTitle: "AI Analiz Yorumu — analist + hakem",
       reportTitle: "Risk Raporu Üret", reportHint: "Word (.docx) formatında, RAG kaynaklı teknik risk raporu."
     },
     vdb: {
@@ -308,9 +295,12 @@ FDX.I18N = {
     },
     sim: {
       emptyTitle: "No simulation has been run yet",
-      emptyBody: "Type the assets you want to analyze in the prompt (e.g. \"compare THYAO with Apple\") — the AI extracts the symbols, runs Monte Carlo for each, and the cards appear here.",
+      emptyBody: "Try \"compare THYAO with AAPL\" — a 2,000-path Monte Carlo runs per asset and the results appear here.",
+      fanAy: "Month", fanMedian: "Median",
+      fanInner: "50% band", fanOuter: "80% band",
+      fanNa: "Re-run the simulation to draw the chart.",
       ragTitle: "RAG Reference Sources", ragUse: "use in simulation",
-      aiTitle: "Claude & Gemini Analysis",
+      aiTitle: "AI Commentary — analyst + referee",
       reportTitle: "Generate Risk Report", reportHint: "A RAG-sourced technical risk report in Word (.docx) format."
     },
     vdb: {

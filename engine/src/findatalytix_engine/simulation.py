@@ -52,12 +52,27 @@ def run_gbm(model: str, mu: float, sigma: float, seed: int) -> dict:
     drawdowns = prices / running_max - 1.0
     mdd = float(np.mean(np.min(drawdowns, axis=1)))
 
+    # Yelpaze (fan chart) bantları: 2.000 yolun GERÇEK yüzdelik dağılımı,
+    # ~haftalık örnekleme (S0 = 100 endeksli). Arayüzdeki grafik artık
+    # dekoratif sentetik yüzey değil, bu simülasyonun kendisi.
+    idx = sorted(set(list(range(0, HORIZON_DAYS + 1, 5)) + [HORIZON_DAYS]))
+    q = np.percentile(prices[:, idx], [10, 25, 50, 75, 90], axis=0)
+    fan = {
+        "days": [int(i) for i in idx],
+        "p10": [round(float(v), 2) for v in q[0]],
+        "p25": [round(float(v), 2) for v in q[1]],
+        "p50": [round(float(v), 2) for v in q[2]],
+        "p75": [round(float(v), 2) for v in q[3]],
+        "p90": [round(float(v), 2) for v in q[4]],
+    }
+
     return {
         "model": model,
         "cagr": round(cagr * 100, 2),    # %
         "vol": round(vol * 100, 2),      # %
         "sharpe": round(sharpe, 2),
         "mdd": round(mdd * 100, 2),      # % (negatif)
+        "fan": fan,                      # gerçek dağılım — grafik bundan çizilir
     }
 
 

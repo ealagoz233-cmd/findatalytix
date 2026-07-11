@@ -41,8 +41,14 @@ except ImportError:
 # İstemciler — tembel ve hataya dayanıklı kurulum
 # ----------------------------------------------------------
 
-ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
-GEMINI_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+# Anahtar hijyeni: panolardan yapıştırırken bulaşan tırnak/boşluk temizlenir
+# (canlıda Groq 401'in muhtemel sebebi — Render dashboard'a tırnaklı yapıştırma).
+def _key(name: str) -> str:
+    return os.getenv(name, "").strip().strip('"').strip("'").strip()
+
+
+ANTHROPIC_KEY = _key("ANTHROPIC_API_KEY")
+GEMINI_KEY = _key("GEMINI_API_KEY")
 
 CLAUDE_MODEL_STRONG = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
 CLAUDE_MODEL_CHEAP = os.getenv("CLAUDE_MODEL_CHEAP", "claude-haiku-4-5-20251001")
@@ -50,7 +56,7 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 # GROQ: ucretsiz + cok comert kota + hizli (Llama 3.3 70B). Anahtar varsa
 # tum AI cagrilari buraya gider; Gemini'nin dar dakikalik limitine takilmaz.
-GROQ_KEY = os.getenv("GROQ_API_KEY", "").strip()
+GROQ_KEY = _key("GROQ_API_KEY")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")        # guclu analist
 GROQ_MODEL_CHEAP = os.getenv("GROQ_MODEL_CHEAP", "llama-3.1-8b-instant")  # sembol/sorgu
 

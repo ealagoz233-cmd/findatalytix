@@ -28,7 +28,8 @@ def test_gbm_metric_sanity():
     assert m["model"] == "XYZ.IS"
     assert m["vol"] > 0
     assert m["mdd"] <= 0                    # düşüş asla pozitif olamaz
-    assert set(m) == {"model", "cagr", "vol", "sharpe", "mdd"}
+    # "fan" 11 Tem'de eklendi: grafik için gerçek yüzdelik bantlar
+    assert set(m) == {"model", "cagr", "vol", "sharpe", "mdd", "fan"}
 
 
 def test_seed_from_prompt_stable():

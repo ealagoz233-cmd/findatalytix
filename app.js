@@ -87,86 +87,90 @@
   const Charts = (function () {
     let instances = [];   // {chart}
 
-    function volSurface({ baseVol, smile, termSlope, noise }) {
-      const data = [];
-      for (let m = 1; m <= 24; m++) {
-        for (let k = 70; k <= 130; k += 2.5) {
-          const s = smile * Math.pow((k - 100) / 30, 2);
-          const t = termSlope * Math.sqrt(m);
-          const w = noise * Math.sin(m * 0.9 + k * 0.11);
-          data.push([m, k, +(baseVol + s * 22 - t + w).toFixed(2)]);
-        }
-      }
-      return data;
-    }
-
-    function option(data) {
-      const C = FDX.CONFIG.chart;
-      const axis = name => ({
-        type: "value", name,
-        nameTextStyle: { color: "#9fb3d0", fontSize: 10 },
-        axisLabel: { color: "#9fb3d0", fontSize: 8 },
-        axisLine: { lineStyle: { color: "#3a4d6e" } }
-      });
+    /* MONTE CARLO YELPAZESI (fan chart) — 2.000 yolun GERCEK yuzdelik
+       bantlari, backend'in dondurdugu m.fan'dan cizilir (S0 = 100).
+       Eski 3D yuzey sentetik dekordu ("dogru seyi gostermiyor"
+       sikayeti, 11 Tem); echarts-gl bagimliligi onunla emekli oldu. */
+    function fanOption(fan, d) {
+      const ay = fan.days.map(v => +(v / 21).toFixed(1));
+      const delta = (hi, lo) => hi.map((v, i) => +(v - lo[i]).toFixed(2));
+      const AXIS = {
+        axisLabel: { color: "#9fb3d0", fontSize: 9 },
+        axisLine: { lineStyle: { color: "#3a4d6e" } },
+        splitLine: { lineStyle: { color: "rgba(143,184,232,0.08)" } }
+      };
       return {
-        tooltip: {},
-        visualMap: {
-          show: false, dimension: 2,
-          min: C.volMin, max: C.volMax,
-          inRange: { color: C.palette }
+        animationDuration: 500,
+        grid: { left: 46, right: 14, top: 30, bottom: 26 },
+        legend: {
+          top: 0, right: 6, itemWidth: 14, itemHeight: 8,
+          textStyle: { color: "#9fb3d0", fontSize: 9 },
+          data: [d.fanOuter, d.fanInner, d.fanMedian]
         },
-        xAxis3D: axis("Vade (ay)"),
-        yAxis3D: axis("Moneyness (%)"),
-        zAxis3D: axis("Imp. Vol (%)"),
-        grid3D: {
-          boxWidth: 90, boxDepth: 90, boxHeight: 55,
-          viewControl: {
-            autoRotate: true,
-            autoRotateSpeed: C.autoRotateSpeed,
-            distance: C.distance, alpha: C.alpha, beta: C.beta
-          },
-          light: { main: { intensity: 1.3, shadow: false }, ambient: { intensity: 0.45 } },
-          environment: "transparent",
-          splitLine: { lineStyle: { color: "rgba(143,184,232,0.12)" } },
-          axisPointer: { show: false }
+        tooltip: {
+          trigger: "axis",
+          backgroundColor: "rgba(17,28,49,0.95)",
+          borderColor: "rgba(143,184,232,0.25)",
+          textStyle: { color: "#dbe6f5", fontSize: 11 },
+          formatter: ps => {
+            const i = ps[0].dataIndex;
+            return d.fanAy + " " + ay[i] +
+              "<br/>" + d.fanMedian + ": <b>" + fan.p50[i] + "</b>" +
+              "<br/>" + d.fanInner + ": " + fan.p25[i] + " – " + fan.p75[i] +
+              "<br/>" + d.fanOuter + ": " + fan.p10[i] + " – " + fan.p90[i];
+          }
         },
-        series: [{
-          type: "surface", shading: "color",
-          wireframe: { show: true, lineStyle: { color: "rgba(10,17,32,0.35)", width: 0.5 } },
-          data
-        }]
+        xAxis: { type: "category", data: ay, boundaryGap: false,
+                 name: d.fanAy,
+                 nameTextStyle: { color: "#9fb3d0", fontSize: 9 }, ...AXIS },
+        yAxis: { type: "value", scale: true, ...AXIS },
+        series: [
+          // dis bant (%80): p10 gorunmez taban + (p90-p10) dolgu
+          { name: "_taban1", type: "line", data: fan.p10, stack: "dis",
+            lineStyle: { opacity: 0 }, symbol: "none", silent: true },
+          { name: d.fanOuter, type: "line", data: delta(fan.p90, fan.p10),
+            stack: "dis", lineStyle: { opacity: 0 }, symbol: "none",
+            areaStyle: { color: "rgba(143,184,232,0.16)" },
+            itemStyle: { color: "rgba(143,184,232,0.55)" }, silent: true },
+          // ic bant (%50): p25 gorunmez taban + (p75-p25) dolgu
+          { name: "_taban2", type: "line", data: fan.p25, stack: "ic",
+            lineStyle: { opacity: 0 }, symbol: "none", silent: true },
+          { name: d.fanInner, type: "line", data: delta(fan.p75, fan.p25),
+            stack: "ic", lineStyle: { opacity: 0 }, symbol: "none",
+            areaStyle: { color: "rgba(217,179,106,0.22)" },
+            itemStyle: { color: "rgba(217,179,106,0.75)" }, silent: true },
+          // medyan yolu
+          { name: d.fanMedian, type: "line", data: fan.p50, symbol: "none",
+            lineStyle: { color: "#d9b36a", width: 2.5 },
+            itemStyle: { color: "#d9b36a" } }
+        ]
       };
     }
 
-    /* v0.9: her varligin yuzeyi kendi GERCEK volatilitesinden dogar.
-       Kartlar DOM'a eklendikten SONRA cagrilir (0x0 tuzagi yok). */
+    /* Kartlar DOM'a eklendikten SONRA cagrilir (0x0 tuzagi yok). */
     function renderFor(metrics) {
       dispose();
-      Object.entries(metrics).forEach(([sym, m], i) => {
+      const d = Prefs.dict().sim;
+      Object.entries(metrics).forEach(([sym, m]) => {
         const el = document.getElementById("chart-" + cssSafe(sym));
         if (!el || !window.echarts) return;
-        // ZERO-CRASH: echarts-gl (CDN) yuklenemezse 'surface' serisi patlar;
-        // grafik atlanir ama metrik kartlari + AI yorumu yasamaya devam eder.
+        if (!m.fan) {
+          // eski kayit / bayat yedek: grafiksiz ama durust
+          el.innerHTML = '<p class="chart-na">' + d.fanNa + '</p>';
+          return;
+        }
         try {
           const chart = echarts.init(el, null, { renderer: "canvas" });
-          chart.setOption(option(volSurface({
-            baseVol: (typeof m.vol === "number" && m.vol > 0) ? m.vol : 18,
-            smile: 0.55 + (i % 3) * 0.15,
-            termSlope: 0.8 - (i % 2) * 0.25,
-            noise: 0.9 + i * 0.2
-          })));
+          chart.setOption(fanOption(m.fan, d));
           instances.push({ chart });
         } catch (err) {
-          console.warn("3D yuzey cizilemedi (" + sym + "):", err.message);
-          el.innerHTML = '<p class="chart-na">3D grafik yüklenemedi — metrikler geçerli</p>';
+          console.warn("Yelpaze cizilemedi (" + sym + "):", err.message);
+          el.innerHTML = '<p class="chart-na">' + d.fanNa + '</p>';
         }
       });
     }
 
-    function setRotation(on) {
-      instances.forEach(({ chart }) =>
-        chart.setOption({ grid3D: { viewControl: { autoRotate: on } } }));
-    }
+    function setRotation(_on) { /* 3D emekli — cagiran kod icin no-op */ }
 
     function resize() { instances.forEach(({ chart }) => chart.resize()); }
 

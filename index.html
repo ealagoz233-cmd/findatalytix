@@ -15,11 +15,15 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://raw.githubusercontent.com/ealagoz233-cmd/findatalytix/master/docs/screenshots/genel-bakis.png" />
   <meta name="theme-color" content="#0a1120" />
+  <!-- Site ZATEN iki dilli (Ayarlar > Dil). Chrome'un otomatik cevirisi
+       finans terimlerini katlediyordu: "Gemini" -> "Ikizler Burcu",
+       "Volatility" -> "Ucucu madde" (kullanici ekran goruntusuyle yakaladi). -->
+  <meta name="google" content="notranslate" />
 
   <!-- Marka simgesi: gercek logo (altin F + yukselen ok, kullanici tasarimi).
        64px sekme ikonu + 180px telefon ana-ekran ikonu. -->
-  <link rel="icon" type="image/png" href="favicon-64.png?v=0.9.31" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=0.9.31" />
+  <link rel="icon" type="image/png" href="favicon-64.png?v=0.9.32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=0.9.32" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,7 +31,7 @@
 
   <!-- ?v= = onbellek asisi: surum degisince tarayici YENI dosyayi almak
        zorunda kalir (Ctrl+Shift+R derdi biter). Guncellemede numarayi artir. -->
-  <link rel="stylesheet" href="styles.css?v=0.9.31" />
+  <link rel="stylesheet" href="styles.css?v=0.9.32" />
 </head>
 <body>
 
@@ -42,7 +46,7 @@
       <div class="brand" id="brandHome" role="button" tabindex="0"
            title="Ana sayfaya don (Genel Bakis)" data-i18n-title="tip.home" aria-label="Ana sayfaya don">
         <div class="brand-icon">
-          <img src="favicon-64.png?v=0.9.31" alt="" width="38" height="38" />
+          <img src="favicon-64.png?v=0.9.32" alt="" width="38" height="38" />
         </div>
         <div class="brand-text">
           <span class="brand-name">FinDatalytix</span>
@@ -384,7 +388,7 @@
           <div class="empty-state glass" id="simEmpty">
             <svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/></svg>
             <h3 data-i18n="sim.emptyTitle">Henüz simülasyon çalıştırılmadı</h3>
-            <p data-i18n="sim.emptyBody">Prompt'a analiz etmek istediğin varlıkları yaz (örn: "THYAO ile Apple'ı karşılaştır") — AI sembolleri çıkarır, her biri için Monte Carlo koşar ve kartlar burada belirir.</p>
+            <p data-i18n="sim.emptyBody">Örn: "THYAO ile AAPL'ı karşılaştır" yaz ve gönder — her varlık için 2.000 yollu Monte Carlo koşulur, sonuçlar burada belirir.</p>
           </div>
         </div>
 
@@ -401,7 +405,7 @@
             </div>
 
             <div class="ai-panel glass">
-              <h3 data-i18n="sim.aiTitle">Claude &amp; Gemini Analiz Yorumu</h3>
+              <h3 data-i18n="sim.aiTitle">AI Analiz Yorumu — analist + hakem</h3>
 
               <p id="aiText"></p>
               <span class="cursor" id="aiCursor"></span>
@@ -724,12 +728,12 @@
   </aside>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
-  <!-- echarts-gl cdnjs'te YOK (404 donuyordu, 3D yuzey hic cizilmiyordu) -> jsdelivr -->
-  <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
+  <!-- echarts-gl emekli (11 Tem): 3D yuzey sentetik dekordu, grafik artik
+       gercek Monte Carlo yelpazesi (duz echarts yeter; sayfa ~700KB hafifledi) -->
   <!-- file:// protokolüyle de çalışsın diye ES Modules yerine
        sıralı klasik script + FDX namespace kullanılıyor -->
-  <script src="config.js?v=0.9.31"></script>
-  <script src="core.js?v=0.9.31"></script>
-  <script src="app.js?v=0.9.31"></script>
+  <script src="config.js?v=0.9.32"></script>
+  <script src="core.js?v=0.9.32"></script>
+  <script src="app.js?v=0.9.32"></script>
 </body>
 </html>
