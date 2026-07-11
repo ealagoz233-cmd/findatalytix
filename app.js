@@ -403,7 +403,7 @@
       if (sim.status === "error") {
         errBox.hidden = false;
         errBox.textContent = Prefs.dict().app.errSim + sim.error +
-          " — Prompt'u düzenleyip tekrar gönderebilirsin.";
+          Prefs.dict().dyn.simErrSuffix;
       } else {
         errBox.hidden = true;
       }
@@ -412,8 +412,7 @@
       if (sim.status === "running") {
         if (aiTimer) { clearInterval(aiTimer); aiTimer = null; }
         const t = $("#aiText");
-        if (t) t.textContent =
-          "Monte Carlo çalışıyor ve AI analiz ediyor… birkaç saniye sürebilir.";
+        if (t) t.textContent = Prefs.dict().dyn.simRunning;
         $("#aiCursor").classList.remove("done");
         $("#aiMeta").hidden = true;
         const grid = $("#simResultsGrid");
@@ -447,9 +446,9 @@
       btn.classList.toggle("loading", rep.status === "generating");
       btn.disabled = rep.status === "generating";
       label.textContent =
-        rep.status === "generating" ? "Oluşturuluyor…" :
-        rep.status === "ready"      ? "Rapor Hazır ✓" :
-        rep.status === "error"      ? "Hata — tekrar dene" :
+        rep.status === "generating" ? Prefs.dict().dyn.btnGenerating :
+        rep.status === "ready"      ? Prefs.dict().dyn.btnReady :
+        rep.status === "error"      ? Prefs.dict().dyn.btnRetry :
                                       Prefs.dict().app.btnReport;
       btn.classList.toggle("error", rep.status === "error");
       btn.title = rep.status === "error" ? rep.error : "";
@@ -854,7 +853,7 @@
           error: null } });
       } catch (err) {
         s.set({ crypto: { ...s.get().crypto,
-          error: "Endeks verileri alınamadı: " + err.message } });
+          error: Prefs.dict().dyn.crMetaErr + err.message } });
       }
     }
 
@@ -1242,7 +1241,7 @@
       del.textContent = "✕";
       del.style.marginLeft = "10px";
       del.addEventListener("click", () => {
-        if (confirm("'" + r.name + "' arşivden kalıcı olarak silinecek. Emin misin?")) {
+        if (confirm("'" + r.name + "'" + Prefs.dict().dyn.archiveDelConfirm)) {
           FDX.api.deleteReport(r.name);
         }
       });
@@ -1309,7 +1308,7 @@
       const tdDel = document.createElement("td");
       const del = document.createElement("button");
       del.className = "file-del";
-      del.setAttribute("aria-label", h.sym + " varlığını çıkar");
+      del.setAttribute("aria-label", h.sym + Prefs.dict().dyn.removeHoldingAria);
       del.textContent = "✕";
       del.addEventListener("click", () => FDX.api.removeHolding(i));
       tdDel.appendChild(del);
@@ -1536,11 +1535,12 @@
     if (!grid) return;
     grid.innerHTML = "";
 
+    const mr = Prefs.dict().sim.metricRows;
     const rows = [
-      ["Yillik Getiri (CAGR, %)", "cagr", " %"],
-      ["Volatilite (\u03c3, %)", "vol", " %"],
-      ["Sharpe Orani", "sharpe", ""],
-      ["Maks. Dusus (MDD)", "mdd", " %"]
+      [mr.cagr, "cagr", " %"],
+      [mr.vol, "vol", " %"],
+      [mr.sharpe, "sharpe", ""],
+      [mr.mdd, "mdd", " %"]
     ];
 
     Object.entries(metrics).forEach(([sym, m]) => {
@@ -1627,15 +1627,16 @@
 
       const meta = document.createElement("span");
       meta.className = "file-meta";
+      const _d = Prefs.dict().dyn;
       meta.textContent =
-        f.status === "uploading" ? f.sizeKB + " KB — yükleniyor…" :
-        f.status === "indexed"   ? f.sizeKB + " KB — indekslendi (" + f.chunks + " chunk)" :
-        f.status === "error"     ? "hata: " + f.reason :
-                                   "reddedildi: " + f.reason;
+        f.status === "uploading" ? f.sizeKB + _d.upUploading :
+        f.status === "indexed"   ? f.sizeKB + _d.upIndexedA + f.chunks + _d.upChunkSuffix :
+        f.status === "error"     ? _d.upError + f.reason :
+                                   _d.upRejected + f.reason;
 
       const del = document.createElement("button");
       del.className = "file-del";
-      del.setAttribute("aria-label", f.name + " dosyasını listeden çıkar");
+      del.setAttribute("aria-label", f.name + Prefs.dict().dyn.removeFileAria);
       del.textContent = "✕";
       del.addEventListener("click", () => FDX.api.removeFile(f.name));
 
@@ -1649,21 +1650,22 @@
     if (!meta) { box.hidden = true; return; }
     const bits = [];
     if (meta.mode === "live-ai") {
-      bits.push("Analist: " + meta.analyst);
+      const _m = Prefs.dict().dyn;
+      bits.push(_m.metaAnalyst + meta.analyst);
       if (meta.confidence !== null && meta.confidence !== undefined)
-        bits.push("Hakem (" + meta.referee + "): " + meta.confidence + "/100" +
+        bits.push(_m.metaRefPre + meta.referee + "): " + meta.confidence + "/100" +
                   (meta.refereeNote ? " — " + meta.refereeNote : ""));
       if (meta.ragMode === "off")
-        bits.push("RAG: kapali (kullanici tercihi)");
+        bits.push(_m.metaRagOff);
       if (meta.rounds > 1) {
         const scores = (meta.roundLog || []).map(r => r.score).join(" \u2192 ");
-        bits.push("\u267b Oz-duzeltme: " + meta.rounds + " tur (" + scores + ")");
+        bits.push(_m.metaSelfCorrect + meta.rounds + _m.metaRounds + scores + ")");
       }
       bits.push("Token: " + meta.tokensIn + "\u2192" + meta.tokensOut);
     } else {
       bits.push(meta.mode === "template"
-        ? "Şablon mod — .env'e API anahtarı (örn. ücretsiz GROQ_API_KEY) eklenince gerçek AI devreye girer"
-        : "AI hatası — ham sonuçlar gösterildi");
+        ? Prefs.dict().dyn.aiTemplate
+        : Prefs.dict().dyn.aiErrShown);
     }
     box.textContent = bits.join("  ·  ");
 
@@ -1870,10 +1872,9 @@
     if (name.toLowerCase().endsWith(".docx")) {
       note.hidden = false;
       note.innerHTML = "";
-      note.appendChild(document.createTextNode(
-        "Word belgeleri tarayıcıda önizlenemez. "));
+      note.appendChild(document.createTextNode(Prefs.dict().dyn.wordNoPreview));
       const a = document.createElement("a");
-      a.href = url; a.textContent = "Belgeyi indir"; a.download = name;
+      a.href = url; a.textContent = Prefs.dict().dyn.wordDownload; a.download = name;
       note.appendChild(a);
       return;
     }
@@ -1939,7 +1940,7 @@
       new Date().toISOString().slice(0, 10) + ".json";
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
-    _dataMsg("Yedek indirildi ✓ (güvenli bir yerde sakla).", false);
+    _dataMsg(Prefs.dict().dyn.bkDownloaded, false);
   }
 
   function importData(file) {
@@ -1947,21 +1948,20 @@
     reader.onload = () => {
       let parsed;
       try { parsed = JSON.parse(reader.result); }
-      catch (e) { _dataMsg("Dosya okunamadı — geçerli bir JSON değil.", true); return; }
+      catch (e) { _dataMsg(Prefs.dict().dyn.bkNotJson, true); return; }
       if (!parsed || parsed.app !== "FinDatalytix" || !parsed.data) {
-        _dataMsg("Bu bir FinDatalytix yedeği değil.", true); return;
+        _dataMsg(Prefs.dict().dyn.bkNotBackup, true); return;
       }
       const keys = Object.keys(parsed.data).filter(k => DATA_KEYS.includes(k));
-      if (!keys.length) { _dataMsg("Yedekte tanınan veri yok.", true); return; }
-      if (!confirm("Bu yedek, mevcut portföy/izleme listesi/tercihlerinin " +
-                   "ÜZERİNE yazacak. Devam edilsin mi?")) return;
+      if (!keys.length) { _dataMsg(Prefs.dict().dyn.bkNoData, true); return; }
+      if (!confirm(Prefs.dict().dyn.bkOverwrite)) return;
       try {
         keys.forEach(k => localStorage.setItem(k, parsed.data[k]));
-      } catch (e) { _dataMsg("Yazılamadı (tarayıcı izni?).", true); return; }
-      _dataMsg("İçe aktarıldı ✓ — sayfa yenileniyor…", false);
+      } catch (e) { _dataMsg(Prefs.dict().dyn.bkWriteFail, true); return; }
+      _dataMsg(Prefs.dict().dyn.bkImported, false);
       setTimeout(() => location.reload(), 900);
     };
-    reader.onerror = () => _dataMsg("Dosya okunamadı.", true);
+    reader.onerror = () => _dataMsg(Prefs.dict().dyn.bkReadFail, true);
     reader.readAsText(file);
   }
 
