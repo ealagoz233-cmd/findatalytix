@@ -41,9 +41,25 @@ from findatalytix_engine.simulation import (
 # (credentials kapalıyken) hem file:// hem localhost sunucularını kapsar.
 # ----------------------------------------------------------
 
-# Surum tek yerden: index.html'deki ?v= damgasiyla birlikte elle artirilir
-# (health endpoint'i app.version'i okur — ikinci bir kopya tutma).
-VERSION = "0.9.26"
+# Surum GERCEKTEN tek kaynaktan: index.html'deki ?v= damgasi ne diyorsa
+# API de onu soyler. "Elle iki yeri artir" plani ilk haftasinda cuvalladi
+# (canlida health 0.9.26 derken site 0.9.31 servis ediyordu — 11 Tem bakim).
+import re as _re
+
+
+def _detect_version() -> str:
+    try:
+        html = (_Path(__file__).resolve().parent.parent / "index.html"
+                ).read_text(encoding="utf-8")
+        m = _re.search(r"\?v=([0-9][0-9.]*)", html)
+        if m:
+            return m.group(1)
+    except OSError:
+        pass
+    return "0.9"
+
+
+VERSION = _detect_version()
 app = FastAPI(title="FinDatalytix API", version=VERSION)
 
 # CORS: gelistirmede "*" (file:// Origin=null dahil calissin diye),

@@ -78,6 +78,10 @@ def parse_rss(xml_bytes: bytes) -> list[dict]:
                           "source": source or "?", "ts": ts})
         if len(items) >= MAX_ITEMS:
             break
+    # Google News akışı her zaman yeni->eski sıralı GELMİYOR; sıralamadan
+    # basınca manşet (items[0]) 2 günlük habere düşebiliyordu (canlıda
+    # görüldü, 11 Tem bakım). Tarihe göre sırala; tarihsizler sona.
+    items.sort(key=lambda i: i["ts"] or 0.0, reverse=True)
     return items
 
 
