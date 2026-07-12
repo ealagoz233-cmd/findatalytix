@@ -441,22 +441,62 @@ def delete_report(filename: str) -> dict:
 # ----------------------------------------------------------
 
 import rag
+import storage
 from fastapi import UploadFile, File, HTTPException
 
 MAX_UPLOAD_MB = 20
 _store: rag.RagStore | None = None
+_rehydrated = False
+_ragmainlog = _logging.getLogger("findatalytix.main")
 
 # Yuklenen orijinal dosyalar burada saklanir; /api/documents/{ad}/file ile
 # servis edilir (yan yana PDF onizleme / provenance icin).
 UPLOAD_DIR = _Path("./uploads")   # _Path importu dosya basinda
 
 
+def _rehydrate(store: rag.RagStore) -> None:
+    """Aşama 3 (Yol A): Supabase Storage'daki KALICI belgeleri, geçici
+    ChromaDB indeksine yeniden yükle. Zaten indekste olanı atlar; Storage
+    kapalıysa no-op. Bir dosya patlarsa diğerleri devam eder (best-effort)."""
+    global _rehydrated
+    if _rehydrated:
+        return
+    _rehydrated = True
+    if not storage.enabled():
+        return
+    try:
+        names = storage.list_names()
+    except Exception:
+        names = []
+    restored = 0
+    for name in names:
+        try:
+            if store.has_document(name):
+                continue
+            data = storage.download(name)
+            if not data:
+                continue
+            store.add_document(name, data, app_settings.get("chunkTarget"))
+            try:                                    # yerel onizleme kopyasi da geri gelsin
+                UPLOAD_DIR.mkdir(exist_ok=True)
+                (UPLOAD_DIR / _Path(name).name).write_bytes(data)
+            except OSError:
+                pass
+            restored += 1
+        except Exception as e:
+            _ragmainlog.warning("rehydrate %s atlandi: %s", name, e)
+    if restored:
+        _ragmainlog.info("Storage'dan %d belge yeniden indekslendi", restored)
+
+
 def get_store() -> rag.RagStore:
     """Tembel başlatma: ChromaDB (ve embedding modeli) yalnızca
-    ilk RAG isteğinde yüklenir; simülasyon kullanıcıları bedel ödemez."""
+    ilk RAG isteğinde yüklenir; simülasyon kullanıcıları bedel ödemez.
+    İlk kurulumda Storage'daki kalıcı belgeler geri yüklenir (Aşama 3)."""
     global _store
     if _store is None:
         _store = rag.RagStore(path="./chroma_db")
+        _rehydrate(_store)
     return _store
 
 
@@ -488,11 +528,19 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
 
     # Indeksleme basarili -> orijinali sakla (yan yana onizleme icin).
     # Path(...).name: yol karakterlerini soyar (path traversal onlemi).
+    safe_name = _Path(file.filename or "belge").name
     try:
         UPLOAD_DIR.mkdir(exist_ok=True)
-        (UPLOAD_DIR / _Path(file.filename or "belge").name).write_bytes(data)
+        (UPLOAD_DIR / safe_name).write_bytes(data)
     except OSError:
         pass   # onizleme kaydi basarisiz olsa bile indeksleme gecerli
+
+    # Asama 3 (Yol A): kalici kopya Supabase Storage'a. Render diski
+    # geciciydi; asil kalicilik burada. Storage kapaliysa sessizce atlanir.
+    # Senkron requests cagrisi event loop'u kilitlemesin diye threadpool'da.
+    ct = "application/pdf" if ext == ".pdf" else \
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    await run_in_threadpool(storage.upload, safe_name, data, ct)
 
     return {"status": "indexed", **result}
 
@@ -511,6 +559,7 @@ def delete_document(filename: str) -> dict:
         (UPLOAD_DIR / _Path(filename).name).unlink(missing_ok=True)
     except OSError:
         pass
+    storage.delete(_Path(filename).name)   # Asama 3: buluttan da sil
     return {"status": "deleted", "filename": filename, "chunksRemoved": deleted}
 
 
