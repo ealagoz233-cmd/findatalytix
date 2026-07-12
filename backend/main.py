@@ -489,13 +489,21 @@ def _rehydrate(store: rag.RagStore) -> None:
         _ragmainlog.info("Storage'dan %d belge yeniden indekslendi", restored)
 
 
+def _make_embedder():
+    """JINA_API_KEY varsa çok dilli Jina embedder (Türkçe için), yoksa None
+    → ChromaDB varsayılan MiniLM (İngilizce). Anahtar yoksa eskisi gibi çalışır."""
+    key = _os.getenv("JINA_API_KEY", "").strip()
+    return rag.JinaEmbedder(key) if key else None
+
+
 def get_store() -> rag.RagStore:
     """Tembel başlatma: ChromaDB (ve embedding modeli) yalnızca
     ilk RAG isteğinde yüklenir; simülasyon kullanıcıları bedel ödemez.
+    Embedder JINA_API_KEY'e göre seçilir (çok dilli Jina / varsayılan MiniLM).
     İlk kurulumda Storage'daki kalıcı belgeler geri yüklenir (Aşama 3)."""
     global _store
     if _store is None:
-        _store = rag.RagStore(path="./chroma_db")
+        _store = rag.RagStore(path="./chroma_db", embedder=_make_embedder())
         _rehydrate(_store)
     return _store
 

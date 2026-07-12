@@ -105,6 +105,41 @@ def chunk_pages(pages: list[tuple[int, str]], target_chars: int | None = None) -
 # 3) VEKTÖR DEPO
 # ----------------------------------------------------------
 
+class JinaEmbedder:
+    """ChromaDB uyumlu çok dilli embedding fonksiyonu (jina-embeddings-v3).
+    Türkçe'yi gerçekten anlar (kanıt: TR finans cümleleri arası ~0.71
+    benzerlik, alakasız cümleyle ~0.17) — ChromaDB'nin varsayılan İngilizce
+    MiniLM'i Türkçe belgede zayıftı. API tabanlı → RAM yemez (Render
+    free-tier dostu). Anahtar env'den (JINA_API_KEY); yoksa bu sınıf hiç
+    kurulmaz, MiniLM'e düşülür. Arayüz conftest.FakeEmbedder ile aynı
+    (ChromaDB'nin beklediği biçim)."""
+
+    def __init__(self, api_key: str, model: str = "jina-embeddings-v3"):
+        self._key = api_key
+        self._model = model
+
+    def _embed(self, texts) -> list[list[float]]:
+        import requests
+        texts = list(texts)
+        if not texts:
+            return []
+        r = requests.post(
+            "https://api.jina.ai/v1/embeddings",
+            headers={"Authorization": f"Bearer {self._key}",
+                     "Content-Type": "application/json"},
+            json={"model": self._model, "input": texts},
+            timeout=60)
+        r.raise_for_status()
+        data = sorted(r.json()["data"], key=lambda d: d["index"])
+        return [d["embedding"] for d in data]
+
+    def __call__(self, input): return self._embed(input)
+    def embed_query(self, input): return self._embed(input)
+    def embed_documents(self, input): return self._embed(input)
+    def name(self): return "jina-v3"
+    def is_legacy(self): return False
+
+
 class RagStore:
 
     def __init__(self, path: str = "./chroma_db", embedder=None):
