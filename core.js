@@ -207,6 +207,16 @@
 
   const C = FDX.CONFIG.api;
 
+  /* Cekirdek katman i18n: Prefs (app.js IIFE'sinde) buradan gorunmez; bu
+     yuzden global sozluk + localStorage dili dogrudan okunur. Anahtar
+     bulunamazsa bos string doner (cagiran taraf kalanini ekler). */
+  function _t(key) {
+    let lang = "tr";
+    try { lang = localStorage.getItem("fdx-lang") || "tr"; } catch (e) {}
+    const dict = (FDX.I18N && (FDX.I18N[lang] || FDX.I18N.tr)) || null;
+    return (dict && dict.app && dict.app[key]) || "";
+  }
+
   async function request(path, { method = "GET", body = null } = {}) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), C.timeoutMs);
@@ -220,17 +230,16 @@
       if (!res.ok) {
         let detail = "";
         try { detail = (await res.json()).detail || ""; } catch (e) {}
-        throw new Error(detail || ("Sunucu hatası: HTTP " + res.status));
+        throw new Error(detail || (_t("httpErr") + res.status));
       }
       return await res.json();
     } catch (err) {
       if (err.name === "AbortError") {
-        throw new Error("İstek zaman aşımına uğradı (" + C.timeoutMs / 1000 + " sn).");
+        throw new Error(_t("timeout") + " (" + C.timeoutMs / 1000 + _t("secUnit") + ").");
       }
       if (err instanceof TypeError) {
         // fetch ağ hatası: sunucu kapalı / CORS / bağlantı yok
-        throw new Error("Sunucuya ulaşılamadı. Backend çalışıyor mu? " +
-          "(uvicorn main:app --port 8000)");
+        throw new Error(_t("noServer") + "(uvicorn main:app --port 8000)");
       }
       throw err;
     } finally {
@@ -299,7 +308,7 @@
         })
       });
       clearTimeout(timer);
-      if (!res.ok) throw new Error("Sunucu hatasi: HTTP " + res.status);
+      if (!res.ok) throw new Error(_t("httpErr") + res.status);
 
       const blob = await res.blob();
       const disposition = res.headers.get("Content-Disposition") || "";
@@ -340,11 +349,11 @@
                     status: "uploading", reason: "", chunks: 0 };
 
       if (!allowedExt.includes(ext)) {
-        entry.status = "rejected"; entry.reason = "desteklenmeyen tür (" + ext + ")";
+        entry.status = "rejected"; entry.reason = _t("upBadType") + " (" + ext + ")";
       } else if (f.size > maxSizeMB * 1024 * 1024) {
-        entry.status = "rejected"; entry.reason = maxSizeMB + " MB sınırı aşıldı";
+        entry.status = "rejected"; entry.reason = maxSizeMB + _t("upTooBig");
       } else if (existing.some(e => e.name === f.name)) {
-        entry.status = "rejected"; entry.reason = "aynı isimde dosya zaten listede";
+        entry.status = "rejected"; entry.reason = _t("upDupName");
       }
 
       s.set({ vectordb: { ...s.get().vectordb, files: existing.concat([entry]) } });
@@ -463,15 +472,16 @@
   function _saveWatch(symbols) {
     try { localStorage.setItem("fdx-watchlist", JSON.stringify(symbols)); }
     catch (e) { /* private mod vb. — liste yine bellekte yaşar */ }
+    _pushCloudDebounced();
   }
 
   function addWatchSymbol(symbol) {
     const s = FDX.store;
     const sym = symbol.trim().toUpperCase();
     const w = s.get().watchlist;
-    if (sym.length < 2 || sym.length > 12) return "Sembol 2-12 karakter olmali";
-    if (w.symbols.includes(sym)) return "Bu sembol zaten listede";
-    if (w.symbols.length >= 15) return "Liste dolu (en fazla 15 sembol)";
+    if (sym.length < 2 || sym.length > 12) return "symLen";
+    if (w.symbols.includes(sym)) return "symDup";
+    if (w.symbols.length >= 15) return "wlFull";
     const symbols = w.symbols.concat([sym]);
     _saveWatch(symbols);
     s.set({ watchlist: { ...w, symbols } });
@@ -540,6 +550,7 @@
   function _saveHoldings(list) {
     try { localStorage.setItem("fdx-portfolio", JSON.stringify(list)); }
     catch (e) { /* private mod — bellekte yaşar */ }
+    _pushCloudDebounced();
   }
 
   function addHolding(symbol, qty, cost) {
@@ -547,10 +558,10 @@
     const p = s.get().portfolio;
     const sym = String(symbol).trim().toUpperCase();
     qty = Number(qty); cost = Number(cost);
-    if (sym.length < 2 || sym.length > 12) return "Sembol 2-12 karakter olmalı";
-    if (!isFinite(qty) || qty <= 0) return "Adet pozitif bir sayı olmalı";
-    if (!isFinite(cost) || cost <= 0) return "Alış fiyatı pozitif bir sayı olmalı";
-    if (p.holdings.length >= 50) return "Portföy dolu (en fazla 50 satır)";
+    if (sym.length < 2 || sym.length > 12) return "symLen";
+    if (!isFinite(qty) || qty <= 0) return "qtyPos";
+    if (!isFinite(cost) || cost <= 0) return "costPos";
+    if (p.holdings.length >= 50) return "pfFull";
     const holdings = p.holdings.concat([{ sym, qty, cost }]);
     _saveHoldings(holdings);
     s.set({ portfolio: { ...p, holdings } });
@@ -691,10 +702,64 @@
     }
   }
 
+  /* ========================================================
+     SUPABASE BULUT SENKRONU (Aşama 2a) — portföy + izleme listesi.
+     Sadece giriş yapılmışsa çalışır; girişsizken TÜM bu fonksiyonlar
+     sessizce no-op olur ve localStorage modu aynen sürer (regresyon yok).
+     Model: kullanıcı başına TEK satır (user_data); portfolio/watchlist
+     JSONB tutulur, RLS her kullanıcıyı kendi satırına kilitler.
+     FDX.auth (client + user) app.js'te kurulur, globaldir.
+  ======================================================== */
+  let _cloudTimer = null, _pulling = false;
+  function _cloudOn() { return !!(FDX.auth && FDX.auth.client && FDX.auth.user()); }
+
+  async function _pushCloud() {
+    if (!_cloudOn()) return;
+    const st = FDX.store.get();
+    try {
+      await FDX.auth.client.from("user_data").upsert({
+        user_id: FDX.auth.user().id,
+        portfolio: st.portfolio.holdings || [],
+        watchlist: st.watchlist.symbols || [],
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_id" });
+    } catch (e) { /* çevrimdışı/geçici: localStorage yazıldı, sonra tekrar denenir */ }
+  }
+
+  /* Yazma yıpratmasını önlemek için borçlanma (debounce): hızlı ardışık
+     değişikliklerde buluta en fazla ~1.2 sn'de bir yazılır. */
+  function _pushCloudDebounced() {
+    if (!_cloudOn() || _cloudTimer || _pulling) return;
+    _cloudTimer = setTimeout(() => { _cloudTimer = null; _pushCloud(); }, 1200);
+  }
+
+  /* Girişte: bulutta satır VARSA onu yükle (bulut kazanır), YOKSA mevcut
+     yerel veriyi buluta tohumla (ilk giriş). Yükleme sonrası kotasyonlar
+     tazelenir. _pulling bayrağı, yüklerken buluta geri yazmayı engeller. */
+  async function pullCloud() {
+    if (!_cloudOn()) return;
+    const s = FDX.store;
+    try {
+      const { data, error } = await FDX.auth.client
+        .from("user_data").select("portfolio, watchlist")
+        .eq("user_id", FDX.auth.user().id).maybeSingle();
+      if (error) throw error;
+      if (!data) { await _pushCloud(); return; }        // ilk giriş → tohumla
+      const pf = Array.isArray(data.portfolio) ? data.portfolio.slice(0, PORTFOLIO_MAX) : [];
+      const wl = Array.isArray(data.watchlist) ? data.watchlist.slice(0, WATCH_MAX) : [];
+      _pulling = true;
+      _saveHoldings(pf); _saveWatch(wl);                // yerel ayna güncellensin
+      _pulling = false;
+      s.set({ portfolio: { ...s.get().portfolio, holdings: pf } });
+      s.set({ watchlist: { ...s.get().watchlist, symbols: wl } });
+      fetchPortfolio(); fetchWatchlist();
+    } catch (e) { _pulling = false; /* çekilemedi → localStorage modunda devam */ }
+  }
+
   FDX.api = { runSimulation, generateReport, addFiles, removeFile,
               refreshVectorStats, queryDocs, refreshHistory, fetchAsset,
               refreshAiStatus, fetchWatchlist, addWatchSymbol, removeWatchSymbol,
               fetchSettings, saveSettings, setUseRag, fetchMarkets,
               deleteDocument, fetchReports, deleteReport,
-              addHolding, removeHolding, fetchPortfolio };
+              addHolding, removeHolding, fetchPortfolio, pullCloud };
 })();

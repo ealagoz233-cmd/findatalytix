@@ -420,9 +420,10 @@
           grid.innerHTML = "";
           const box = document.createElement("div");
           box.className = "empty-state glass";
-          box.innerHTML = '<div class="fdx-spinner"></div>' +
-            '<h3>Hesaplanıyor…</h3>' +
-            '<p>2.000 yollu Monte Carlo koşuyor, AI yorumu hazırlanıyor.</p>';
+          const dd = Prefs.dict().dyn;
+          box.innerHTML = '<div class="fdx-spinner"></div><h3></h3><p></p>';
+          box.querySelector("h3").textContent = dd.calcTitle;
+          box.querySelector("p").textContent = dd.calcBody;
           grid.appendChild(box);
         }
       }
@@ -545,26 +546,27 @@
     const d = a.data, s = d.summary;
     $("#asLast").textContent = trNumber(s.last);
     const ch = $("#asChange");
-    ch.textContent = (s.changePct >= 0 ? "+" : "") + trNumber(s.changePct) + "% gunluk";
+    ch.textContent = (s.changePct >= 0 ? "+" : "") + trNumber(s.changePct) + Prefs.dict().as.dailyPct;
     ch.className = "ov-delta " + (s.changePct >= 0 ? "up" : "down");
     $("#asRange").textContent = trNumber(s.low52) + " \u2014 " + trNumber(s.high52);
     $("#asVol").textContent = "%" + trNumber(s.volAnnual);
     const rsiEl = $("#asRsi"), rsiNote = $("#asRsiNote");
     if (s.rsiNow != null) {
       rsiEl.textContent = trNumber(s.rsiNow, 1);
-      rsiNote.textContent = s.rsiNow >= 70 ? "asiri alim bolgesi"
-                          : s.rsiNow <= 30 ? "asiri satim bolgesi" : "notr bolge";
+      rsiNote.textContent = s.rsiNow >= 70 ? Prefs.dict().as.rsiOver
+                          : s.rsiNow <= 30 ? Prefs.dict().as.rsiUnder : Prefs.dict().as.rsiNeutral;
       rsiNote.className = "ov-delta " +
         (s.rsiNow >= 70 ? "down" : s.rsiNow <= 30 ? "up" : "");
     } else {
       // onceki sembolun RSI'i ekranda KALMASIN (bayat veri yalani)
       rsiEl.textContent = "—";
-      rsiNote.textContent = "yetersiz veri";
+      rsiNote.textContent = Prefs.dict().as.noData;
       rsiNote.className = "ov-delta";
     }
 
     $("#assetChartTitle").textContent =
-      d.resolved + " \u00b7 son 1 yil \u00b7 " + s.observations + " islem gunu";
+      d.resolved + " \u00b7 " + Prefs.dict().as.lastYear + " \u00b7 " +
+      s.observations + " " + Prefs.dict().as.tradingDays;
     summary.hidden = false;
     wrap.hidden = false;
     AssetChart.show(d);   // panel gorunur olduktan SONRA ciz (0x0 tuzagi)
@@ -644,6 +646,16 @@
            '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>';
   }
 
+  /* Backend TR sabit hata metnini aktif UI diline cevirir; taninmayan
+     metni oldugu gibi birakir (backend wording degisirse patlamaz). */
+  function localizeErr(msg) {
+    if (!msg) return msg;
+    if (/veri bulunamad/i.test(msg)) return Prefs.dict().app.errNoData;
+    if (/veri bi[cç]imi tan/i.test(msg)) return Prefs.dict().app.fmtBad;
+    if (/veri al[ıi]namad/i.test(msg)) return Prefs.dict().app.errFetch;
+    return msg;
+  }
+
   function renderWatchlist(w, prevQuotes) {
     const body = $("#watchlistBody");
     const err = $("#watchError");
@@ -703,7 +715,7 @@
         tdChange.innerHTML = "";
         const tag = document.createElement("span");
         tag.className = "tag wait";
-        tag.textContent = q.error;
+        tag.textContent = localizeErr(q.error);
         tdChange.appendChild(tag);
         tdSpark.textContent = "";
       } else {
@@ -1153,10 +1165,11 @@
 
       const tdName = document.createElement("td");
       const label = document.createElement("span");
-      label.textContent = item.label;
+      label.textContent = (Prefs.lang === "en" && item.en) ? item.en : item.label;
       const sym = document.createElement("span");
       sym.className = "mk-sym mono";
-      sym.textContent = item.calc ? (item.note || "hesaplanan") : item.sym;
+      const noteTxt = (Prefs.lang === "en" && item.noteEn) ? item.noteEn : item.note;
+      sym.textContent = item.calc ? (noteTxt || "hesaplanan") : item.sym;
       tdName.append(label, sym);
 
       const tdPrice = document.createElement("td");
@@ -1173,7 +1186,7 @@
         tdPrice.textContent = "—";
         const tag = document.createElement("span");
         tag.className = "tag wait";
-        tag.textContent = q.error;
+        tag.textContent = localizeErr(q.error);
         tdChange.appendChild(tag);
       } else {
         tdPrice.textContent = trNumber(q.last);
@@ -1291,7 +1304,7 @@
         tdVal.textContent = "—";
         const tag = document.createElement("span");
         tag.className = "tag wait";
-        tag.textContent = q && q.error ? q.error : "fiyat yok";
+        tag.textContent = q && q.error ? localizeErr(q.error) : Prefs.dict().app.noPrice;
         tdPnl.appendChild(tag);
       } else {
         tdVal.textContent = trNumber(valTot);
@@ -1484,7 +1497,8 @@
     }
     if (!h.items.length) {
       const tr = document.createElement("tr");
-      tr.innerHTML = '<td colspan="4" class="table-empty">Henuz simulasyon calistirilmadi - Simulasyon Olustur sayfasindan basla.</td>';
+      tr.innerHTML = '<td colspan="4" class="table-empty"></td>';
+      tr.firstChild.textContent = Prefs.dict().ui.histEmpty;
       body.appendChild(tr);
       return;
     }
@@ -2076,10 +2090,10 @@
     const watchInput = $("#watchInput");
     const addWatch = () => {
       const errBox = $("#watchError");
-      const msg = FDX.api.addWatchSymbol(watchInput.value);
-      if (msg) {
+      const code = FDX.api.addWatchSymbol(watchInput.value);
+      if (code) {
         errBox.hidden = false;
-        errBox.textContent = msg;
+        errBox.textContent = Prefs.dict().app[code] || code;
       } else {
         errBox.hidden = true;
         watchInput.value = "";
@@ -2093,9 +2107,9 @@
     if (pfAddBtn) {
       const addPf = () => {
         const errBox = $("#pfError");
-        const msg = FDX.api.addHolding($("#pfSym").value, $("#pfQty").value, $("#pfCostIn").value);
-        if (msg) {
-          if (errBox) { errBox.hidden = false; errBox.textContent = msg; }
+        const code = FDX.api.addHolding($("#pfSym").value, $("#pfQty").value, $("#pfCostIn").value);
+        if (code) {
+          if (errBox) { errBox.hidden = false; errBox.textContent = Prefs.dict().app[code] || code; }
         } else {
           if (errBox) errBox.hidden = true;
           $("#pfSym").value = ""; $("#pfQty").value = ""; $("#pfCostIn").value = "";
@@ -2164,7 +2178,7 @@
      Aşama 2'de FDX.auth üzerinden veri senkronu bağlanacak.
   ======================================================== */
   const Auth = (() => {
-    let client = null, user = null, mode = "login";
+    let client = null, user = null, mode = "login", _lastUid = null;
 
     function init() {
       const cfg = FDX.CONFIG.supabase;
@@ -2195,8 +2209,15 @@
         $("#authUserName").textContent = email;
         $("#authAvatar").textContent = (email[0] || "?").toUpperCase();
         userChip.title = Prefs.dict().auth.logout;
+        // Aşama 2a: yeni oturum → bulut verisini BİR KEZ çek. Token
+        // yenilemede (aynı kullanıcı) tekrar çekme; sonsuz çekiş olmasın.
+        if (u.id !== _lastUid && FDX.api && FDX.api.pullCloud) {
+          _lastUid = u.id;
+          FDX.api.pullCloud();
+        }
       } else {
         loginBtn.hidden = false; userChip.hidden = true;
+        _lastUid = null;
       }
     }
 

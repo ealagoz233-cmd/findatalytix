@@ -50,23 +50,23 @@ FDX.CONFIG = {
    Satır eklemek/çıkarmak için sadece bu listeyi düzenle.
 ---------------------------------------------------------- */
 FDX.MARKETS = [
-  { sym: "USDTRY=X", label: "Dolar / TL" },
-  { sym: "EURTRY=X", label: "Euro / TL" },
-  { sym: "GBPTRY=X", label: "Sterlin / TL" },
-  { sym: "GC=F",     label: "Altın (ons, $)" },
+  { sym: "USDTRY=X", label: "Dolar / TL",     en: "USD / TRY" },
+  { sym: "EURTRY=X", label: "Euro / TL",      en: "EUR / TRY" },
+  { sym: "GBPTRY=X", label: "Sterlin / TL",   en: "GBP / TRY" },
+  { sym: "GC=F",     label: "Altın (ons, $)", en: "Gold (oz, $)" },
   /* Hesaplı satırlar: ons altın x dolar kuru'ndan türetilir (calc=true).
      factor: ons->gram = 1/31.1035; çeyrek = gram x 1.603 (1.75g, 22 ayar).
      Not: külçe karşılığıdır; kuyumcu alış-satış makası dahil değildir. */
-  { calc: true, label: "Gram Altın (TL)",
+  { calc: true, label: "Gram Altın (TL)", en: "Gram Gold (TRY)",
     needs: ["GC=F", "USDTRY=X"], factor: 1 / 31.1035,
-    note: "hesaplanan: ons × kur" },
-  { calc: true, label: "Çeyrek Altın (TL)",
+    note: "hesaplanan: ons × kur", noteEn: "computed: oz × rate" },
+  { calc: true, label: "Çeyrek Altın (TL)", en: "Quarter Gold (TRY)",
     needs: ["GC=F", "USDTRY=X"], factor: 1.603 / 31.1035,
-    note: "hesaplanan: külçe karşılığı" },
-  { sym: "SI=F",     label: "Gümüş (ons, $)" },
-  { sym: "BZ=F",     label: "Brent Petrol ($)" },
-  { sym: "XU100.IS", label: "BIST 100" },
-  { sym: "^GSPC",    label: "S&P 500" }
+    note: "hesaplanan: külçe karşılığı", noteEn: "computed: bullion equiv." },
+  { sym: "SI=F",     label: "Gümüş (ons, $)", en: "Silver (oz, $)" },
+  { sym: "BZ=F",     label: "Brent Petrol ($)", en: "Brent Oil ($)" },
+  { sym: "XU100.IS", label: "BIST 100",       en: "BIST 100" },
+  { sym: "^GSPC",    label: "S&P 500",        en: "S&P 500" }
   /* Kripto satirlari kaldirildi: artik ozel "Kripto" sekmesi var
      (Binance WS, 10 coin, canli) — burada tutmak mukerrerdi ve her
      60 sn'lik poll'da Yahoo'ya 2 gereksiz sembol soruyordu. */
@@ -131,10 +131,12 @@ FDX.I18N = {
     ui: { live: "CANLI", loading: "Veriler yükleniyor…", loadingShort: "Yükleniyor…",
           serverDown: "Veri alınamadı — backend çalışıyor mu?",
           wlEmpty: "Liste boş — yukarıdan sembol ekle (örn: THYAO, NVDA, BTC-USD).",
-          rpEmpty: "Henüz rapor üretilmedi — Simülasyon sayfasında bir simülasyon çalıştırıp \"Raporu Oluştur\"a bas." },
+          rpEmpty: "Henüz rapor üretilmedi — Simülasyon sayfasında bir simülasyon çalıştırıp \"Raporu Oluştur\"a bas.",
+          histEmpty: "Henüz simülasyon çalıştırılmadı — Simülasyon Oluştur sayfasından başla." },
     dyn: {
       simErrSuffix: " — Prompt'u düzenleyip tekrar gönderebilirsin.",
       simRunning: "Monte Carlo çalışıyor ve AI analiz ediyor… birkaç saniye sürebilir.",
+      calcTitle: "Hesaplanıyor…", calcBody: "2.000 yollu Monte Carlo koşuyor, AI yorumu hazırlanıyor.",
       btnGenerating: "Oluşturuluyor…", btnReady: "Rapor Hazır ✓", btnRetry: "Hata — tekrar dene",
       aiTemplate: "Şablon mod — .env'e API anahtarı (örn. ücretsiz GROQ_API_KEY) eklenince gerçek AI devreye girer",
       aiErrShown: "AI hatası — ham sonuçlar gösterildi",
@@ -222,7 +224,10 @@ FDX.I18N = {
       ph: "Örn: THYAO, XU030, AAPL, BTC, ETH…",
       last: "Son Fiyat", range: "52 Hafta Aralığı", rangeNote: "düşük — yüksek",
       vol: "Yıllık Volatilite", volNote: "günlük getirilerden", rsi: "RSI (14)",
-      chartTitle: "Fiyat Grafiği", liveTag: "canlı", noLive: "anlık fiyat yok"
+      chartTitle: "Fiyat Grafiği", liveTag: "canlı", noLive: "anlık fiyat yok",
+      dailyPct: "% günlük", noData: "yetersiz veri",
+      rsiOver: "aşırı alım bölgesi", rsiUnder: "aşırı satım bölgesi", rsiNeutral: "nötr bölge",
+      lastYear: "son 1 yıl", tradingDays: "işlem günü"
     },
     rep: {
       note: "Üretilen her .docx rapor sunucuda arşivlenir; buradan tekrar indirebilir ya da silebilirsin.",
@@ -290,6 +295,16 @@ FDX.I18N = {
       btnReport: "Raporu Oluştur",
       btnAnalyze: "Analiz Et", btnAnalyzing: "Yükleniyor…",
       errAsset: "veri yok", errConn: "bağlantı yok",
+      errNoData: "veri bulunamadı", noPrice: "fiyat yok",
+      symLen: "Sembol 2-12 karakter olmalı", symDup: "Bu sembol zaten listede",
+      wlFull: "Liste dolu (en fazla 15 sembol)",
+      qtyPos: "Adet pozitif bir sayı olmalı", costPos: "Alış fiyatı pozitif bir sayı olmalı",
+      pfFull: "Portföy dolu (en fazla 50 satır)",
+      fmtBad: "veri biçimi tanınmadı (backend sürümünü güncelle)",
+      httpErr: "Sunucu hatası: HTTP ", timeout: "İstek zaman aşımına uğradı", secUnit: " sn",
+      noServer: "Sunucuya ulaşılamadı. Backend çalışıyor mu? ",
+      upBadType: "desteklenmeyen tür", upTooBig: " MB sınırı aşıldı",
+      upDupName: "aynı isimde dosya zaten listede", errFetch: "veri alınamadı",
       errAI: "AI durumu alınamadı: ",
       btnSave: "Kaydet", btnSaving: "Kaydediliyor…",
       errGeneric: "Hata: ", saved: "Kaydedildi ✓ (restart gerekmez)",
@@ -316,10 +331,12 @@ FDX.I18N = {
     ui: { live: "LIVE", loading: "Loading data…", loadingShort: "Loading…",
           serverDown: "Couldn't load data — is the backend running?",
           wlEmpty: "List is empty — add a symbol above (e.g. THYAO, NVDA, BTC-USD).",
-          rpEmpty: "No reports yet — run a simulation, then hit \"Generate Report\"." },
+          rpEmpty: "No reports yet — run a simulation, then hit \"Generate Report\".",
+          histEmpty: "No simulations yet — start from the Create Simulation page." },
     dyn: {
       simErrSuffix: " — you can edit the prompt and resend.",
       simRunning: "Monte Carlo is running and the AI is analyzing… this may take a few seconds.",
+      calcTitle: "Calculating…", calcBody: "Running 2,000-path Monte Carlo, preparing the AI commentary.",
       btnGenerating: "Generating…", btnReady: "Report Ready ✓", btnRetry: "Error — try again",
       aiTemplate: "Template mode — real AI activates once an API key (e.g. a free GROQ_API_KEY) is added to .env",
       aiErrShown: "AI error — raw results shown",
@@ -407,7 +424,10 @@ FDX.I18N = {
       ph: "e.g. THYAO, XU030, AAPL, BTC, ETH…",
       last: "Last Price", range: "52-Week Range", rangeNote: "low — high",
       vol: "Annual Volatility", volNote: "from daily returns", rsi: "RSI (14)",
-      chartTitle: "Price Chart", liveTag: "live", noLive: "no live price"
+      chartTitle: "Price Chart", liveTag: "live", noLive: "no live price",
+      dailyPct: "% daily", noData: "insufficient data",
+      rsiOver: "overbought zone", rsiUnder: "oversold zone", rsiNeutral: "neutral zone",
+      lastYear: "last 1 year", tradingDays: "trading days"
     },
     rep: {
       note: "Every generated .docx report is archived on the server; you can re-download or delete it here.",
@@ -475,6 +495,16 @@ FDX.I18N = {
       btnReport: "Generate Report",
       btnAnalyze: "Analyze", btnAnalyzing: "Loading…",
       errAsset: "no data", errConn: "no connection",
+      errNoData: "no data", noPrice: "no price",
+      symLen: "Symbol must be 2-12 characters", symDup: "This symbol is already in the list",
+      wlFull: "List is full (max 15 symbols)",
+      qtyPos: "Quantity must be a positive number", costPos: "Buy price must be a positive number",
+      pfFull: "Portfolio is full (max 50 rows)",
+      fmtBad: "unrecognized data format (update the backend)",
+      httpErr: "Server error: HTTP ", timeout: "Request timed out", secUnit: " s",
+      noServer: "Couldn't reach the server. Is the backend running? ",
+      upBadType: "unsupported type", upTooBig: " MB limit exceeded",
+      upDupName: "a file with the same name is already listed", errFetch: "couldn't fetch data",
       errAI: "Couldn't read AI status: ",
       btnSave: "Save", btnSaving: "Saving…",
       errGeneric: "Error: ", saved: "Saved ✓ (no restart needed)",
