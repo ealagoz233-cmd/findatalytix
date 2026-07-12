@@ -1720,6 +1720,14 @@
           { hour: "2-digit", minute: "2-digit" })
       : "—";
 
+    // Gercek embedder'i goster (sabit "ONNX MiniLM" etiketi Jina devredeyken
+    // yaniltiyordu). Backend stats.embedder: "jina-v3" | "minilm-onnx" | ...
+    const embEl = $("#statEmbModel");
+    if (embEl && v.stats.embedder) {
+      embEl.textContent = v.stats.embedder === "jina-v3"
+        ? "Jina v3 · çok dilli" : "ONNX MiniLM-L6";
+    }
+
     renderIndexedDocs(v.stats);
   }
 

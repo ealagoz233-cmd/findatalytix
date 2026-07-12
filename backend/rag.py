@@ -123,15 +123,21 @@ class JinaEmbedder:
         texts = list(texts)
         if not texts:
             return []
-        r = requests.post(
-            "https://api.jina.ai/v1/embeddings",
-            headers={"Authorization": f"Bearer {self._key}",
-                     "Content-Type": "application/json"},
-            json={"model": self._model, "input": texts},
-            timeout=60)
-        r.raise_for_status()
-        data = sorted(r.json()["data"], key=lambda d: d["index"])
-        return [d["embedding"] for d in data]
+        # Buyuk belgede tum chunk'lari TEK istekte gondermek Jina'nin
+        # istek/dakika-token limitini asar ve patlar; 64'luk partiler halinde.
+        out: list[list[float]] = []
+        for i in range(0, len(texts), 64):
+            batch = texts[i:i + 64]
+            r = requests.post(
+                "https://api.jina.ai/v1/embeddings",
+                headers={"Authorization": f"Bearer {self._key}",
+                         "Content-Type": "application/json"},
+                json={"model": self._model, "input": batch},
+                timeout=60)
+            r.raise_for_status()
+            data = sorted(r.json()["data"], key=lambda d: d["index"])
+            out.extend(d["embedding"] for d in data)
+        return out
 
     def __call__(self, input): return self._embed(input)
     def embed_query(self, input): return self._embed(input)
@@ -146,6 +152,10 @@ class RagStore:
         self.client = chromadb.PersistentClient(path=path)
         kwargs = {"embedding_function": embedder} if embedder is not None else {}
         self.col = self.client.get_or_create_collection(COLLECTION_NAME, **kwargs)
+        # Aktif embedder adi (UI'da gercek modeli gostermek icin; "ONNX MiniLM"
+        # sabit etiketi Jina devredeyken yanilticiydi). None -> ChromaDB varsayilani.
+        self.embedder_name = (embedder.name() if (embedder is not None
+                              and hasattr(embedder, "name")) else "minilm-onnx")
 
     # ---- yazma ----
 
@@ -195,6 +205,7 @@ class RagStore:
             "documentCount": len(docs),
             "totalChunks": len(data["metadatas"]),
             "lastUpdated": last or None,
+            "embedder": self.embedder_name,
         }
 
     def query(self, question: str, top_k: int = 5,
