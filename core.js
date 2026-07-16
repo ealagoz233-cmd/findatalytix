@@ -290,6 +290,8 @@
     }
 
     s.set({ report: { status: "generating", error: null } });
+    let _lang = "tr";
+    try { if (localStorage.getItem("fdx-lang") === "en") _lang = "en"; } catch (e) {}
     try {
       // Binary indirme: request() JSON bekler, burada blob gerekiyor.
       // AbortController: timeout aninda baglanti GERCEKTEN kesilir.
@@ -304,7 +306,8 @@
           metrics: sim.metrics,
           dataSources: sim.dataSources || {},
           aiText: sim.aiText || "",
-          aiMeta: sim.aiMeta || {}
+          aiMeta: sim.aiMeta || {},
+          lang: _lang
         })
       });
       clearTimeout(timer);
