@@ -62,10 +62,20 @@ def _detect_version() -> str:
 VERSION = _detect_version()
 app = FastAPI(title="FinDatalytix API", version=VERSION)
 
-# CORS: gelistirmede "*" (file:// Origin=null dahil calissin diye),
-# deploy gununde .env'e CORS_ORIGINS=https://alanadi.com yazilarak daraltilir.
+# CORS: gelistirmede "*" (file:// Origin=null dahil calissin diye).
+# Deploy'da daraltma: CORS_ORIGINS girilmisse o; girilmemisse Render'in
+# otomatik verdigi RENDER_EXTERNAL_URL (tek-origin deploy'da site kendi
+# adresine daralir — panelde elle ayar beklemeden guvenli varsayilan).
 import os as _os
-_origins = [o.strip() for o in _os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
+
+
+def _cors_setup():
+    raw = _os.getenv("CORS_ORIGINS") or _os.getenv("RENDER_EXTERNAL_URL") or "*"
+    origins = [o.strip().rstrip("/") for o in raw.split(",") if o.strip()]
+    return origins, raw != "*"   # daraltilmis origin = deploy kipi
+
+
+_origins, _DEPLOY_MODE = _cors_setup()
 
 app.add_middleware(
     CORSMiddleware,
@@ -162,11 +172,11 @@ async def _security(request, call_next):
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["Referrer-Policy"] = "no-referrer"
     resp.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    # Clickjacking freni yalnız deploy kipinde (CORS_ORIGINS ayarlıyken):
+    # Clickjacking freni yalnız deploy kipinde (origin daraltılmışken):
     # canlıda site + PDF iframe'i AYNI origin'de, SAMEORIGIN hiçbir şeyi
     # kırmaz; geliştirmede (file:// veya :8091 -> :8000) origin'ler farklı
     # olduğundan koşulsuz eklemek provenance önizlemesini kırardı.
-    if _os.getenv("CORS_ORIGINS"):
+    if _DEPLOY_MODE:
         resp.headers["X-Frame-Options"] = "SAMEORIGIN"
     return resp
 
@@ -214,6 +224,7 @@ class ReportRequest(BaseModel):
     dataSources: dict = {}
     aiText: str = Field(default="", max_length=40000)
     aiMeta: dict = {}
+    lang: str = "tr"      # rapor etiketlerinin dili (arayüzle senkron: tr | en)
 
 
 # ----------------------------------------------------------
